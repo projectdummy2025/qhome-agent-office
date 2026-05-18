@@ -12,6 +12,7 @@ Proyek ini menggunakan *stack* mutakhir yang memisahkan beban kerja antara *back
 
 ### 1. Backend (Orkestrasi Agen & API)
 * **Framework Utama**: **FastAPI** (Python) untuk *endpoint* performa tinggi berbekal dukungan fungsi asinkron.
+* **Modular Architecture**: Menggunakan **APIRouter** (`api/routes`) dan pemisahan logika ke `services/` untuk menjamin kebersihan kode *main.py* dan kemudahan penambahan fitur di skala *Enterprise*.
 * **Orkestrasi AI**: **LangGraph** digunakan untuk menciptakan alur hirarki di mana Supervisor memegang kendali (DAG/State Graph) dalam mendelegasikan tugas ke spesialis lain secara bergiliran (*waterfall/throttled execution*).
 * **Komunikasi Data**: **Server-Sent Events (SSE)** digunakan untuk men- *stream* proses pemikiran agen ke *frontend* secara instan.
 * **Integrasi Alat (Custom MCP)**: Sebuah *Model Context Protocol* kustom di *backend* yang menjembatani agen LLM dengan Kalkulator Matematika Sipil deterministik (anti-halusinasi) dan Vector DB.
