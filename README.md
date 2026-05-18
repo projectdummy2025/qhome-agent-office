@@ -52,5 +52,20 @@ Mengingat infrastruktur API gratis memiliki batasan (seperti model Groq yang dib
 
 ---
 
+## Persiapan Database (Docker & Seeding)
+Untuk mendukung *scale* level *Enterprise*, proyek ini menggunakan **PostgreSQL** (Chat History BSON/JSONB) dan **ChromaDB** (Vector RAG) yang berjalan di dalam Docker Container. 
+
+1. Pastikan Docker/Podman sudah terinstal.
+2. Putar container database di latar belakang:
+   ```bash
+   docker compose up -d
+   ```
+3. Lakukan injeksi (*seeding*) 80+ katalog material QHomeMart dari Markdown langsung ke dalam database:
+   ```bash
+   python backend/seed.py
+   ```
+
+---
+
 ## Persiapan Pengembangan Awal (Getting Started)
-Lihat konfigurasi kerangka sistem pada folder `/docs`. Modul `.env.example` sudah disertakan di repositori ini. Salin file tersebut menjadi `.env` dan isi dengan **GEMINI_API_KEY**, **GROQ_API_KEY**, dan **TAVILY_API_KEY** milik Anda sebelum memulai *scaffolding* server.
+Lihat konfigurasi kerangka sistem pada folder `/docs`. Modul `.env.example` sudah disertakan di repositori ini. Salin file tersebut menjadi `.env` dan isi dengan **GEMINI_API_KEY**, **GROQ_API_KEY**, **TAVILY_API_KEY** serta konfigurasi **DATABASE_URL** dan **CHROMA_PORT** milik Anda sebelum memulai *scaffolding* server.

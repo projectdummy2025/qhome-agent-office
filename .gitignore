@@ -1,0 +1,62 @@
+# --- Security & Environment Variables ---
+.env
+.env.*
+!.env.example
+*.pem
+
+# --- Python / Backend ---
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Database files
+*.sqlite3
+*.sqlite
+*.db
+qhome.db
+pgdata/
+
+# Vector DB (Chroma)
+chroma_db/
+chroma.sqlite3
+
+# LangGraph / LangChain cache (if any)
+.langchain.db
+
+# --- Frontend (Vite / React / Node) ---
+# Dependencies
+node_modules/
+/frontend/node_modules/
+
+# Production builds
+/frontend/dist/
+/frontend/dist-ssr/
+/frontend/build/
+
+# Vite caches
+/frontend/.vite/
+
+# --- IDEs / Editors / OS ---
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains / IntelliJ
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
