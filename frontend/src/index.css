@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Warm Earth Palette — calm, trustworthy, premium interior feel */
+  --color-canvas:         #faf9f7;      /* Warm off-white */
+  --color-surface:        #ffffff;
+  --color-surface-soft:   #f4f2ef;      /* Warm greige */
+  --color-surface-strong: #ede9e3;      /* Warm stone */
+  --color-hairline:       #e5e1da;      /* Soft warm border */
+  --color-ink:            #1c1916;      /* Deep warm black */
+  --color-ink-2:          #3d3935;      /* Secondary text */
+  --color-muted:          #7c7872;      /* Warm muted */
+  --color-muted-light:    #b5b0a8;      /* Light muted */
+
+  /* Accent — Warm Terracotta (soft, not aggressive) */
+  --color-accent:         #c47c5a;      /* Terracotta */
+  --color-accent-hover:   #b36a47;
+  --color-accent-soft:    #f5ede7;      /* Terracotta tint bg */
+  --color-accent-border:  #e8c5b0;
+
+  /* Sage Green — calm trust signal */
+  --color-sage:           #7a9e8e;
+  --color-sage-soft:      #edf3f0;
+  --color-sage-border:    #c4d9d1;
+
+  /* Legacy compat (used in some classes) */
+  --color-primary:        #c47c5a;
+  --color-primary-active: #b36a47;
+
+  --font-sans:    "DM Sans", system-ui, sans-serif;
+  --font-display: "DM Serif Display", Georgia, serif;
+}
+
+@layer base {
+  :root {
+    --background:          35 20% 97%;
+    --foreground:          25 8% 11%;
+    --primary:             22 44% 56%;
+    --primary-foreground:  0 0% 100%;
+    --muted:               30 12% 95%;
+    --muted-foreground:    30 5% 48%;
+    --border:              35 14% 89%;
+    --input:               35 14% 89%;
+    --ring:                22 44% 56%;
+    --radius:              0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+  }
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-hover);
+  }
+}
+
+/* Scrollbar — ultra thin & warm */
+@layer utilities {
+  .scrollbar-warm::-webkit-scrollbar { width: 4px; }
+  .scrollbar-warm::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-warm::-webkit-scrollbar-thumb {
+    background: var(--color-hairline);
+    border-radius: 99px;
+  }
+  .scrollbar-warm::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-light);
+  }
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  .font-display { font-family: var(--font-display); }
+
+  /* Calm ambient glow for key elements */
+  .glow-accent {
+    box-shadow: 0 0 0 1px var(--color-accent-border),
+                0 4px 24px 0 rgba(196, 124, 90, 0.12);
+  }
+  .glow-sage {
+    box-shadow: 0 0 0 1px var(--color-sage-border),
+                0 4px 24px 0 rgba(122, 158, 142, 0.12);
+  }
+}
+
+/* Smooth animations */
+@keyframes float-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.04); }
+}
+
+.animate-float-up  { animation: float-up  0.5s ease both; }
+.animate-scale-in  { animation: scale-in  0.4s ease both; }
+.animate-breathe   { animation: breathe   2.4s ease-in-out infinite; }
+
+/* Shimmer loading effect */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-soft) 25%,
+    var(--color-surface-strong) 50%,
+    var(--color-surface-soft) 75%
+  );
+  background-size: 200% auto;
+  animation: shimmer 1.8s linear infinite;
+}
+
+/* Icon container style — "calm badge" */
+.icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.icon-badge:hover {
+  transform: translateY(-1px);
+}
