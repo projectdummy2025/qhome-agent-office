@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, CheckCircle2, Cpu, ChevronDown, Plus, Search, MessageSquare, PanelLeftClose, PanelLeftOpen, Sparkles, ShoppingBag, ShoppingCart, AlertCircle, ArrowRight } from 'lucide-react';
+import { Loader2, CheckCircle2, Cpu, ChevronDown, Plus, Search, MessageSquare, PanelLeftClose, PanelLeftOpen, Sparkles, ShoppingBag, ShoppingCart, AlertCircle, ArrowRight, Download, FileText } from 'lucide-react';
 
 export default function App() {
   const [brief, setBrief] = useState("");
@@ -59,6 +59,26 @@ export default function App() {
     setBrief("");
     setCurrentSessionId(null);
     setCurrentAgentOnDuty(null);
+  };
+
+  // P3 — Download PDF Estimasi Resmi
+  const handleDownloadPdf = async (sessionId: string) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/projects/${sessionId}/generate-pdf`);
+      if (!res.ok) throw new Error('Gagal generate PDF');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Estimasi_QHome_${sessionId.substring(0, 8).toUpperCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('PDF download error:', e);
+      alert('Gagal mengunduh PDF. Pastikan estimasi telah selesai diproses.');
+    }
   };
 
   const handleHire = async () => {
@@ -394,10 +414,31 @@ export default function App() {
                                         Rp {availableProds.reduce((acc: number, curr: any) => acc + (curr.total || 0), 0).toLocaleString('id-ID')}
                                       </p>
                                     </div>
-                                    <button className="w-full sm:w-auto bg-accent text-white px-6 py-3.5 rounded-lg text-[15px] font-semibold hover:bg-accent-hover transition-all flex items-center justify-center gap-2 shadow-sm">
-                                      <ShoppingCart className="w-4.5 h-4.5" /> Tambahkan ke Keranjang Belanja
-                                    </button>
+                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                      {/* P3 — Tombol Unduh PDF */}
+                                      {currentSessionId && (
+                                        <button
+                                          onClick={() => handleDownloadPdf(currentSessionId)}
+                                          className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-5 py-3 rounded-lg text-[14px] font-semibold transition-all flex items-center justify-center gap-2"
+                                        >
+                                          <Download className="w-4 h-4" /> Unduh PDF
+                                        </button>
+                                      )}
+                                      <button className="w-full sm:w-auto bg-accent text-white px-6 py-3.5 rounded-lg text-[15px] font-semibold hover:bg-accent-hover transition-all flex items-center justify-center gap-2 shadow-sm">
+                                        <ShoppingCart className="w-4.5 h-4.5" /> Tambahkan ke Keranjang
+                                      </button>
+                                    </div>
                                   </div>
+
+                                  {/* P6 — Disclaimer Teknis */}
+                                  {msg.logs?.find((l: any) => l.event === 'completed')?.disclaimer && (
+                                    <div className="px-7 py-5 bg-amber-50/60 border-t border-amber-200/60 flex items-start gap-3">
+                                      <FileText className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                      <p className="text-[12px] text-amber-800 leading-relaxed">
+                                        {msg.logs.find((l: any) => l.event === 'completed').disclaimer}
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })()}
