@@ -1,5 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, ChevronDown, Plus, Search, PanelLeftClose, PanelLeftOpen, ShoppingCart, AlertCircle, Send, Download, FileText, UserCog, Brain } from 'lucide-react';
+import { Loader2, ChevronDown, Plus, Search, PanelLeftClose, PanelLeftOpen, ShoppingCart, AlertCircle, Send, Download, FileText, UserCog, Brain, Maximize2 } from 'lucide-react';
+
+
+// Komponen Helper untuk membungkus teks panjang dengan tombol Selengkapnya / Lebih Sedikit
+function ExpandableText({ text, limit = 250 }: { text: string, limit?: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (text.length <= limit) {
+    return <div className="whitespace-pre-line">{text}</div>;
+  }
+
+  return (
+    <div className="relative">
+      <div className={`whitespace-pre-line transition-all duration-300 ${!isExpanded ? 'max-h-[140px] overflow-hidden' : ''}`}>
+        {text}
+      </div>
+      
+      {!isExpanded && (
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface-soft to-transparent pointer-events-none" />
+      )}
+      
+      <div className="mt-2 text-right">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-[12px] font-bold text-accent hover:text-accent/80 transition-all focus:outline-none"
+        >
+          {isExpanded ? 'Tampilkan Lebih Sedikit' : 'Selengkapnya'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [brief, setBrief] = useState("");
@@ -11,6 +42,7 @@ export default function App() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentAgentOnDuty, setCurrentAgentOnDuty] = useState<string | null>(null); // Konsep petugas aktif saat ini
+  const [isModalOpen, setIsModalOpen] = useState(false); // State untuk pengeditan prompt skala besar dalam popup modal
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -56,11 +88,14 @@ export default function App() {
     };
   };
 
-  // Auto-expand textarea height secara dinamis saat konten (brief) berubah
+  // Auto-expand textarea height secara dinamis saat konten (brief) berubah, dibatasi max-height
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120; // Batasi tinggi maksimum demi estetika optimal
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+      textareaRef.current.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
     }
   }, [brief]);
  
@@ -485,8 +520,8 @@ export default function App() {
                 <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-float-up w-full`}>
                   
                   {msg.role === 'user' && (
-                    <div className="bg-surface-soft border border-hairline text-ink px-6 py-4 rounded-2xl max-w-2xl text-[15px] leading-relaxed">
-                      {msg.content}
+                    <div className="bg-surface-soft border border-hairline text-ink px-6 py-4 rounded-2xl max-w-2xl text-[15px] leading-relaxed w-full sm:w-auto">
+                      <ExpandableText text={msg.content} />
                     </div>
                   )}
 
@@ -675,9 +710,19 @@ export default function App() {
                     handleHire();
                   }
                 }}
-                className="flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 resize-none overflow-hidden text-[14.5px] leading-relaxed text-ink placeholder:text-muted-light max-h-[180px] scrollbar-none py-1.5 min-h-[22px] disabled:opacity-60"
+                className="flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 resize-none text-[14.5px] leading-relaxed text-ink placeholder:text-muted-light max-h-[120px] scrollbar-thin py-1.5 min-h-[22px] disabled:opacity-60"
                 rows={1}
               />
+              {/* Tombol Expand/Maximize Premium */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                disabled={isProcessing}
+                className="w-8.5 h-8.5 rounded-full bg-canvas border border-hairline hover:bg-hairline text-muted hover:text-ink flex items-center justify-center transition-all disabled:opacity-30 shadow-sm flex-shrink-0"
+                title="Perluas Konsol Prompt"
+                type="button"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
               {/* Tombol Pesawat Terbang Melayang Selaras Tinggi */}
               <button
                 onClick={handleHire}
@@ -769,7 +814,7 @@ export default function App() {
                                     <p className="text-[11px] text-muted-light uppercase tracking-wider mb-2">Ditugaskan kepada</p>
                                     {log.hired.map((agent: string) => (
                                       <div key={agent} className="flex items-center gap-2">
-                                        <span className="w-1 h-1 rounded-full bg-hairline flex-shrink-0" />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-hairline flex-shrink-0" />
                                         <span className="text-[12px] font-medium text-ink-2 uppercase tracking-wide">{agent}</span>
                                       </div>
                                     ))}
@@ -815,6 +860,69 @@ export default function App() {
               </>
             );
           })()}
+        </div>
+      )}
+
+      {/* Premium Full-Screen Brief Editor Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-ink/40 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
+          <div className="bg-canvas rounded-[24px] shadow-2xl border border-hairline w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh] transition-all">
+            {/* Header Modal */}
+            <div className="px-6 py-5 border-b border-hairline flex items-center justify-between bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-ink/5 text-ink flex items-center justify-center">
+                  <Brain className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[15px] text-ink leading-tight">Konsol Prompt Premium</h3>
+                  <p className="text-[11px] text-muted mt-0.5">Tulis spesifikasi arsitektural dan civil engineering secara leluasa</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-hairline flex items-center justify-center text-muted hover:text-ink transition-all font-semibold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Textarea Modal */}
+            <div className="p-6 flex-1 flex flex-col bg-white">
+              <textarea
+                value={brief}
+                onChange={(e) => setBrief(e.target.value)}
+                placeholder="Tuliskan brief proyek secara lengkap (contoh: ukuran ruangan, ketebalan dinding, pola pemasangan ubin, warna aksen cat, ketersediaan gudang dll)..."
+                className="w-full flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 resize-none text-[14.5px] leading-relaxed text-ink placeholder:text-muted-light/70 min-h-[250px] scrollbar-thin"
+                disabled={isProcessing}
+              />
+            </div>
+            
+            {/* Footer Modal */}
+            <div className="px-6 py-4.5 border-t border-hairline bg-canvas flex items-center justify-between">
+              <div className="text-[11.5px] text-muted-light font-medium">
+                {brief.length} karakter terisi
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-5 py-2 rounded-full border border-hairline text-[13px] font-semibold bg-white hover:bg-hairline text-muted hover:text-ink transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    if (brief.trim()) handleHire();
+                  }}
+                  disabled={!brief.trim() || isProcessing}
+                  className="px-6 py-2 rounded-full bg-ink hover:bg-accent text-white text-[13px] font-semibold flex items-center gap-2 transition-all disabled:opacity-20 shadow-sm"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Terapkan & Kirim
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
