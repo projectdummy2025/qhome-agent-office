@@ -134,24 +134,6 @@ Server backend sekarang aktif di `http://127.0.0.1:8000`. Anda dapat mengakses d
    npm run dev
    ```
 4. Buka peramban (browser) dan akses alamat `http://localhost:5173`.
-
----
-
-## Panduan RTK (Rust Token Killer)
-
-Selaku pengembang, Anda **wajib** menggunakan CLI proxy `rtk` untuk menghemat token dan melihat analitik performa:
-
-```bash
-# Menampilkan total token yang berhasil diselamatkan
-rtk gain
-
-# Melihat riwayat pemanggilan perintah beserta efisiensi tokennya
-rtk gain --history
-
-# Menganalisis riwayat pengerjaan Claude Code untuk mencari optimalisasi baru
-rtk discover
-```
-
 ---
 
 ## Kebijakan Penanganan Batasan & Mitigasi Rate Limit
