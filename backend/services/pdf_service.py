@@ -30,6 +30,21 @@ def _format_rupiah(amount: float) -> str:
     return "Rp {:,.0f}".format(amount).replace(",", ".")
 
 
+def _format_qty(qty_str: str) -> str:
+    """Membulatkan angka desimal pada string quantity demi estetika cetak."""
+    import re
+    if not qty_str:
+        return "-"
+    
+    def replace_decimal(match):
+        num = float(match.group(1))
+        if num.is_integer():
+            return str(int(num))
+        return "{:.2f}".format(num)
+        
+    return re.sub(r'(\d+\.\d+)', replace_decimal, qty_str)
+
+
 def generate_estimation_pdf(
     session_id: str,
     brief: str,
@@ -52,6 +67,11 @@ def generate_estimation_pdf(
     Returns:
         Bytes dari file PDF yang dihasilkan
     """
+    import re
+    # Bersihkan seluruh tag <think> dari brief dan narrative demi kebersihan dokumen PDF
+    brief = re.sub(r'<think>[\s\S]*?</think>', '', brief, flags=re.IGNORECASE).strip()
+    narrative = re.sub(r'<think>[\s\S]*?</think>', '', narrative, flags=re.IGNORECASE).strip()
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -191,10 +211,25 @@ def generate_estimation_pdf(
             price = float(p.get("price", 0))
             total = float(p.get("total", 0))
             grand_total += total
+            
+            import re
+            p_name = p.get("name", "-")
+            is_sub = "substitusi" in p.get("qty", "").lower()
+            is_limited = "[stok terbatas]" in p_name.lower()
+            is_empty = "[stok habis]" in p_name.lower()
+            
+            clean_name = re.sub(r'\[.*?\]\s*', '', p_name)
+            if is_sub:
+                clean_name = f"{clean_name} (Substitusi)"
+            elif is_limited:
+                clean_name = f"{clean_name} (Menunggu Konfirmasi)"
+            elif is_empty:
+                clean_name = f"{clean_name} (Stok Kosong)"
+
             tbl_data.append([
                 str(i),
-                p.get("name", "-"),
-                p.get("qty", "-"),
+                clean_name,
+                _format_qty(p.get("qty", "-")),
                 _format_rupiah(price),
                 _format_rupiah(total),
             ])

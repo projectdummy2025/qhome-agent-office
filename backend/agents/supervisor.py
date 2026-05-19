@@ -332,6 +332,8 @@ def market_researcher(state: AgentState):
         )
         gemini_response = _llm_invoke_with_retry(gemini_specialist, polish_prompt)
         polished_content = gemini_response.content.strip()
+        # Bersihkan pemikiran yang bocor dari Gemini Polish
+        polished_content = re.sub(r'<think>[\s\S]*?</think>', '', polished_content, flags=re.IGNORECASE).strip()
         
         # Satukan kembali untuk dikonsumsi UI ThinkingBlock
         if thinking:
@@ -479,6 +481,8 @@ def inventory_administrator(state: AgentState):
         )
         gemini_response = _llm_invoke_with_retry(gemini_specialist, polish_prompt)
         polished_content = gemini_response.content.strip()
+        # Bersihkan pemikiran yang bocor dari Gemini Polish
+        polished_content = re.sub(r'<think>[\s\S]*?</think>', '', polished_content, flags=re.IGNORECASE).strip()
         
         if thinking:
             content = f"<think>{thinking}</think> {polished_content}"
@@ -521,10 +525,12 @@ def synthesizer(state: AgentState):
     from datetime import datetime, timezone
     products = []
     agent_reports_text = ""
+    import re
     for r in state.get("reports", []):
         if "product" in r:
             products.append(r["product"])
-        agent_reports_text += f"\n- Laporan {r['agent']}: {r['content']}"
+        clean_report_content = re.sub(r'<think>[\s\S]*?</think>', '', r['content'], flags=re.IGNORECASE).strip()
+        agent_reports_text += f"\n- Laporan {r['agent']}: {clean_report_content}"
 
     brief = state.get("brief", "")
     prompt = (

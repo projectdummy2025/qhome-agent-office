@@ -12,25 +12,38 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
 
   return (
     <div className="relative">
-      <div className={`whitespace-pre-line transition-all duration-300 ${!isExpanded ? 'max-h-[140px] overflow-hidden' : ''}`}>
-        {text}
+      <div className="relative">
+        <div className={`whitespace-pre-line transition-all duration-300 ${!isExpanded ? 'max-h-[128px] overflow-hidden pb-1' : ''}`}>
+          {text}
+        </div>
+        {!isExpanded && (
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-surface-soft via-surface-soft/50 to-transparent pointer-events-none" />
+        )}
       </div>
       
-      {!isExpanded && (
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface-soft to-transparent pointer-events-none" />
+      {!isExpanded ? (
+        <div className="absolute bottom-1 right-0 bg-gradient-to-l from-surface-soft via-surface-soft via-surface-soft/90 to-transparent pl-14 pr-0.5 py-0.5 flex items-center">
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="text-[12.5px] font-bold text-muted hover:text-accent transition-colors focus:outline-none bg-surface-soft px-1"
+          >
+            Selengkapnya
+          </button>
+        </div>
+      ) : (
+        <div className="mt-2 text-right">
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="text-[12.5px] font-bold text-muted hover:text-accent transition-colors focus:outline-none"
+          >
+            Tampilkan Lebih Sedikit
+          </button>
+        </div>
       )}
-      
-      <div className="mt-2 text-right">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-[12px] font-bold text-accent hover:text-accent/80 transition-all focus:outline-none"
-        >
-          {isExpanded ? 'Tampilkan Lebih Sedikit' : 'Selengkapnya'}
-        </button>
-      </div>
     </div>
   );
 }
+
 
 export default function App() {
   const [brief, setBrief] = useState("");
@@ -106,21 +119,35 @@ export default function App() {
    // Helper untuk mendeteksi dan memisahkan blok <think>
    const parseThinking = (text: string) => {
      if (!text) return { thinking: null, content: "" };
-     const thinkRegex = /<think>([\s\S]*?)<\/think>/i;
-     const match = text.match(thinkRegex);
-     if (match) {
-       const thinking = match[1].trim();
+     const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
+     const matches = Array.from(text.matchAll(thinkRegex));
+     if (matches.length > 0) {
+       const thinking = matches.map(match => match[1].trim()).join("\n\n---\n\n");
        const cleanContent = text.replace(thinkRegex, '').trim();
        return { thinking, content: cleanContent };
      }
      return { thinking: null, content: text };
    };
 
-   // Helper untuk merender markdown sederhana seperti teks tebal (**)
-   const renderMarkdown = (text: string) => {
-     if (!text) return "";
-     return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>');
-   };
+    // Helper untuk merender markdown sederhana seperti teks tebal (**), miring (*), dll
+    const renderMarkdown = (text: string) => {
+      if (!text) return "";
+      let html = text;
+      // Bold: **text**
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>');
+      // Italic: *text*
+      html = html.replace(/\*(.*?)\*/g, '<em class="italic text-accent font-medium bg-accent-soft/40 px-1.5 py-0.5 rounded">$1</em>');
+      return html;
+    };
+
+    // Helper untuk membulatkan angka desimal pada string quantity
+    const formatQty = (qtyStr: string) => {
+      if (!qtyStr) return "";
+      return qtyStr.replace(/(\d+\.\d+)/g, (match) => {
+        const num = parseFloat(match);
+        return num.toFixed(2);
+      });
+    };
 
  
    // Sub-komponen Akordeon Berpikir Agen (Premium)
@@ -583,13 +610,13 @@ export default function App() {
                                           {listItems.map((li, liIdx) => (
                                             <li key={liIdx} className="flex items-start gap-3">
                                               <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 flex-shrink-0"></span>
-                                              <span dangerouslySetInnerHTML={{ __html: li.replace(/^- /, '').replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>') }} />
+                                              <span dangerouslySetInnerHTML={{ __html: renderMarkdown(li.replace(/^- /, '')) }} />
                                             </li>
                                           ))}
                                         </ul>
                                       );
                                     }
-                                    return <p key={idx} dangerouslySetInnerHTML={{ __html: para.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>') }} />;
+                                    return <p key={idx} dangerouslySetInnerHTML={{ __html: renderMarkdown(para) }} />;
                                   })}
                                 </div>
                               );
@@ -611,35 +638,64 @@ export default function App() {
                                   </div>
                                   
                                   {availableProds.length > 0 ? (
-                                    <div className="p-7 space-y-5">
-                                      {availableProds.map((prod: any, pIdx: number) => (
-                                        <div key={pIdx} className="flex justify-between items-center group">
-                                          <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-surface-soft rounded-lg flex items-center justify-center text-[13px] text-muted font-semibold uppercase group-hover:bg-accent-soft group-hover:text-accent transition-colors">
-                                              {prod.name.substring(0,2)}
+                                    <div className="p-7 space-y-5 bg-white">
+                                      {availableProds.map((prod: any, pIdx: number) => {
+                                        const isSub = prod.qty.toLowerCase().includes("substitusi");
+                                        return (
+                                          <div key={pIdx} className="flex justify-between items-center group">
+                                            <div className="flex items-center gap-4">
+                                              <div className="w-12 h-12 bg-surface-soft rounded-lg flex items-center justify-center text-[13px] text-muted font-semibold uppercase group-hover:bg-accent-soft group-hover:text-accent transition-colors shrink-0">
+                                                {prod.name.substring(0,2)}
+                                              </div>
+                                              <div>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                  <p className="font-semibold text-[15px] text-ink leading-tight">{prod.name}</p>
+                                                  {isSub && (
+                                                    <span className="text-[9px] font-bold bg-accent-soft/80 text-accent border border-accent-border/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                      Substitusi Otomatis
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                <p className="text-[13px] text-muted mt-1">Vol: {formatQty(prod.qty)}</p>
+                                              </div>
                                             </div>
-                                            <div>
-                                              <p className="font-semibold text-[15px] text-ink">{prod.name}</p>
-                                              <p className="text-[13px] text-muted mt-0.5">Vol: {prod.qty}</p>
-                                            </div>
+                                            <p className="font-semibold text-[15px] text-ink shrink-0">Rp {prod.total.toLocaleString('id-ID')}</p>
                                           </div>
-                                          <p className="font-semibold text-[15px] text-ink">Rp {prod.total.toLocaleString('id-ID')}</p>
-                                        </div>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
                                   ) : (
-                                    <div className="p-7 text-center">
+                                    <div className="p-7 text-center bg-white">
                                       <p className="text-muted text-[14px] italic">Tidak ada material siap beli dalam daftar. Semua item saat ini memerlukan verifikasi stok.</p>
                                     </div>
                                   )}
 
                                   {/* Regulasi Terkait Barang Kosong / Menunggu Konfirmasi */}
                                   {unavailableProds.length > 0 && (
-                                    <div className="px-7 py-4.5 bg-sage-soft/30 border-t border-hairline flex items-start gap-3">
-                                      <AlertCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                      <div className="text-[13.5px] text-ink-2 leading-relaxed">
-                                        <span className="font-semibold text-ink block mb-0.5">Catatan Ketersediaan Stok Gudang</span>
-                                        Terdapat <strong className="text-accent font-bold">{unavailableProds.length} material</strong> (seperti semen perekat, jenis pelapis cat, ubin, atau kayu kustom) yang sengaja disembunyikan dari daftar belanja utama karena status stok saat ini memerlukan konfirmasi manual oleh tim logistik QHomeMart.
+                                    <div className="px-7 py-5 bg-canvas border-t border-hairline/60 space-y-4">
+                                      <div className="flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                                        <div className="text-[13.5px] text-ink-2 leading-relaxed">
+                                          <span className="font-semibold text-ink block mb-0.5">Catatan Ketersediaan Stok Gudang</span>
+                                          Terdapat <strong className="text-accent font-bold">{unavailableProds.length} material</strong> yang dialihkan atau ditangguhkan sementara dari daftar utama karena status stok saat ini memerlukan konfirmasi manual oleh tim logistik QHomeMart:
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="pl-8 space-y-2">
+                                        {unavailableProds.map((prod: any, upIdx: number) => {
+                                          const isHabis = prod.name.toLowerCase().includes("habis");
+                                          const cleanName = prod.name.replace(/\[.*?\]\s*/g, '');
+                                          return (
+                                            <div key={upIdx} className="flex justify-between items-center bg-white border border-hairline rounded-lg px-4 py-2.5 text-[13px] shadow-sm">
+                                              <span className="text-ink-2 font-medium">{cleanName}</span>
+                                              <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
+                                                isHabis ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                              }`}>
+                                                {isHabis ? 'Stok Kosong' : 'Menunggu Konfirmasi'}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                   )}
@@ -710,7 +766,7 @@ export default function App() {
                     handleHire();
                   }
                 }}
-                className="flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 resize-none text-[14.5px] leading-relaxed text-ink placeholder:text-muted-light max-h-[120px] scrollbar-thin py-1.5 min-h-[22px] disabled:opacity-60"
+                className="flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 resize-none text-[14.5px] leading-relaxed text-ink placeholder:text-muted-light max-h-[120px] scrollbar-none py-1.5 min-h-[22px] disabled:opacity-60"
                 rows={1}
               />
               {/* Tombol Expand/Maximize Premium */}
@@ -915,9 +971,8 @@ export default function App() {
                     if (brief.trim()) handleHire();
                   }}
                   disabled={!brief.trim() || isProcessing}
-                  className="px-6 py-2 rounded-full bg-ink hover:bg-accent text-white text-[13px] font-semibold flex items-center gap-2 transition-all disabled:opacity-20 shadow-sm"
+                  className="px-6 py-2 rounded-full bg-ink hover:bg-accent text-white text-[13px] font-semibold transition-all disabled:opacity-20 shadow-sm"
                 >
-                  <Send className="w-3.5 h-3.5" />
                   Terapkan & Kirim
                 </button>
               </div>
