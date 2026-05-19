@@ -68,3 +68,37 @@ class EstimationKPI(Base):
     product_count = Column(Integer, default=0)        # Jumlah produk di output
     brief_length = Column(Integer, default=0)         # Panjang brief (chars)
     pdf_generated = Column(Integer, default=0)        # 0/1 apakah PDF digenerate
+
+
+class Order(Base):
+    """Tabel Master Order Logistik (Ternormalisasi 3NF)"""
+    __tablename__ = "orders"
+    id = Column(String, primary_key=True, index=True)
+    session_id = Column(String, ForeignKey("chat_sessions.id"), nullable=True)
+    user_id = Column(String, index=True, default="default-user")
+    materials_total = Column(Float, nullable=False)
+    shipping_cost = Column(Float, nullable=False)
+    total_invoice = Column(Float, nullable=False)
+    truck_type = Column(String, nullable=False)
+    delivery_date = Column(String, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relasi 1-to-many: Satu order dapat memiliki banyak item detail
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+
+
+class OrderItem(Base):
+    """Tabel Detail Item Order (Menghilangkan Redundansi & Duplikasi)"""
+    __tablename__ = "order_items"
+    id = Column(String, primary_key=True, index=True)
+    order_id = Column(String, ForeignKey("orders.id"), index=True)
+    product_sku = Column(String, ForeignKey("products.sku"), index=True)
+    qty = Column(Float, nullable=False)
+    price = Column(Float, nullable=False)
+    total = Column(Float, nullable=False)
+
+    # Relasi back-populates
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product")
+

@@ -44,7 +44,7 @@ def seed_db():
     chroma_col = get_chroma_collection()
     
     for item in PRODUCTS:
-        # Save to SQLite
+        # Save to PostgreSQL
         if not db.query(Product).filter_by(sku=item["sku"]).first():
             product = Product(
                 sku=item["sku"],
@@ -54,7 +54,7 @@ def seed_db():
                 coverage_m2=item["coverage_m2"]
             )
             db.add(product)
-            print(f"Added SQLite: {item['sku']}")
+            print(f"Added into Database: {item['sku']}")
             
         # Save to ChromaDB
         chroma_col.add(
@@ -62,7 +62,7 @@ def seed_db():
             metadatas=[{"sku": item["sku"], "name": item["name"], "category": item["category"], "price": item["base_price"], "coverage": item["coverage_m2"]}],
             ids=[item["sku"]]
         )
-        print(f"Added ChromaDB: {item['sku']}")
+        print(f"Added into ChromaDB: {item['sku']}")
 
     db.commit()
     db.close()
