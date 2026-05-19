@@ -29,18 +29,43 @@ gemini_specialist = ChatGoogleGenerativeAI(
 groq_specialist = ChatGroq(model_name="qwen/qwen3-32b", api_key=settings.GROQ_API_KEY)
 
 def _llm_invoke_with_retry(llm, prompt: str, max_retries: int = 3):
-    """Invoke LLM dengan retry + exponential backoff saat kena 429."""
+    """Invoke LLM dengan retry + exponential backoff, serta fallback ke Groq."""
     for attempt in range(max_retries):
         try:
             return llm.invoke(prompt)
         except Exception as e:
             err_str = str(e)
+            # Jika kena rate limit (429) atau resource exhausted
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                if llm != groq_specialist:
+                    print("Gemini Rate Limit (429) terdeteksi. Beralih ke Groq...")
+                    try:
+                        return groq_specialist.invoke(prompt)
+                    except Exception as fallback_err:
+                        print(f"Gagal melakukan fallback ke Groq: {fallback_err}")
                 wait = 2 ** attempt  # 1s, 2s, 4s
                 time.sleep(wait)
                 continue
-            raise  # error lain langsung raise
-    raise Exception(f"LLM gagal setelah {max_retries} percobaan karena rate limit.")
+            
+            # Jika error tipe lain, coba fallback ke Groq jika bukan Groq sendiri
+            if llm != groq_specialist:
+                print("Error terjadi pada LLM. Mengalihkan ke Groq...")
+                try:
+                    return groq_specialist.invoke(prompt)
+                except Exception as fallback_err:
+                    print(f"Fallback ke Groq gagal: {fallback_err}")
+            raise
+            
+    # Jika loop selesai dan masih gagal, coba Groq sekali lagi sebagai pertolongan terakhir
+    if llm != groq_specialist:
+        print("Mencoba fallback akhir ke Groq...")
+        try:
+            return groq_specialist.invoke(prompt)
+        except Exception:
+            pass
+        
+    raise Exception(f"LLM gagal setelah {max_retries} percobaan.")
+
 
 def chief_supervisor(state: AgentState):
     """Menganalisis brief dan menghire agen"""
@@ -79,25 +104,43 @@ def tile_estimator(state: AgentState):
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
         
-        prompt = f"Anda adalah Tile Estimator. Klien meminta: '{brief}'. Anda memilih produk: {meta['name']} ({desc}). Coverage per dus: {meta['coverage']} m2. Estimasi berapa unit yang dibutuhkan berdasarkan brief (jika tidak ada ukuran, asumsikan 10 dus). Format output HANYA JSON: {{\"reasoning\": \"1 kalimat alasan profesional pemilihan produk\", \"qty\": integer, \"unit\": \"Dus\"}}"
+        prompt = (
+            f"Anda adalah Tile Estimator. Klien meminta: '{brief}'. "
+            f"Anda memilih produk: {meta['name']} ({desc}). Coverage per dus: {meta['coverage']} m2. "
+            "Ekstrak luas area lantai (m2) dari brief klien. Jika tidak ada ukuran luas di brief, asumsikan luas area 10 m2. "
+            "Analisis juga pola pemasangan apakah standard (wastage 5%) or diagonal/vintage (wastage 10%). "
+            "Format output HANYA JSON: {\"reasoning\": \"1 kalimat alasan estetis profesional pemilihan produk\", \"area_m2\": float, \"pattern\": \"standard\" atau \"vintage\"}"
+        )
         response = _llm_invoke_with_retry(gemini_specialist, prompt)
         
         import json
         import re
+        from backend.mcp_tools.calculators import calculate_tile_needs
         try:
             match = re.search(r'\{.*\}', response.content, re.DOTALL)
-            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "qty": 10, "unit": "Dus"}
-            qty = int(res_json.get("qty", 10))
-            unit = res_json.get("unit", "Dus")
-            content = res_json.get("reasoning", response.content.strip())
+            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "area_m2": 10.0, "pattern": "standard"}
+            area_m2 = float(res_json.get("area_m2", 10.0))
+            pattern = res_json.get("pattern", "standard")
+            wastage = 10.0 if pattern == "vintage" else 5.0
+            reasoning = res_json.get("reasoning", response.content.strip())
         except Exception:
-            qty = 10
-            unit = "Dus"
-            content = response.content.strip()
+            area_m2 = 10.0
+            wastage = 5.0
+            reasoning = response.content.strip()
             
+        calc = calculate_tile_needs(area_m2, float(meta['coverage']), wastage)
+        qty = calc["boxes_needed"]
+        unit = "Dus"
+        
+        content = (
+            f"{reasoning}. Dengan estimasi luas area lantai {area_m2} m2 menggunakan pola {pattern} "
+            f"(wastage {wastage}%), dibutuhkan {qty} dus ubin. "
+            f"Kalkulator sipil merekomendasikan tambahan {calc['cement_sacks_needed']} sak semen perekat "
+            f"dan {calc['grout_bags_needed']} bag semen nat pendukung."
+        )
         product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception as e:
-        content = "Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan."
+        content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"
         product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Tile Estimator", "content": content, "product": product_data}
@@ -117,22 +160,34 @@ def wood_specialist(state: AgentState):
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
         
-        prompt = f"Anda adalah Wood Specialist. Klien meminta: '{brief}'. Anda memilih produk: {meta['name']} ({desc}). Coverage per lembar: {meta['coverage']} m2. Estimasi berapa unit yang dibutuhkan berdasarkan brief (jika tidak ada ukuran, asumsikan 12 lembar). Format output HANYA JSON: {{\"reasoning\": \"1 kalimat alasan profesional pemilihan produk\", \"qty\": integer, \"unit\": \"Lembar\"}}"
+        prompt = (
+            f"Anda adalah Wood Specialist. Klien meminta: '{brief}'. "
+            f"Anda memilih produk: {meta['name']} ({desc}). Coverage per lembar: {meta['coverage']} m2. "
+            "Ekstrak luas area dinding/panel (m2) dari brief klien. Jika tidak ada ukuran luas, asumsikan luas area 15 m2. "
+            "Format output HANYA JSON: {\"reasoning\": \"1 kalimat alasan profesional pemilihan panel kayu\", \"area_m2\": float}"
+        )
         response = _llm_invoke_with_retry(groq_specialist, prompt)
         
         import json
         import re
+        from backend.mcp_tools.calculators import calculate_wood_needs
         try:
             match = re.search(r'\{.*\}', response.content, re.DOTALL)
-            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "qty": 12, "unit": "Lembar"}
-            qty = int(res_json.get("qty", 12))
-            unit = res_json.get("unit", "Lembar")
-            content = res_json.get("reasoning", response.content.strip())
+            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "area_m2": 15.0}
+            area_m2 = float(res_json.get("area_m2", 15.0))
+            reasoning = res_json.get("reasoning", response.content.strip())
         except Exception:
-            qty = 12
-            unit = "Lembar"
-            content = response.content.strip()
+            area_m2 = 15.0
+            reasoning = response.content.strip()
             
+        calc = calculate_wood_needs(area_m2, float(meta['coverage']))
+        qty = calc["panels_needed"]
+        unit = "Lembar"
+        
+        content = (
+            f"{reasoning}. Untuk luas bidang kayu {area_m2} m2, diperlukan sebanyak {qty} lembar panel. "
+            f"Diperlukan pula {calc['coating_cans_needed']} kaleng cairan coating pelindung UV agar warna kayu tahan lama."
+        )
         product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception:
         content = "Maaf, saya tidak menemukan produk panel kayu yang sesuai di database."
@@ -155,22 +210,35 @@ def paint_consultant(state: AgentState):
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
         
-        prompt = f"Anda adalah Paint Consultant. Klien meminta: '{brief}'. Anda memilih produk: {meta['name']} ({desc}). Coverage per pail/kaleng: {meta['coverage']} m2. Estimasi berapa unit yang dibutuhkan berdasarkan brief (jika tidak ada ukuran, asumsikan 1 Pail). Format output HANYA JSON: {{\"reasoning\": \"1 kalimat alasan profesional pemilihan produk\", \"qty\": integer, \"unit\": \"Pail/Kaleng\"}}"
+        prompt = (
+            f"Anda adalah Paint Consultant. Klien meminta: '{brief}'. "
+            f"Anda memilih produk: {meta['name']} ({desc}). Coverage per pail: {meta['coverage']} m2. "
+            "Ekstrak luas area dinding pengecatan (m2) dari brief klien. Jika brief menyebutkan ukuran kamar (misal 3x4 meter dengan tinggi 3 meter), "
+            "hitung luas keliling dikali tinggi (2*(3+4)*3 = 42 m2). Jika tidak ada spesifikasi ukuran, asumsikan luas dinding 12 m2. "
+            "Format output HANYA JSON: {\"reasoning\": \"1 kalimat alasan pemilihan warna cat\", \"area_m2\": float}"
+        )
         response = _llm_invoke_with_retry(groq_specialist, prompt)
         
         import json
         import re
+        from backend.mcp_tools.calculators import calculate_paint_needs
         try:
             match = re.search(r'\{.*\}', response.content, re.DOTALL)
-            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "qty": 1, "unit": "Pail"}
-            qty = int(res_json.get("qty", 1))
-            unit = res_json.get("unit", "Pail")
-            content = res_json.get("reasoning", response.content.strip())
+            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "area_m2": 12.0}
+            area_m2 = float(res_json.get("area_m2", 12.0))
+            reasoning = res_json.get("reasoning", response.content.strip())
         except Exception:
-            qty = 1
-            unit = "Pail"
-            content = response.content.strip()
+            area_m2 = 12.0
+            reasoning = response.content.strip()
             
+        calc = calculate_paint_needs(area_m2, float(meta['coverage']))
+        qty = calc["pails_needed"]
+        unit = "Pail"
+        
+        content = (
+            f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
+            f"dibutuhkan {qty} pail cat utama dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar."
+        )
         product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception:
         content = "Maaf, saya tidak menemukan cat interior yang spesifik sesuai permintaan."
@@ -189,36 +257,44 @@ def stone_specialist(state: AgentState):
         res = col.query(query_texts=[brief], n_results=1, where={"category": "stone"})
         if not res["metadatas"] or len(res["metadatas"][0]) == 0:
             raise Exception("No stone product found")
-
+            
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
-
+        
         prompt = (
             f"Anda adalah Stone Veneer Specialist. Klien meminta: '{brief}'. "
-            f"Produk yang dipilih: {meta['name']} ({desc}). Coverage per m2: {meta['coverage']} m2/unit. "
-            "Hitung estimasi kebutuhan material. Jika tidak ada dimensi, asumsikan area dinding 15 m2. "
-            "Sertakan rekomendasi bonding agent (perekat khusus batu) dan instruksi persiapan permukaan dinding singkat. "
-            "Format output HANYA JSON: {\"reasoning\": \"1-2 kalimat analisis profesional termasuk saran bonding agent dan persiapan dinding\", \"qty\": integer, \"unit\": \"m2\"}"
+            f"Anda memilih produk: {meta['name']} ({desc}). Coverage per m2: {meta['coverage']} m2/unit. "
+            "Ekstrak luas area dinding batu (m2) dari brief klien. Jika tidak ada ukuran luas, asumsikan luas area 15 m2. "
+            "Format output HANYA JSON: {\"reasoning\": \"1-2 kalimat analisis profesional termasuk saran bonding agent dan persiapan dinding\", \"area_m2\": float}"
         )
         response = _llm_invoke_with_retry(gemini_specialist, prompt)
-
+        
+        import json
         import re
+        from backend.mcp_tools.calculators import calculate_stone_needs
         try:
             match = re.search(r'\{.*\}', response.content, re.DOTALL)
-            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "qty": 15, "unit": "m2"}
-            qty = int(res_json.get("qty", 15))
-            unit = res_json.get("unit", "m2")
-            content = res_json.get("reasoning", response.content.strip())
+            res_json = json.loads(match.group(0)) if match else {"reasoning": response.content.strip(), "area_m2": 15.0}
+            area_m2 = float(res_json.get("area_m2", 15.0))
+            reasoning = res_json.get("reasoning", response.content.strip())
         except Exception:
-            qty = 15
-            unit = "m2"
-            content = response.content.strip()
-
+            area_m2 = 15.0
+            reasoning = response.content.strip()
+            
+        calc = calculate_stone_needs(area_m2, float(meta['coverage']))
+        qty = calc["stone_units_needed"]
+        unit = "m2"
+        
+        content = (
+            f"{reasoning}. Untuk luas dinding batu {area_m2} m2, diperlukan {qty} m2 batu alam. "
+            f"Kalkulator merekomendasikan tambahan perekat khusus sebanyak {calc['bonding_agent_bags_needed']} sak heavy-duty bonding agent "
+            f"dan {calc['grout_bags_needed']} sak joint filler pengisi nat batu."
+        )
         product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception as e:
-        content = "Maaf, produk Stone Veneer tidak ditemukan di katalog. Disarankan menggunakan bonding agent berbasis semen polymer untuk dinding batu apapun. Pastikan permukaan dinding bersih, bebas debu, dan lembab sebelum pemasangan."
+        content = f"Maaf, produk Stone Veneer tidak ditemukan di katalog. Detail: {str(e)}"
         product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
-
+        
     report = {"agent": "Stone Veneer Specialist", "content": content, "product": product_data}
     return {"reports": state.get("reports", []) + [report]}
 
@@ -274,82 +350,128 @@ def market_researcher(state: AgentState):
 def inventory_administrator(state: AgentState):
     """
     Inventory Administrator — Verifikasi ketersediaan stok gudang untuk setiap produk
-    yang telah direkomendasikan oleh agen spesialis, lalu menyusun laporan profesional
-    ketersediaan material kepada Chief Supervisor.
+    yang telah direkomendasikan oleh agen spesialis.
+    Jika stok rendah (< 20) atau habis, merekomendasikan produk substitusi secara otomatis
+    dan memperbarui list produk agar proposal ter-update dinamis.
     """
     reports = state.get("reports", [])
     brief = state.get("brief", "")
 
-    # Kumpulkan nama produk yang direkomendasikan dari semua laporan spesialis
-    recommended_products = [
-        r["product"] for r in reports if "product" in r
-    ]
-
-    if not recommended_products:
-        report = {
-            "agent": "Inventory Administrator",
-            "content": "Tidak ada produk yang perlu diverifikasi stoknya karena tidak ada rekomendasi dari agen spesialis."
-        }
-        return {"reports": reports + [report]}
-
-    # Query DB untuk stok aktual setiap produk yang direkomendasikan
+    # Jalankan pengecekan stok
     from backend.core.database import SessionLocal
     from backend.models.schema import Product as ProductModel
+    import re
 
     db = SessionLocal()
     stock_report_lines = []
+    new_reports = []
+    
+    # Simpan produk alternatif yang ditambahkan untuk di-inject
+    added_alternatives = []
+
     try:
-        for prod in recommended_products:
-            prod_name = prod.get("name", "")
-            if not prod_name or prod_name == "Menunggu Konfirmasi":
-                stock_report_lines.append(
-                    f"- {prod_name or 'Produk Tidak Diketahui'}: Status tidak dapat diverifikasi (nama produk tidak valid)."
-                )
-                continue
+        for r in reports:
+            # Salin laporan agar tidak mengubah state asli secara kotor
+            r_copy = dict(r)
+            
+            if "product" in r_copy:
+                r_copy["product"] = dict(r_copy["product"])
+                prod = r_copy["product"]
+                prod_name = prod.get("name", "")
+                
+                if prod_name and prod_name != "Menunggu Konfirmasi":
+                    # Cari produk di database
+                    db_product = db.query(ProductModel).filter(
+                        ProductModel.name.ilike(f"%{prod_name[:20]}%")
+                    ).first()
 
-            # Cari produk di database berdasarkan nama (case-insensitive fuzzy match)
-            db_product = db.query(ProductModel).filter(
-                ProductModel.name.ilike(f"%{prod_name[:20]}%")
-            ).first()
+                    if db_product:
+                        qty_val = db_product.stock_qty
+                        
+                        if qty_val >= 20:
+                            # Stok Aman
+                            status = f"TERSEDIA — Stok {qty_val} unit di gudang."
+                            stock_report_lines.append(f"- {db_product.name} (SKU: {db_product.sku}): {status}")
+                        else:
+                            # Stok Terbatas / Habis
+                            if qty_val > 0:
+                                status = f"TERBATAS — Hanya tersisa {qty_val} unit."
+                            else:
+                                status = "HABIS — Stok kosong."
+                            
+                            # Cari alternatif dinamis (kategori sama, stok >= 20, SKU berbeda)
+                            alt = db.query(ProductModel).filter(
+                                ProductModel.category == db_product.category,
+                                ProductModel.stock_qty >= 20,
+                                ProductModel.sku != db_product.sku
+                            ).first()
 
-            if db_product:
-                qty = db_product.stock_qty
-                if qty >= 20:
-                    status = f"TERSEDIA — Stok {qty} unit di gudang."
-                elif qty > 0:
-                    status = f"TERBATAS — Hanya tersisa {qty} unit. Disarankan melakukan pemesanan segera."
-                else:
-                    status = "HABIS — Stok kosong. Akan tersedia dalam 3-5 hari kerja."
-                stock_report_lines.append(f"- {db_product.name} (SKU: {db_product.sku}): {status}")
-            else:
-                stock_report_lines.append(
-                    f"- {prod_name}: Produk ditemukan di katalog namun belum terdaftar di sistem gudang. Perlu konfirmasi manual."
-                )
+                            if alt:
+                                status += f" Disarankan alternatif: {alt.name} (SKU: {alt.sku}, Stok: {alt.stock_qty})."
+                                
+                                # Parse qty asli (misalnya "10 Dus (Est)" -> 10)
+                                qty_str = prod.get("qty", "10")
+                                try:
+                                    qty_nums = re.findall(r'\d+', qty_str)
+                                    qty_int = int(qty_nums[0]) if qty_nums else 10
+                                except Exception:
+                                    qty_int = 10
+                                
+                                # Tandai produk asli agar masuk ke "unavailable"
+                                prod["name"] = f"[STOK TERBATAS] {prod_name}"
+                                prod["price"] = 0
+                                prod["total"] = 0
+                                
+                                # Tambahkan produk alternatif ke daftar belanja utama
+                                qty_suffix = "Unit"
+                                for suff in ["Dus", "Lembar", "Pail", "m2"]:
+                                    if suff.lower() in qty_str.lower():
+                                        qty_suffix = suff
+                                        break
+                                
+                                alt_product = {
+                                    "name": alt.name,
+                                    "price": alt.base_price,
+                                    "qty": f"{qty_int} {qty_suffix} (Substitusi)",
+                                    "total": alt.base_price * qty_int
+                                }
+                                added_alternatives.append(alt_product)
+                            else:
+                                status += " Tidak ada produk alternatif sejenis yang mencukupi saat ini."
+                                prod["name"] = f"[STOK HABIS] {prod_name}"
+                                prod["price"] = 0
+                                prod["total"] = 0
+
+                            stock_report_lines.append(f"- {db_product.name} (SKU: {db_product.sku}): {status}")
+                    else:
+                        stock_report_lines.append(
+                            f"- {prod_name}: Produk ditemukan di katalog namun belum terdaftar di sistem gudang. Perlu konfirmasi manual."
+                        )
+            
+            new_reports.append(r_copy)
     finally:
         db.close()
 
-    # LLM menyusun laporan profesional ketersediaan gudang ke Chief Supervisor (Hybrid Pipeline: Groq Reasoning + Gemini Polish)
+    # Buat narasi log inventaris
     stock_summary = "\n".join(stock_report_lines)
     prompt = (
         f"Anda adalah Inventory Administrator di gudang QHomeMart. "
-        f"Anda telah melakukan pengecekan stok fisik untuk proyek dengan brief: '{brief}'.\n\n"
+        f"Anda telah melakukan pemeriksaan stok untuk proyek dengan brief: '{brief}'.\n\n"
         f"Hasil pemeriksaan stok gudang:\n{stock_summary}\n\n"
         "Tuliskan laporan ketersediaan material (1-2 kalimat) kepada Chief Supervisor secara profesional. "
-        "Sebutkan secara ringkas status ketersediaan keseluruhan dan apakah ada tindakan pengadaan yang diperlukan. "
-        "Gunakan bahasa yang tegas dan informatif seperti laporan internal gudang."
+        "Sebutkan jika ada produk yang dialihkan ke alternatif stok yang lebih melimpah demi kelancaran proyek."
     )
 
     try:
         response = _llm_invoke_with_retry(groq_specialist, prompt)
         raw_res = response.content.strip()
         
-        # Ekstraksi blok <think> dan teks bersih
-        import re
+        # Ekstraksi think & content
         think_match = re.search(r'<think>([\s\S]*?)</think>', raw_res, re.IGNORECASE)
         thinking = think_match.group(1).strip() if think_match else ""
         clean_content = re.sub(r'<think>[\s\S]*?</think>', '', raw_res, flags=re.IGNORECASE).strip()
         
-        # Gemini memoles teks akhir menjadi kalimat laporan gudang yang super rapi dan formal
+        # Gemini Polish
         polish_prompt = (
             f"Anda adalah Kepala Administrasi Gudang QHomeMart. Berikut adalah draf laporan persediaan barang pergudangan: '{clean_content}'. "
             "Tulis ulang draf tersebut menjadi HANYA 1-2 kalimat laporan inventaris yang sangat rapi, formal, "
@@ -358,7 +480,6 @@ def inventory_administrator(state: AgentState):
         gemini_response = _llm_invoke_with_retry(gemini_specialist, polish_prompt)
         polished_content = gemini_response.content.strip()
         
-        # Satukan kembali untuk dikonsumsi UI ThinkingBlock
         if thinking:
             content = f"<think>{thinking}</think> {polished_content}"
         else:
@@ -367,11 +488,25 @@ def inventory_administrator(state: AgentState):
     except Exception:
         content = (
             f"Laporan Stok Gudang: {stock_summary}. "
-            "Seluruh material yang direkomendasikan telah diverifikasi ketersediaannya di sistem inventaris QHomeMart."
+            "Seluruh rekomendasi material telah diverifikasi ketersediaannya."
         )
 
-    report = {"agent": "Inventory Administrator", "content": content}
-    return {"reports": reports + [report]}
+    # Buat laporan akhir Inventory Administrator
+    inv_report = {"agent": "Inventory Administrator", "content": content}
+    
+    # Jika ada alternatif, tambahkan ke laporan agar synthesizer otomatis memasukannya ke proposal
+    if added_alternatives:
+        # Kita masukkan produk alternatif pertama ke inv_report
+        inv_report["product"] = added_alternatives[0]
+        # Jika ada produk alternatif lain, buat laporan dummy untuk menyalurkannya
+        for extra_alt in added_alternatives[1:]:
+            new_reports.append({
+                "agent": "Inventory Administrator (Alt)",
+                "content": f"Substitusi material tambahan: {extra_alt['name']}",
+                "product": extra_alt
+            })
+
+    return {"reports": new_reports + [inv_report]}
 
 DISCLAIMER_TEXT = (
     " DISCLAIMER TEKNIS: Dokumen ini merupakan estimasi awal yang dihasilkan oleh sistem AI QHome-MAS "
