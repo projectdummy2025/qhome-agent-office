@@ -25,40 +25,46 @@ Proyek akan dibagi menjadi dua wilayah utama: `/backend` dan `/frontend`.
 qhomemart-mas-agent/
 │
 ├── backend/                  # Domain khusus Backend (FastAPI & AI Agents)
-│   ├── main.py               # Entry point FastAPI & route endpoints
+│   ├── main.py               # Entry point FastAPI
+│   ├── seed.py               # Script seeding database (SQLite & ChromaDB)
+│   ├── seed_products.csv     # Data produk awal untuk disemai (seed)
+│   ├── requirements.txt      # Dependensi library Python backend
+│   │
 │   ├── core/                 # Konfigurasi utama
 │   │   ├── config.py         # Pengaturan Environment ($GEMINI_API_KEY, dll)
-│   │   └── database.py       # Koneksi SQLite & ChromaDB
+│   │   └── database.py       # Inisialisasi SQLite & ChromaDB
 │   │
-│   ├── agents/               # Modul AI Agents (LangGraph Nodes)
-│   │   ├── supervisor.py     # Chief Project Supervisor (Router & QC)
-│   │   ├── estimator.py      # Tile, Wood, Stone Specialists
-│   │   ├── consultant.py     # Color & Paint Consultant
-│   │   └── researcher.py     # Market Research Analyst
+│   ├── agents/               # Modul Orkestrasi AI
+│   │   └── supervisor.py     # Chief Supervisor & Node Spesialis (Tile, Wood, Paint, Stone, Researcher)
 │   │
-│   ├── mcp_tools/            # Custom Model Context Protocol (Tools)
-│   │   ├── calculators.py    # Logika deterministik (migrasi dari rules.py)
-│   │   ├── vector_search.py  # Fungsi RAG query ke ChromaDB
-│   │   └── web_search.py     # Konektor API Tavily
+│   ├── api/                  # Jalur Routing API
+│   │   └── routes/
+│   │       └── chat.py       # Endpoint POST analyze, GET stream (SSE), GET history, GET PDF
 │   │
-│   └── models/               # Skema Database SQL (SQLAlchemy) & Pydantic
-│       └── schema.py         # Tabel Project, Product, AgentLog
+│   ├── services/             # Layanan Bisnis Tambahan
+│   │   ├── pdf_service.py    # Pembuatan laporan PDF proposal belanja juri
+│   │   └── simulation_service.py # Logika simulasi stream log agen
+│   │
+│   ├── mcp_tools/            # Model Context Protocol Tools
+│   │   ├── calculators.py    # Rumus estimasi material (Tile, Wood, Paint, Stone)
+│   │   └── web_search.py     # Konektor pencarian web Tavily
+│   │
+│   └── models/               # Model database relasional
+│       └── schema.py         # Definisi tabel SQLAlchemy (Project, Product, dll)
 │
 ├── frontend/                 # Domain khusus Frontend (Vite + React)
-│   ├── package.json          # Dependensi Node.js
-│   ├── index.html            # Entry point web
+│   ├── package.json          # Dependensi Node.js frontend
+│   ├── index.html            # Entry point web HTML
 │   ├── src/
 │   │   ├── main.tsx          # React root render
-│   │   ├── App.tsx           # Layout utama dashboard
-│   │   ├── components/       # Komponen UI Terisolasi
-│   │   │   ├── LiveCanvas.tsx# Animasi hirarki agen yang aktif
-│   │   │   ├── AgentChat.tsx # Komponen baca laporan agen
-│   │   │   └── Terminal.tsx  # Log interaksi (SSE Stream)
-│   │   └── styles/           # Vanilla CSS (index.css, glassmorphism.css)
+│   │   ├── App.tsx           # Layout dashboard tunggal (Live Canvas, Chat, & Terminal)
+│   │   ├── App.css           # Styling CSS dashboard
+│   │   ├── index.css         # Styling CSS global & Glassmorphism
+│   │   └── assets/           # Gambar & ikon statis (Vite, React, Hero)
 │   │
-│   └── public/               # Assets statis (gambar, font)
+│   └── public/               # File statis publik
 │
-├── docs/                     # Dokumentasi Arsitektur (Sudah kita buat)
+├── docs/                     # Dokumentasi Arsitektur (Bahasa Inggris & CamelCase)
 │   ├── ArchitectureConcept.md
 │   ├── AgentRoster.md
 │   ├── ProjectStructure.md
@@ -66,7 +72,7 @@ qhomemart-mas-agent/
 │
 ├── .env                      # File rahasia (TIDAK di-commit ke Git)
 ├── .env.example              # Template variabel environment (API Keys)
-└── requirements.txt          # Dependensi library Python
+└── docker-compose.yml        # Konfigurasi kontainer DB lokal (Postgres & Chroma)
 ```
 
 ---
