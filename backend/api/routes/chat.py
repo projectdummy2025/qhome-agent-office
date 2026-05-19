@@ -14,6 +14,22 @@ from backend.services.pdf_service import generate_estimation_pdf
 
 router = APIRouter(prefix="/api/projects", tags=["chat"])
 
+def _generate_session_title(brief: str) -> str:
+    """Generate a highly concise, professional title (3-5 words) in Indonesian for the session brief"""
+    try:
+        from backend.agents.supervisor import gemini_specialist, _llm_invoke_with_retry
+        prompt = (
+            f"Tulis HANYA judul singkat (maksimal 3-4 kata, bahasa Indonesia) yang paling menggambarkan proyek renovasi berikut: '{brief}'. "
+            "Contoh output: 'Estimasi Granit Kamar Mandi', 'Fasad Panel WPC Outdoor', 'Pengecatan Tembok Rumah'. "
+            "Jangan berikan tanda kutip, tanda baca, atau kalimat pengantar apapun, langsung judulnya."
+        )
+        response = _llm_invoke_with_retry(gemini_specialist, prompt)
+        title = response.content.strip()
+        title = title.replace('"', '').replace("'", "").strip()
+        return title[:50]
+    except Exception:
+        return brief[:30] + "..."
+
 @router.post("/analyze")
 async def analyze_project(request: Request, db: Session = Depends(get_db)):
     data = await request.json()
@@ -23,7 +39,8 @@ async def analyze_project(request: Request, db: Session = Depends(get_db)):
     # 1. Pastikan ChatSession ada, jika belum buat baru
     if not session_id:
         session_id = str(uuid.uuid4())
-        new_session = ChatSession(id=session_id, title=brief[:30] + "...")
+        title = _generate_session_title(brief)
+        new_session = ChatSession(id=session_id, title=title)
         db.add(new_session)
         db.commit()
     
