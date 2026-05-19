@@ -14,7 +14,7 @@ class AgentState(TypedDict):
 
 from backend.core.config import settings
 
-# Define models based on agent_roster.md
+# Define models based on AgentRoster.md
 # gemini-2.5-flash: lebih stabil untuk free tier, fallback jika 2.0-flash kena 429
 supervisor_llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",

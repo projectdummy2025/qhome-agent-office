@@ -59,9 +59,10 @@ qhomemart-mas-agent/
 │   └── public/               # Assets statis (gambar, font)
 │
 ├── docs/                     # Dokumentasi Arsitektur (Sudah kita buat)
-│   ├── architecture_concept.md
-│   ├── agent_roster.md
-│   └── project_structure.md
+│   ├── ArchitectureConcept.md
+│   ├── AgentRoster.md
+│   ├── ProjectStructure.md
+│   └── UserSystemFlow.md
 │
 ├── .env                      # File rahasia (TIDAK di-commit ke Git)
 ├── .env.example              # Template variabel environment (API Keys)
