@@ -75,7 +75,16 @@ async def stream_logs(request: Request, session_id: str):
 def get_sessions(db: Session = Depends(get_db)):
     """Mendapatkan daftar seluruh riwayat proyek di sidebar"""
     sessions = db.query(ChatSession).order_by(ChatSession.created_at.desc()).all()
-    return [{"id": s.id, "title": s.title} for s in sessions]
+    result = []
+    for s in sessions:
+        # Cari pesan user pertama dari sesi ini untuk dijadikan brief lengkap
+        first_user_msg = next((m.content for m in s.messages if m.role == ChatRole.user), None)
+        result.append({
+            "id": s.id,
+            "title": s.title,
+            "brief": first_user_msg or s.title
+        })
+    return result
 
 @router.get("/sessions/{session_id}/messages")
 def get_session_messages(session_id: str, db: Session = Depends(get_db)):

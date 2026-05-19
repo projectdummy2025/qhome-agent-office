@@ -237,16 +237,38 @@ def market_researcher(state: AgentState):
         from backend.mcp_tools.web_search import tavily_web_search
         search_result = tavily_web_search(search_query)
         
-        # Analyze search results
-        analysis_prompt = f"Berdasarkan hasil pencarian internet berikut: '{search_result[:500]}...', tuliskan 1 kalimat singkat temuan pasar (market insight) yang relevan untuk proyek dengan brief: '{brief}'."
-        analysis_response = _llm_invoke_with_retry(gemini_specialist, analysis_prompt)
-        content = analysis_response.content.strip()
+        # Analyze search results (Hybrid Pipeline: Groq Reasoning + Gemini Polish)
+        analysis_prompt = f"Berdasarkan hasil pencarian internet berikut: '{search_result[:500]}...', lakukan analisis mendalam dan tuliskan temuan pasar (market insight) yang relevan untuk proyek dengan brief: '{brief}'."
+        analysis_response = _llm_invoke_with_retry(groq_specialist, analysis_prompt)
+        raw_res = analysis_response.content.strip()
         
+        # Ekstraksi blok <think> dan teks bersih
+        import re
+        think_match = re.search(r'<think>([\s\S]*?)</think>', raw_res, re.IGNORECASE)
+        thinking = think_match.group(1).strip() if think_match else ""
+        clean_content = re.sub(r'<think>[\s\S]*?</think>', '', raw_res, flags=re.IGNORECASE).strip()
+        
+        # Gemini memoles teks akhir menjadi 1 kalimat super premium
+        polish_prompt = (
+            f"Anda adalah Market Analyst Senior di QHomeMart. Berikut adalah draf analisis pasar mentah hasil riset: '{clean_content}'. "
+            "Tulis ulang draf tersebut menjadi HANYA 1 kalimat temuan pasar (market insight) yang sangat elegan, profesional, "
+            "dan mudah dipahami oleh pelanggan."
+        )
+        gemini_response = _llm_invoke_with_retry(gemini_specialist, polish_prompt)
+        polished_content = gemini_response.content.strip()
+        
+        # Satukan kembali untuk dikonsumsi UI ThinkingBlock
+        if thinking:
+            content = f"<think>{thinking}</think> {polished_content}"
+        else:
+            content = polished_content
+            
     except Exception:
         content = "Riset pasar saat ini difokuskan pada ketersediaan stok material di gudang lokal QHomeMart."
         
     report = {"agent": "Market Analyst", "content": content}
     return {"reports": state.get("reports", []) + [report]}
+
 
 
 def inventory_administrator(state: AgentState):
@@ -306,7 +328,7 @@ def inventory_administrator(state: AgentState):
     finally:
         db.close()
 
-    # LLM menyusun laporan profesional ketersediaan gudang ke Chief Supervisor
+    # LLM menyusun laporan profesional ketersediaan gudang ke Chief Supervisor (Hybrid Pipeline: Groq Reasoning + Gemini Polish)
     stock_summary = "\n".join(stock_report_lines)
     prompt = (
         f"Anda adalah Inventory Administrator di gudang QHomeMart. "
@@ -319,7 +341,29 @@ def inventory_administrator(state: AgentState):
 
     try:
         response = _llm_invoke_with_retry(groq_specialist, prompt)
-        content = response.content.strip()
+        raw_res = response.content.strip()
+        
+        # Ekstraksi blok <think> dan teks bersih
+        import re
+        think_match = re.search(r'<think>([\s\S]*?)</think>', raw_res, re.IGNORECASE)
+        thinking = think_match.group(1).strip() if think_match else ""
+        clean_content = re.sub(r'<think>[\s\S]*?</think>', '', raw_res, flags=re.IGNORECASE).strip()
+        
+        # Gemini memoles teks akhir menjadi kalimat laporan gudang yang super rapi dan formal
+        polish_prompt = (
+            f"Anda adalah Kepala Administrasi Gudang QHomeMart. Berikut adalah draf laporan persediaan barang pergudangan: '{clean_content}'. "
+            "Tulis ulang draf tersebut menjadi HANYA 1-2 kalimat laporan inventaris yang sangat rapi, formal, "
+            "dan berwibawa untuk diserahkan kepada Chief Supervisor."
+        )
+        gemini_response = _llm_invoke_with_retry(gemini_specialist, polish_prompt)
+        polished_content = gemini_response.content.strip()
+        
+        # Satukan kembali untuk dikonsumsi UI ThinkingBlock
+        if thinking:
+            content = f"<think>{thinking}</think> {polished_content}"
+        else:
+            content = polished_content
+            
     except Exception:
         content = (
             f"Laporan Stok Gudang: {stock_summary}. "
