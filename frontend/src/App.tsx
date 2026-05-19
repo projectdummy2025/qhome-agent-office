@@ -263,7 +263,7 @@ export default function App() {
     <div className="flex h-screen bg-canvas font-sans overflow-hidden">
       
       {/* Left Sidebar — Premium B2B Studio List */}
-      <div className={`bg-canvas text-ink-2 flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out border-r border-hairline ${isSidebarOpen ? 'w-[260px]' : 'w-0 overflow-hidden border-none'}`}>
+      <div className={`bg-surface-soft text-ink-2 flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out border-r border-hairline/80 ${isSidebarOpen ? 'w-[260px]' : 'w-0 overflow-hidden border-none'}`}>
         
         {/* Header Sidebar — Elegant & Minimalist */}
         <div className="p-4 flex items-center justify-between min-w-[260px] border-b border-hairline/60">
@@ -326,43 +326,50 @@ export default function App() {
                   const isSelected = currentSessionId === session.id;
 
                   return (
-                    <button 
-                      key={session.id || idx} 
-                      onClick={() => handleSelectSession(session)}
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setHoveredSession(session);
-                        setTooltipPos({
-                          x: rect.right + 12,
-                          y: rect.top
-                        });
-                      }}
-                      onMouseLeave={() => setHoveredSession(null)}
-                      className={`w-full flex flex-col justify-center px-4.5 py-3 rounded-xl transition-all text-left border relative group ${
-                        isSelected 
-                          ? 'bg-white shadow-sm border-hairline/80 text-accent font-medium' 
-                          : 'border-transparent text-ink-2 hover:bg-white hover:border-hairline/40'
-                      }`}
-                    >
-                      {/* Kategori Proyek Kecil */}
-                      <span className={`block text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
-                        isSelected ? 'text-accent' : 'text-muted-light'
-                      }`}>
-                        {project.category}
-                      </span>
+                    <div key={session.id || idx} className="py-0.5 group/sidebar-item">
+                      {/* Garis Pembatas Atas Memudar (Hanya Muncul Saat Hover - Transisi Halus) */}
+                      <div className="h-px w-full bg-gradient-to-r from-transparent via-muted-light/60 to-transparent opacity-0 group-hover/sidebar-item:opacity-100 transition-opacity duration-300" />
                       
-                      {/* Judul Proyek Resmi */}
-                      <span className={`block text-[13px] font-medium leading-tight truncate w-full ${
-                        isSelected ? 'text-accent font-semibold' : 'text-ink group-hover:text-accent transition-colors'
-                      }`}>
-                        {project.title}
-                      </span>
+                      <button 
+                        onClick={() => handleSelectSession(session)}
+                        onMouseEnter={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setHoveredSession(session);
+                          setTooltipPos({
+                            x: rect.right + 12,
+                            y: rect.top
+                          });
+                        }}
+                        onMouseLeave={() => setHoveredSession(null)}
+                        className={`w-full flex flex-col justify-center px-4 py-2 rounded-lg transition-all text-left border relative group my-0.5 ${
+                          isSelected 
+                            ? 'bg-white shadow-sm border-hairline/80 text-accent font-medium' 
+                            : 'border-transparent text-ink-2 hover:bg-white/80 hover:border-hairline/30'
+                        }`}
+                      >
+                        {/* Kategori Proyek Kecil */}
+                        <span className={`block text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
+                          isSelected ? 'text-accent' : 'text-muted-light'
+                        }`}>
+                          {project.category}
+                        </span>
+                        
+                        {/* Judul Proyek Resmi */}
+                        <span className={`block text-[13px] font-medium leading-tight truncate w-full ${
+                          isSelected ? 'text-accent font-semibold' : 'text-ink group-hover:text-accent transition-colors'
+                        }`}>
+                          {project.title}
+                        </span>
 
-                      {/* Penanda Kiri Saat Terpilih */}
-                      {isSelected && (
-                        <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-accent" />
-                      )}
-                    </button>
+                        {/* Penanda Kiri Saat Terpilih */}
+                        {isSelected && (
+                          <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-accent" />
+                        )}
+                      </button>
+
+                      {/* Garis Pembatas Bawah Memudar (Hanya Muncul Saat Hover - Transisi Halus) */}
+                      <div className="h-px w-full bg-gradient-to-r from-transparent via-muted-light/60 to-transparent opacity-0 group-hover/sidebar-item:opacity-100 transition-opacity duration-300" />
+                    </div>
                   );
                 });
               })()}
