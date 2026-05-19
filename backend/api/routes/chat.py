@@ -2,12 +2,15 @@ import json
 import uuid
 import asyncio
 from fastapi import APIRouter, Request, Depends
+from fastapi.responses import StreamingResponse
 from sse_starlette.sse import EventSourceResponse
 from sqlalchemy.orm import Session
+import io
 
 from backend.core.database import get_db
-from backend.models.schema import ChatSession, ChatMessage, ChatRole
+from backend.models.schema import ChatSession, ChatMessage, ChatRole, EstimationKPI
 from backend.services.simulation_service import run_agent_simulation, cleanup_stream, active_streams
+from backend.services.pdf_service import generate_estimation_pdf
 
 router = APIRouter(prefix="/api/projects", tags=["chat"])
 
@@ -110,3 +113,99 @@ def get_session_messages(session_id: str, db: Session = Depends(get_db)):
             "products": products
         })
     return result
+
+
+@router.get("/{session_id}/generate-pdf")
+def generate_pdf(session_id: str, db: Session = Depends(get_db)):
+    """
+    P3 — PDF Estimasi Resmi: Generate dokumen PDF dari hasil estimasi sesi tertentu.
+    Mengambil data dari log agen yang tersimpan di DB.
+    """
+    messages = db.query(ChatMessage).filter(
+        ChatMessage.session_id == session_id
+    ).order_by(ChatMessage.created_at.asc()).all()
+
+    # Ambil brief dari pesan user pertama
+    brief = ""
+    narrative = "Tidak ada narasi tersedia."
+    products = []
+    disclaimer = ""
+    generated_at = None
+
+    for msg in messages:
+        if msg.role == ChatRole.user and not brief:
+            brief = msg.content or ""
+
+        if msg.role == ChatRole.system and msg.agent_logs:
+            logs = msg.agent_logs
+            if isinstance(logs, str):
+                try:
+                    logs = json.loads(logs)
+                except Exception:
+                    logs = []
+            completed_log = next(
+                (l for l in logs if isinstance(l, dict) and l.get("event") == "completed"), None
+            )
+            if completed_log:
+                narrative = completed_log.get("narrative", narrative)
+                products = completed_log.get("products", products)
+                disclaimer = completed_log.get("disclaimer", "")
+                generated_at = completed_log.get("generated_at")
+
+    if not brief:
+        return {"error": "Sesi tidak ditemukan atau belum selesai diproses."}
+
+    # Jika disclaimer kosong (sesi lama sebelum P6), pakai default
+    if not disclaimer:
+        from backend.agents.supervisor import DISCLAIMER_TEXT
+        disclaimer = DISCLAIMER_TEXT
+
+    pdf_bytes = generate_estimation_pdf(
+        session_id=session_id,
+        brief=brief,
+        narrative=narrative,
+        products=products,
+        disclaimer=disclaimer,
+        generated_at=generated_at,
+    )
+
+    # P6 — Update KPI: tandai pdf_generated = 1
+    kpi = db.query(EstimationKPI).filter(
+        EstimationKPI.session_id == session_id
+    ).order_by(EstimationKPI.started_at.desc()).first()
+    if kpi:
+        kpi.pdf_generated = 1
+        db.commit()
+
+    filename = f"Estimasi_QHome_{session_id[:8].upper()}.pdf"
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/kpi/summary")
+def get_kpi_summary(db: Session = Depends(get_db)):
+    """
+    P6 — KPI Dashboard: Ringkasan metrik performa estimasi.
+    Menampilkan lead_time rata-rata, hit rate < 30 detik, dan statistik lain.
+    """
+    records = db.query(EstimationKPI).all()
+    if not records:
+        return {"total_estimations": 0, "message": "Belum ada data KPI."}
+
+    lead_times = [r.lead_time_seconds for r in records if r.lead_time_seconds is not None]
+    under_30 = [lt for lt in lead_times if lt < 30]
+
+    return {
+        "total_estimations": len(records),
+        "avg_lead_time_seconds": round(sum(lead_times) / len(lead_times), 2) if lead_times else None,
+        "min_lead_time_seconds": round(min(lead_times), 2) if lead_times else None,
+        "max_lead_time_seconds": round(max(lead_times), 2) if lead_times else None,
+        "under_30s_count": len(under_30),
+        "under_30s_percent": round(len(under_30) / len(lead_times) * 100, 1) if lead_times else 0,
+        "kpi_target_met": len(under_30s if (under_30s := under_30) else []) == len(lead_times),
+        "total_pdf_generated": sum(r.pdf_generated for r in records),
+        "avg_agents_per_session": round(sum(r.agent_count for r in records) / len(records), 1),
+    }
