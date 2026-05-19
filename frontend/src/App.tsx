@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, ChevronDown, Plus, Search, PanelLeftClose, PanelLeftOpen, ShoppingCart, AlertCircle, Send, Download, FileText, UserCog, Brain, Maximize2 } from 'lucide-react';
+import { Loader2, ChevronDown, Plus, Search, PanelLeftClose, PanelLeftOpen, Send, UserCog, Brain, Maximize2 } from 'lucide-react';
 
 
 // Komponen Helper untuk membungkus teks panjang dengan tombol Selengkapnya / Lebih Sedikit
@@ -62,42 +62,7 @@ export default function App() {
   const [hoveredSession, setHoveredSession] = useState<any | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
-  // Fungsi Parser untuk menghasilkan detail proyek B2B mewah secara otomatis
-  const getB2BProjectDetails = (text: string) => {
-    if (!text) return { title: "Konsultasi Baru", category: "RAB Kustom", desc: "Sesi estimasi material kustom." };
-    const lower = text.toLowerCase();
-    
-    if (lower.includes("wpc") || lower.includes("fluted") || lower.includes("kisi")) {
-      return {
-        title: "Simulasi Dinding WPC Kisi",
-        category: "Dinding & Panel",
-        desc: "Rencana estimasi fluted panel WPC dari Panelku untuk panel dinding dekoratif seluas 15 m²."
-      };
-    }
-    if (lower.includes("granit") || lower.includes("indogress") || lower.includes("lantai")) {
-      return {
-        title: "Lantai Granit Indogress",
-        category: "Lantai & Keramik",
-        desc: "Analisis kebutuhan volume ubin granit Indogress 60x60 untuk area ruang tamu berdimensi 6x6 m."
-      };
-    }
-    if (lower.includes("cat") || lower.includes("vinilex") || lower.includes("dulux") || lower.includes("pengecatan")) {
-      return {
-        title: "Pengecatan Interior Kamar",
-        category: "Finishing & Cat",
-        desc: "RAB volume cat primer & topcoat Vinilex/Dulux untuk kamar ukuran 3x4 m dengan tinggi dinding 3 m."
-      };
-    }
-    
-    // Fallback rapi jika input kustom dinamis
-    const words = text.replace(/[?.!,]/g, "").split(" ");
-    const cleanTitle = words.slice(0, 3).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-    return {
-      title: cleanTitle ? `Estimasi ${cleanTitle}` : "Estimasi Material Kustom",
-      category: "Material Kustom",
-      desc: text.length > 90 ? text.substring(0, 90) + "..." : text
-    };
-  };
+
 
   // Auto-expand textarea height secara dinamis saat konten (brief) berubah, dibatasi max-height
   useEffect(() => {
@@ -221,25 +186,6 @@ export default function App() {
     setCurrentAgentOnDuty(null);
   };
 
-  // P3 — Download PDF Estimasi Resmi
-  const handleDownloadPdf = async (sessionId: string) => {
-    try {
-      const res = await fetch(`http://localhost:8000/api/projects/${sessionId}/generate-pdf`);
-      if (!res.ok) throw new Error('Gagal generate PDF');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Estimasi_QHome_${sessionId.substring(0, 8).toUpperCase()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('PDF download error:', e);
-      alert('Gagal mengunduh PDF. Pastikan estimasi telah selesai diproses.');
-    }
-  };
 
   const handleHire = async () => {
     if (!brief.trim()) return;
@@ -647,68 +593,84 @@ export default function App() {
                               const availableProds = msg.products.filter((p: any) => p.price > 0 && p.total > 0 && p.name !== "Menunggu Konfirmasi" && !p.name.toLowerCase().includes("konfirmasi"));
                               const unavailableProds = msg.products.filter((p: any) => p.price === 0 || p.total === 0 || p.name === "Menunggu Konfirmasi" || p.name.toLowerCase().includes("konfirmasi"));
                               return (
-                                <div className="bg-white rounded-[14px] border border-hairline shadow-sm overflow-hidden mt-8 relative">
-                                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-soft"></div>
-                                  <div className="px-7 py-5 border-b border-hairline flex justify-between items-center bg-surface-soft">
-                                    <h4 className="font-semibold text-[18px] text-ink">Rencana Anggaran Biaya (RAB)</h4>
-                                    <span className="text-[12px] font-semibold tracking-widest uppercase text-muted-light">Estimasi Supermarket</span>
-                                  </div>
+                                <div className="space-y-6 mt-8 w-full">
                                   
-                                  {availableProds.length > 0 ? (
-                                    <div className="p-7 space-y-5 bg-white">
-                                      {availableProds.map((prod: any, pIdx: number) => {
-                                        const isSub = prod.qty.toLowerCase().includes("substitusi");
-                                        return (
-                                          <div key={pIdx} className="flex justify-between items-center group">
-                                            <div className="flex items-center gap-4">
-                                              <div className="w-12 h-12 bg-surface-soft rounded-lg flex items-center justify-center text-[13px] text-muted font-semibold uppercase group-hover:bg-accent-soft group-hover:text-accent transition-colors shrink-0">
-                                                {prod.name.substring(0,2)}
-                                              </div>
-                                              <div>
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                  <p className="font-semibold text-[15px] text-ink leading-tight">{prod.name}</p>
-                                                  {isSub && (
-                                                    <span className="text-[9px] font-bold bg-accent-soft/80 text-accent border border-accent-border/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                                      Substitusi Otomatis
-                                                    </span>
-                                                  )}
+                                  {/* Bagian 1: Keranjang Spesifikasi Terkurasi */}
+                                  <div className="relative w-full rounded-[22px] bg-white border border-hairline/80 shadow-[0_4px_24px_rgba(0,0,0,0.02)] overflow-hidden">
+                                    <div className="px-8 py-6 border-b border-hairline bg-gradient-to-b from-surface-soft/60 to-transparent flex justify-between items-center">
+                                      <div>
+                                        <h4 className="font-bold text-[18px] text-ink tracking-tight">
+                                          Keranjang Kolaborasi Desain
+                                        </h4>
+                                        <p className="text-[12px] text-muted-light mt-0.5">Direncanakan oleh AI Supervisor & Tim Desainer QHome</p>
+                                      </div>
+                                      <span className="text-[10px] font-bold tracking-widest uppercase text-accent bg-accent-soft px-3.5 py-1.5 rounded-full border border-accent-border/10 shadow-sm">
+                                        Koleksi Terpilih
+                                      </span>
+                                    </div>
+                                    
+                                    {(() => {
+                                      return availableProds.length > 0 ? (
+                                        <div className="px-8 divide-y divide-hairline bg-white">
+                                          {availableProds.map((prod: any, pIdx: number) => {
+                                            const isSub = prod.qty.toLowerCase().includes("substitusi");
+                                            return (
+                                              <div key={pIdx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-5 group transition-colors duration-150">
+                                                <div>
+                                                  <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="font-semibold text-[15px] text-ink leading-tight group-hover:text-accent transition-colors">{prod.name}</p>
+                                                    {isSub && (
+                                                      <span className="text-[9px] font-bold bg-amber-50 text-amber-600 border border-amber-200/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                        Substitusi Otomatis
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                  <p className="text-[12.5px] text-muted mt-1.5 flex items-center gap-1.5">
+                                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                    Spesifikasi: <strong className="text-ink-2 font-medium">{formatQty(prod.qty)}</strong>
+                                                  </p>
                                                 </div>
-                                                <p className="text-[13px] text-muted mt-1">Vol: {formatQty(prod.qty)}</p>
+                                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                                                  <span className="text-[10px] font-medium text-muted bg-neutral-100 border border-neutral-200/20 px-2.5 py-0.5 rounded-md">Harga Sesuai</span>
+                                                  <p className="font-bold text-[15.5px] text-ink">
+                                                    Rp {prod.total.toLocaleString('id-ID')}
+                                                  </p>
+                                                </div>
                                               </div>
-                                            </div>
-                                            <p className="font-semibold text-[15px] text-ink shrink-0">Rp {prod.total.toLocaleString('id-ID')}</p>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  ) : (
-                                    <div className="p-7 text-center bg-white">
-                                      <p className="text-muted text-[14px] italic">Tidak ada material siap beli dalam daftar. Semua item saat ini memerlukan verifikasi stok.</p>
-                                    </div>
-                                  )}
-
-                                  {/* Regulasi Terkait Barang Kosong / Menunggu Konfirmasi */}
-                                  {unavailableProds.length > 0 && (
-                                    <div className="px-7 py-5 bg-canvas border-t border-hairline/60 space-y-4">
-                                      <div className="flex items-start gap-3">
-                                        <AlertCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                        <div className="text-[13.5px] text-ink-2 leading-relaxed">
-                                          <span className="font-semibold text-ink block mb-0.5">Catatan Ketersediaan Stok Gudang</span>
-                                          Terdapat <strong className="text-accent font-bold">{unavailableProds.length} material</strong> yang dialihkan atau ditangguhkan sementara dari daftar utama karena status stok saat ini memerlukan konfirmasi manual oleh tim logistik QHomeMart:
+                                            );
+                                          })}
                                         </div>
+                                      ) : (
+                                        <div className="p-8 text-center bg-white text-muted text-[14px] italic">
+                                          Semua material terpilih memerlukan verifikasi ketersediaan khusus dari asisten desain kami.
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* Bagian 2: Catatan Kurasi Personal Assistant */}
+                                  {unavailableProds.length > 0 && (
+                                    <div className="w-full p-6 bg-amber-50/20 border border-amber-200/40 rounded-[22px] space-y-3.5">
+                                      <div className="text-[13.5px] text-ink-2 leading-relaxed">
+                                        <span className="font-bold text-ink block mb-1">Catatan Kurasi Personal Assistant</span>
+                                        Demi menjaga kesempurnaan estetika desain ruang Anda, terdapat <strong className="text-accent font-bold">{unavailableProds.length} item spesifik</strong> yang saat ini memerlukan perhatian khusus atau penyesuaian oleh tim ahli kami:
                                       </div>
                                       
-                                      <div className="pl-8 space-y-2">
+                                      <div className="divide-y divide-amber-200/20">
                                         {unavailableProds.map((prod: any, upIdx: number) => {
                                           const isHabis = prod.name.toLowerCase().includes("habis");
                                           const cleanName = prod.name.replace(/\[.*?\]\s*/g, '');
                                           return (
-                                            <div key={upIdx} className="flex justify-between items-center bg-white border border-hairline rounded-lg px-4 py-2.5 text-[13px] shadow-sm">
-                                              <span className="text-ink-2 font-medium">{cleanName}</span>
-                                              <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
-                                                isHabis ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                            <div key={upIdx} className="flex justify-between items-center py-3 text-[13px] first:pt-0 last:pb-0">
+                                              <span className="text-ink font-medium">
+                                                {cleanName}
+                                              </span>
+                                              <span className={`text-[9.5px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shrink-0 border ${
+                                                isHabis 
+                                                  ? 'bg-amber-50 text-amber-600 border-amber-200/40' 
+                                                  : 'bg-accent-soft/50 text-accent border-accent-border/20'
                                               }`}>
-                                                {isHabis ? 'Stok Kosong' : 'Menunggu Konfirmasi'}
+                                                {isHabis ? 'Pencarian Alternatif Setara' : 'Reservasi Khusus Staf Ahli'}
                                               </span>
                                             </div>
                                           );
@@ -717,41 +679,43 @@ export default function App() {
                                     </div>
                                   )}
 
-                                  <div className="bg-ink p-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
-                                    <div>
-                                      <p className="text-[12px] font-medium text-muted-light uppercase tracking-wider mb-1">Total Estimasi Belanja QHomeMart</p>
-                                      <p className="text-2xl font-bold text-white">
-                                        Rp {availableProds.reduce((acc: number, curr: any) => acc + (curr.total || 0), 0).toLocaleString('id-ID')}
-                                      </p>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                      {/* P3 — Tombol Unduh PDF */}
-                                      {currentSessionId && (
-                                        <button
-                                          onClick={() => handleDownloadPdf(currentSessionId)}
-                                          className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 px-5 py-3 rounded-lg text-[14px] font-semibold transition-all flex items-center justify-center gap-2"
-                                        >
-                                          <Download className="w-4 h-4" /> Unduh PDF
+                                  {/* Bagian 3: Ringkasan Investasi & Tindakan */}
+                                  <div className="relative w-full rounded-[22px] bg-neutral-50 p-7 border border-hairline/85">
+                                    <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 z-10">
+                                      <div>
+                                        <p className="text-[12px] text-muted-light font-medium tracking-wide">Total Investasi</p>
+                                        <p className="text-2xl font-black text-ink mt-0.5">
+                                          Rp {availableProds.reduce((acc: number, curr: any) => acc + (curr.total || 0), 0).toLocaleString('id-ID')}
+                                        </p>
+                                      </div>
+                                      
+                                      <div className="flex gap-2.5 w-full sm:w-auto">
+                                        {currentSessionId && (
+                                          <a
+                                            href={`http://localhost:8000/api/projects/${currentSessionId}/generate-pdf`}
+                                            download={`Estimasi_QHome_${currentSessionId.substring(0, 8).toUpperCase()}.pdf`}
+                                            className="flex-1 sm:flex-none bg-white hover:bg-neutral-50 active:scale-[0.98] text-ink border border-hairline px-4.5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all text-center flex items-center justify-center"
+                                          >
+                                            Unduh Gaya
+                                          </a>
+                                        )}
+                                        <button className="flex-1 sm:flex-none bg-ink hover:opacity-90 text-white px-5.5 py-2.5 rounded-xl text-[13.5px] font-bold active:scale-[0.97] transition-all text-center">
+                                          Ambil Koleksi
                                         </button>
-                                      )}
-                                      <button className="w-full sm:w-auto bg-accent text-white px-6 py-3.5 rounded-lg text-[15px] font-semibold hover:bg-accent-hover transition-all flex items-center justify-center gap-2 shadow-sm">
-                                        <ShoppingCart className="w-4.5 h-4.5" /> Tambahkan ke Keranjang
-                                      </button>
+                                      </div>
                                     </div>
                                   </div>
 
-                                  {/* P6 — Disclaimer Teknis */}
+                                  {/* Bagian 4: Disclaimer Teknis (Footnote Minimalis) */}
                                   {msg.logs?.find((l: any) => l.event === 'completed')?.disclaimer && (
-                                    <div className="px-7 py-5 bg-amber-50/60 border-t border-amber-200/60 flex items-start gap-3">
-                                      <FileText className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                                      <p className="text-[12px] text-amber-800 leading-relaxed">
-                                        {msg.logs.find((l: any) => l.event === 'completed').disclaimer}
-                                      </p>
+                                    <div className="px-4 py-2 text-[12px] text-muted-light leading-relaxed text-center">
+                                      {msg.logs.find((l: any) => l.event === 'completed').disclaimer}
                                     </div>
                                   )}
+
                                 </div>
                               );
-                            })()}
+                           })()}
                           </div>
                         )}
                       </div>

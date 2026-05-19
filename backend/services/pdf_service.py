@@ -141,7 +141,7 @@ def generate_estimation_pdf(
     header_data = [[
         Paragraph("<b>QHome</b>mart", style_brand),
         Paragraph(
-            f"<b>ESTIMASI MATERIAL RESMI</b><br/><font size='9'>#{ref_id}</font>",
+            f"<b>KOLABORASI DESAIN</b><br/><font size='9'>#{ref_id}</font>",
             ParagraphStyle("hdr_right", fontSize=12, textColor=QHOME_ACCENT,
                            fontName="Helvetica-Bold", alignment=TA_CENTER + 1)  # TA_RIGHT=2
         )
@@ -200,10 +200,10 @@ def generate_estimation_pdf(
     story.append(Spacer(1, 10))
 
     # ── Tabel Produk ──────────────────────────────────────────────────────
-    story.append(Paragraph("DAFTAR ESTIMASI MATERIAL", style_section))
+    story.append(Paragraph("DAFTAR KURASI SPESIFIKASI & GAYA", style_section))
 
     if products:
-        tbl_header = ["No.", "Nama Produk", "Estimasi Qty", "Harga Satuan", "Total Estimasi"]
+        tbl_header = ["No.", "Nama Produk", "Estimasi Qty", "Harga Satuan", "Total Investasi"]
         tbl_data = [tbl_header]
         grand_total = 0
 
@@ -222,9 +222,9 @@ def generate_estimation_pdf(
             if is_sub:
                 clean_name = f"{clean_name} (Substitusi)"
             elif is_limited:
-                clean_name = f"{clean_name} (Menunggu Konfirmasi)"
+                clean_name = f"{clean_name} (Reservasi Khusus Staf Ahli)"
             elif is_empty:
-                clean_name = f"{clean_name} (Stok Kosong)"
+                clean_name = f"{clean_name} (Alternatif Setara)"
 
             tbl_data.append([
                 str(i),
@@ -235,7 +235,7 @@ def generate_estimation_pdf(
             ])
 
         # Grand Total row
-        tbl_data.append(["", "", "", "TOTAL ESTIMASI", _format_rupiah(grand_total)])
+        tbl_data.append(["", "", "", "TOTAL INVESTASI RUANG", _format_rupiah(grand_total)])
 
         col_widths = ["5%", "40%", "20%", "17%", "18%"]
         # Convert % to absolute
@@ -294,6 +294,97 @@ def generate_estimation_pdf(
     story.append(KeepTogether([
         Paragraph("DISCLAIMER TEKNIS", style_section),
         disclaimer_box,
+    ]))
+
+    story.append(Spacer(1, 14))
+
+    # ── Informasi Rekening & Validasi Pembayaran ─────────────────────────────
+    bank_style_label = ParagraphStyle(
+        "bank_label", fontSize=8.5, textColor=QHOME_DARK,
+        fontName="Helvetica-Bold", leading=11,
+    )
+    bank_style_val = ParagraphStyle(
+        "bank_val", fontSize=8.5, textColor=QHOME_DARK,
+        fontName="Helvetica", leading=11,
+    )
+    
+    bank_data = [
+        [
+            Paragraph("<b>INSTRUKSI PEMBAYARAN TRANSFER</b>", bank_style_label),
+            Paragraph("<b>MASA BERLAKU PENAWARAN</b>", bank_style_label)
+        ],
+        [
+            Paragraph(
+                "Pembayaran resmi melalui rekening resmi <b>PT QHome Mart</b>:<br/>"
+                "<b>Bank Central Asia (BCA)</b> Cabang Yogyakarta<br/>"
+                "No. Rekening: <b>456-789-1011</b> a.n. <b>PT QHome Mart</b>", 
+                bank_style_val
+            ),
+            Paragraph(
+                "Estimasi harga dan ketersediaan stok ini berlaku selama <b>14 (empat belas) hari kalender</b> "
+                "sejak tanggal dokumen ini diterbitkan. Setelah masa berlaku habis, koordinasi ulang ketersediaan material diperlukan.", 
+                bank_style_val
+            )
+        ]
+    ]
+    
+    bank_table = Table(bank_data, colWidths=["50%", "50%"])
+    bank_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
+        ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.HexColor("#E2E8F0")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+
+    # ── Kolom Tanda Tangan Resmi ──────────────────────────────────────────────
+    sig_title_style = ParagraphStyle(
+        "sig_title", fontSize=8.5, textColor=QHOME_MUTED,
+        fontName="Helvetica-Bold", alignment=TA_CENTER,
+    )
+    sig_name_style = ParagraphStyle(
+        "sig_name", fontSize=9, textColor=QHOME_DARK,
+        fontName="Helvetica-Bold", alignment=TA_CENTER,
+    )
+    sig_sub_style = ParagraphStyle(
+        "sig_sub", fontSize=8, textColor=QHOME_MUTED,
+        fontName="Helvetica", alignment=TA_CENTER,
+    )
+    
+    sig_data = [
+        [
+            Paragraph("Disiapkan Oleh,<br/><b>QHome-MAS Supervisor</b>", sig_title_style),
+            Paragraph("Disetujui & Diterima Oleh,<br/><b>Klien / Pembeli</b>", sig_title_style)
+        ],
+        [
+            Spacer(1, 35),
+            Spacer(1, 35)
+        ],
+        [
+            Paragraph("<b>TIM ESTIMATOR QHOME MART</b>", sig_name_style),
+            Paragraph("<b>( ___________________________ )</b>", sig_name_style)
+        ],
+        [
+            Paragraph("Divisi Perencanaan B2B & Proyek", sig_sub_style),
+            Paragraph("Tanda Tangan & Nama Terang", sig_sub_style)
+        ]
+    ]
+    
+    sig_table = Table(sig_data, colWidths=["50%", "50%"])
+    sig_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+
+    story.append(KeepTogether([
+        Paragraph("KETENTUAN PEMBAYARAN & ADMINISTRASI", style_section),
+        bank_table,
+        Spacer(1, 14),
+        sig_table
     ]))
 
     story.append(Spacer(1, 20))
