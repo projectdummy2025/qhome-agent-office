@@ -269,29 +269,30 @@ export default function App() {
     <div className="flex h-screen bg-canvas font-sans overflow-hidden">
       
       {/* Left Sidebar — Premium B2B Studio List */}
-      <div className={`bg-surface-soft text-ink-2 flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out border-r border-hairline/80 ${isSidebarOpen ? 'w-[260px]' : 'w-0 overflow-hidden border-none'}`}>
+      <div className={`bg-canvas border-r border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[260px]' : 'w-0 overflow-hidden border-none'}`}>
         
-        {/* Header Sidebar — Elegant & Minimalist */}
-        <div className="p-4 flex items-center justify-between min-w-[260px] border-b border-hairline/60">
-          <div className="flex items-center gap-2 pl-1">
+        {/* Header Sidebar — Ultra Minimalis (Harmonis dengan Sidebar Kanan) */}
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[260px]">
+          <div className="flex items-center gap-3">
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-light">
+            <span className="text-[11px] font-semibold text-muted-light tracking-[0.18em] uppercase">
               MAS Studio
             </span>
           </div>
-          <div className="flex gap-1.5">
-            <button onClick={handleNewChat} className="p-1.5 text-muted hover:text-ink hover:bg-white rounded-lg transition-all border border-hairline/30 shadow-sm" title="Konsultasi Baru">
+          <div className="flex gap-2">
+            <button onClick={handleNewChat} className="p-1 text-muted-light hover:text-ink transition-colors" title="Konsultasi Baru">
               <Plus className="w-3.5 h-3.5" />
             </button>
-            <button onClick={() => setIsSidebarOpen(false)} className="p-1.5 text-muted hover:text-ink hover:bg-white rounded-lg transition-all border border-hairline/30 shadow-sm" title="Tutup Sidebar">
+            <button onClick={() => setIsSidebarOpen(false)} className="p-1 text-muted-light hover:text-ink transition-colors" title="Tutup Sidebar">
               <PanelLeftClose className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
+        <div className="mx-6 h-px bg-hairline" />
 
         {/* Cari Estimasi Fungsional */}
-        <div className="px-4 mt-4 min-w-[260px]">
-          <div className="relative flex items-center bg-white border border-hairline rounded-xl px-3 py-2 shadow-sm focus-within:border-accent/40 transition-all">
+        <div className="px-6 mt-4 min-w-[260px]">
+          <div className="relative flex items-center bg-white/50 border border-hairline rounded-xl px-3 py-1.5 shadow-sm focus-within:border-accent/40 focus-within:bg-white transition-all">
             <Search className="w-3.5 h-3.5 text-muted-light mr-2 flex-shrink-0" />
             <input
               type="text"
@@ -305,8 +306,8 @@ export default function App() {
 
         {/* List RAB */}
         <div className="flex-1 overflow-y-auto scrollbar-warm pb-4 min-w-[260px] mt-6">
-          <div className="px-4">
-            <div className="px-3 mb-2.5 flex items-center justify-between">
+          <div className="px-6">
+            <div className="px-2 mb-2.5 flex items-center justify-between">
               <span className="text-[10px] font-semibold text-muted-light uppercase tracking-widest">Daftar Simulasi RAB</span>
             </div>
             
@@ -360,10 +361,7 @@ export default function App() {
                   }
 
                   return (
-                    <div key={session.id || idx} className="py-0.5 group/sidebar-item">
-                      {/* Garis Pembatas Atas Memudar (Hanya Muncul Saat Hover - Transisi Halus) */}
-                      <div className="h-px w-full bg-gradient-to-r from-transparent via-muted-light/60 to-transparent opacity-0 group-hover/sidebar-item:opacity-100 transition-opacity duration-300" />
-                      
+                    <div key={session.id || idx} className="py-0.5">
                       <button 
                         onClick={() => handleSelectSession(session)}
                         onMouseEnter={(e) => {
@@ -375,25 +373,26 @@ export default function App() {
                           });
                         }}
                         onMouseLeave={() => setHoveredSession(null)}
-                        className="w-full flex flex-col justify-center px-4 py-2.5 rounded-none transition-all text-left bg-transparent border-none outline-none"
+                        className={`w-full flex flex-col justify-center px-3.5 py-2.5 rounded-xl transition-all text-left border-none outline-none ${
+                          isSelected 
+                            ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-hairline/80' 
+                            : 'bg-transparent hover:bg-white/40'
+                        }`}
                       >
                         {/* Kategori Proyek Utama (Biru / Besar) */}
-                        <span className={`block text-[12.5px] font-bold uppercase tracking-wider mb-1 transition-colors ${
+                        <span className={`block text-[12px] font-bold uppercase tracking-wider mb-1 transition-colors ${
                           isSelected ? 'text-accent' : 'text-ink group-hover:text-accent'
                         }`}>
                           {category}
                         </span>
                         
                         {/* Judul Proyek / Riwayat (Abu-abu Pekat / Kecil) */}
-                        <span className={`block text-[12px] font-medium leading-normal truncate w-full transition-colors ${
+                        <span className={`block text-[11.5px] font-medium leading-normal truncate w-full transition-colors ${
                           isSelected ? 'text-muted' : 'text-muted-light group-hover:text-muted'
                         }`}>
                           {titleDisplay}
                         </span>
                       </button>
-
-                      {/* Garis Pembatas Bawah Memudar (Hanya Muncul Saat Hover - Transisi Halus) */}
-                      <div className="h-px w-full bg-gradient-to-r from-transparent via-muted-light/60 to-transparent opacity-0 group-hover/sidebar-item:opacity-100 transition-opacity duration-300" />
                     </div>
                   );
                 });
