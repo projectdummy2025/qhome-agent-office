@@ -866,9 +866,10 @@ export default function App() {
                             {agentTitle}
                           </span>
                           {isSpinnerActive ? (
-                            <span className="flex items-center gap-1 text-[10px] text-accent flex-shrink-0 pt-0.5">
-                              <span className="w-1 h-1 rounded-full bg-accent animate-ping" />
-                              aktif
+                            <span className="flex items-center gap-1 text-accent flex-shrink-0 pt-1.5" title="Aktif">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-wave-1" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-wave-2" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-wave-3" />
                             </span>
                           ) : (
                             <span className="text-[10px] text-muted-light flex-shrink-0 pt-0.5">selesai</span>
