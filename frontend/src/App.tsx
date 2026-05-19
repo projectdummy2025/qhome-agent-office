@@ -497,8 +497,8 @@ export default function App() {
         </header>
 
         {/* Main Content Area — Editorial Layout aligned with max-w-[1400px] */}
-        <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-12 relative z-10 justify-between">
-          <div className="flex-1 flex flex-col justify-center animate-scale-in max-w-3xl w-full">
+        <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-12 relative z-10 justify-start">
+          <div className="flex-1 flex flex-col justify-start animate-scale-in max-w-3xl w-full">
 
             {/* Eyebrow + Headline */}
             <div className="mb-10">
@@ -559,8 +559,8 @@ export default function App() {
                           {persona.roleDisplay}
                         </span>
                       </div>
-                      <div className="overflow-hidden max-h-[1.6em] group-hover:max-h-[4.5em] transition-all duration-300 ease-in-out">
-                        <p className="text-[12.5px] text-muted leading-relaxed">
+                      <div className="overflow-hidden max-h-[1.6em] group-hover:max-h-[4.5em] transition-[max-height] duration-300 ease-in-out">
+                        <p className="text-[12.5px] text-muted leading-relaxed truncate group-hover:whitespace-normal">
                           {persona.desc}
                         </p>
                       </div>
