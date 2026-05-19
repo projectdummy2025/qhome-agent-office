@@ -4,12 +4,13 @@ import { Bot, User, Loader2, Send, CheckCircle2, Cpu, ChevronDown, ChevronUp, Pl
 export default function App() {
   const [brief, setBrief] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
-  const [chatHistory, setChatHistory] = useState<string[]>([]);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeAgents, setActiveAgents] = useState<string[]>([]);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true); // Default open untuk nuansa "Digital Office Canvas" yang premium
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [currentAgentOnDuty, setCurrentAgentOnDuty] = useState<string | null>(null); // Konsep petugas aktif saat ini
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -21,22 +22,52 @@ export default function App() {
     scrollToBottom();
   }, [messages, activeAgents]);
 
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/projects/sessions");
+      const data = await res.json();
+      setChatHistory(data);
+    } catch (e) {
+      console.error("Error fetching history:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const handleSelectSession = async (session: any) => {
+    setCurrentSessionId(session.id);
+    setIsProcessing(false);
+    setCurrentAgentOnDuty(null);
+    setActiveAgents([]);
+    
+    try {
+      const res = await fetch(`http://localhost:8000/api/projects/sessions/${session.id}/messages`);
+      const data = await res.json();
+      setMessages(data);
+      
+      const hasSystemMessage = data.some((m: any) => m.role === 'system');
+      setIsRightSidebarOpen(hasSystemMessage);
+    } catch (e) {
+      console.error("Error loading session:", e);
+    }
+  };
+
   const handleNewChat = () => {
     setMessages([]);
     setBrief("");
     setCurrentSessionId(null);
+    setCurrentAgentOnDuty(null);
   };
 
   const handleHire = async () => {
     if (!brief.trim()) return;
     
-    if (!currentSessionId) {
-       setChatHistory(prev => [brief, ...prev]);
-    }
-    
     setMessages(prev => [...prev, { role: "user", content: brief }]);
     setBrief("");
     setIsProcessing(true);
+    setCurrentAgentOnDuty("Chief Supervisor"); // Dimulai dari koordinasi Chief Supervisor
     setActiveAgents([]);
     
     try {
@@ -47,6 +78,7 @@ export default function App() {
       });
       const dataInfo = await res.json();
       setCurrentSessionId(dataInfo.session_id);
+      fetchHistory(); // Segarkan riwayat di sidebar kiri
       
       const sse = new EventSource(`http://localhost:8000/api/projects/${dataInfo.session_id}/stream`);
       
@@ -71,6 +103,15 @@ export default function App() {
           return newMessages;
         });
 
+        // Rekam agen spesialis yang saat ini aktif bertugas
+        if (data.event === "working" && data.title) {
+          setCurrentAgentOnDuty(data.title);
+        } else if (data.event === "routing") {
+          setCurrentAgentOnDuty("Chief Supervisor");
+        } else if (data.event === "report" && data.title) {
+          setCurrentAgentOnDuty(data.title);
+        }
+
         if (data.event === "working" && data.agent) {
            setActiveAgents(prev => Array.from(new Set([...prev, data.agent])));
         }
@@ -78,6 +119,7 @@ export default function App() {
         if (data.event === "completed") {
           sse.close();
           setIsProcessing(false);
+          setCurrentAgentOnDuty(null); // Selesai bertugas
           setActiveAgents([]);
           setMessages(prev => {
             const newMessages = [...prev];
@@ -126,24 +168,18 @@ export default function App() {
               {chatHistory.length === 0 ? (
                 <p className="text-[13px] text-[#7c7872] px-4 py-2">Belum ada riwayat.</p>
               ) : (
-                chatHistory.map((historyItem, idx) => (
-                  <button key={idx} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/60 transition-all text-sm text-left group">
-                    <MessageSquare className="w-4 h-4 text-[#b5b0a8] shrink-0 group-hover:text-[#c47c5a] transition-colors" />
-                    <span className="truncate text-[#3d3935] font-medium">{historyItem}</span>
+                chatHistory.map((session, idx) => (
+                  <button 
+                    key={session.id || idx} 
+                    onClick={() => handleSelectSession(session)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/60 transition-all text-sm text-left group ${currentSessionId === session.id ? 'bg-white shadow-sm text-[#c47c5a]' : 'text-[#3d3935]'}`}
+                  >
+                    <MessageSquare className={`w-4 h-4 shrink-0 group-hover:text-[#c47c5a] transition-colors ${currentSessionId === session.id ? 'text-[#c47c5a]' : 'text-[#b5b0a8]'}`} />
+                    <span className="truncate font-medium">{session.title}</span>
                   </button>
                 ))
               )}
             </div>
-          </div>
-        </div>
-
-        <div className="p-5 border-t border-[#e5e1da] flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all min-w-[260px]">
-          <div className="w-9 h-9 rounded-full bg-[#e8c5b0] flex items-center justify-center text-[#b36a47] text-sm font-semibold">
-            AH
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[14px] font-medium text-[#1c1916]">Ahmad</span>
-            <span className="text-[11px] text-[#7c7872]">Klien VIP</span>
           </div>
         </div>
       </div>
@@ -155,42 +191,57 @@ export default function App() {
         <header className="px-6 py-4 bg-[#faf9f7]/90 backdrop-blur-xl border-b border-[#e5e1da] flex justify-between items-center sticky top-0 z-20">
           <div className="flex items-center gap-3">
             {!isSidebarOpen && (
-              <button onClick={() => setIsSidebarOpen(true)} className="p-2 mr-1 text-[#7c7872] hover:text-[#1c1916] rounded-xl hover:bg-[#f4f2ef] transition-all">
+              <button onClick={() => setIsSidebarOpen(true)} className="p-2 mr-1 text-[#7c7872] hover:text-[#1c1916] rounded-xl hover:bg-[#f4f2ef] transition-all" title="Buka Sidebar">
                 <PanelLeftOpen className="w-5 h-5" />
               </button>
             )}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#f5ede7] flex items-center justify-center">
-                <Home className="w-4 h-4 text-[#c47c5a]" />
+            {/* Mengganti QHome Atelier menjadi Dapur Desain sebagai Title utama dan interaktif */}
+            <button 
+              onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+              className="flex items-center gap-2 hover:opacity-85 transition-all text-left group"
+              title={isRightSidebarOpen ? "Tutup Panel Proses Dapur Desain" : "Buka Panel Proses Dapur Desain"}
+            >
+              <div className="w-8 h-8 rounded-lg bg-[#7a9e8e]/10 group-hover:bg-[#7a9e8e]/20 flex items-center justify-center transition-colors">
+                <Cpu className="w-4 h-4 text-[#7a9e8e]" />
               </div>
-              <h1 className="text-[18px] font-display text-[#1c1916] tracking-wide flex items-center gap-2">
-                QHome <span className="font-sans text-[15px] text-[#7c7872] font-normal">Atelier</span>
+              <h1 className="text-[18px] font-display text-[#1c1916] tracking-wide flex items-center gap-1.5">
+                Dapur <span className="font-sans text-[15px] text-[#7c7872] font-normal">Desain</span>
               </h1>
-            </div>
+            </button>
           </div>
-          <div className="flex items-center gap-3">
+          
+          <div className="flex items-center gap-4">
+            {/* Konsep Siapa yang bertugas sekarang (Petugas Aktif) - Desain Tenang Tanpa Flicker */}
+            {isProcessing && currentAgentOnDuty && (
+              <div className="flex items-center gap-2.5 bg-[#edf3f0] px-4 py-2 rounded-full border border-[#7a9e8e]/20 text-[13px] font-medium text-[#5a7d6d] shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-[#7a9e8e]" />
+                <span className="text-[#7c7872] font-normal hidden sm:inline">Petugas Aktif:</span>
+                <span className="text-[#3d5a4d] font-semibold">{currentAgentOnDuty}</span>
+              </div>
+            )}
+            
             {activeAgents.length > 0 && (
-               <div className="flex -space-x-2 mr-3">
-                 {activeAgents.map(a => (
-                   <div key={a} className="w-8 h-8 rounded-full bg-white border-2 border-[#faf9f7] flex items-center justify-center text-[10px] font-bold text-[#7a9e8e] shadow-sm glow-sage animate-breathe" title={a}>
-                     {a.substring(0,2).toUpperCase()}
-                   </div>
-                 ))}
+               <div className="flex -space-x-1.5">
+                 {activeAgents.map(a => {
+                   const isCurrent = currentAgentOnDuty && currentAgentOnDuty.toLowerCase().includes(a.toLowerCase());
+                   return (
+                     <div 
+                       key={a} 
+                       className={`w-8 h-8 rounded-full bg-white border-2 flex items-center justify-center text-[10px] font-bold shadow-sm transition-all duration-300 ${isCurrent ? 'border-[#7a9e8e] text-[#7a9e8e] scale-110 z-10 bg-[#edf3f0]' : 'border-[#faf9f7] text-[#b5b0a8]'}`}
+                       title={a}
+                     >
+                       {a.substring(0,2).toUpperCase()}
+                     </div>
+                   );
+                 })}
                </div>
             )}
-            <button 
-              onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)} 
-              className={`px-4 py-2 rounded-full transition-all flex items-center gap-2 text-[13px] font-medium ${isRightSidebarOpen ? 'bg-[#7a9e8e] text-white shadow-md' : 'bg-[#f4f2ef] text-[#7c7872] hover:text-[#1c1916] hover:bg-[#ede9e3]'}`}
-            >
-              <Cpu className="w-4 h-4" />
-              <span>Dapur Desain</span>
-            </button>
           </div>
         </header>
 
         {/* Chat History */}
         <main className="flex-1 overflow-y-auto w-full scrollbar-warm">
-          <div className="p-6 md:p-10 space-y-10 w-full max-w-4xl mx-auto pb-40">
+          <div className="p-6 md:p-10 space-y-10 w-full max-w-4xl mx-auto pb-10">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-float-up min-h-[65vh]">
                 <div className="relative">
@@ -234,9 +285,31 @@ export default function App() {
                       <div className="flex-1 max-w-3xl text-[15.5px] text-[#3d3935] leading-[1.7]">
                         
                         {msg.status !== 'completed' && (
-                          <div className="mb-6 flex items-center gap-3 px-5 py-3 bg-[#edf3f0]/60 border border-[#c4d9d1]/50 rounded-2xl text-[#7a9e8e] text-[14px] font-medium animate-breathe">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Merapikan inspirasi dan kalkulasi (Lihat proses di Dapur Desain)...</span>
+                          <div className="mb-6 bg-[#edf3f0]/30 border border-[#7a9e8e]/20 rounded-3xl p-6 space-y-4">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <div className="flex items-center gap-3 text-[#7a9e8e] text-[14.5px] font-medium">
+                                <Loader2 className="w-4.5 h-4.5 animate-spin" />
+                                <span>Tim Spesialis QHome-MAS Sedang Meracik Desain...</span>
+                              </div>
+                              {currentAgentOnDuty && (
+                                <span className="text-[11px] uppercase tracking-widest bg-[#7a9e8e] text-white px-3 py-1 rounded-full font-bold">
+                                  BERTUGAS: {currentAgentOnDuty.toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <p className="text-[14px] text-[#5a7d6d] leading-relaxed">
+                                {currentAgentOnDuty ? (
+                                  <>Spesialis <strong>{currentAgentOnDuty}</strong> sedang menganalisis brief dan meninjau katalog produk untuk merumuskan estimasi serta gaya ruang terbaik...</>
+                                ) : (
+                                  <>Chief Supervisor sedang memetakan brief dan mengoordinasikan tim spesialis yang sesuai...</>
+                                )}
+                              </p>
+                              <div className="w-full bg-[#e5e1da]/60 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-gradient-to-r from-[#7a9e8e] to-[#c47c5a] h-full rounded-full w-[65%] transition-all duration-500" />
+                              </div>
+                            </div>
                           </div>
                         )}
 
@@ -312,11 +385,13 @@ export default function App() {
               ))
             )}
             <div ref={messagesEndRef} />
+            {/* Spacer fisik agar konten terakhir melayang sempurna di atas input bar absolute */}
+            <div className="h-[140px] w-full shrink-0" />
           </div>
         </main>
 
         {/* Input Area */}
-        <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#faf9f7] via-[#faf9f7] to-transparent pt-16 pb-8 px-6 z-10">
+        <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#faf9f7] via-[#faf9f7] to-transparent pt-10 pb-6 px-6 z-10">
           <div className="max-w-3xl mx-auto relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#e8c5b0] to-[#e5e1da] rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
             <textarea
@@ -371,21 +446,35 @@ export default function App() {
           ) : (
             <div className="space-y-6 relative">
               <div className="absolute left-4 top-4 bottom-4 w-px bg-[#e5e1da] z-0"></div>
-              {messages.filter(m => m.role === 'system').reverse()[0]?.logs?.map((log: any, idx: number) => (
-                 <div key={idx} className="relative z-10 animate-float-up">
-                   <div className="flex items-start gap-4">
-                     <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${log.event === 'completed' ? 'bg-[#edf3f0] border-white text-[#7a9e8e]' : 'bg-white border-[#e5e1da] text-[#c47c5a] shadow-sm'}`}>
-                       {log.event === 'working' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                     </div>
-                     <div className="flex-1 bg-[#faf9f7] rounded-2xl p-4 border border-[#e5e1da] shadow-sm">
-                       <span className="text-[12px] font-semibold uppercase tracking-widest text-[#7c7872] block mb-1">
-                         {log.title || 'Sistem'}
-                       </span>
-                       <p className="text-[14px] text-[#1c1916] leading-relaxed">{log.message}</p>
-                     </div>
-                   </div>
-                 </div>
-              ))}
+              {(() => {
+                const systemLogs = messages.filter(m => m.role === 'system').reverse()[0]?.logs || [];
+                return systemLogs.map((log: any, idx: number) => {
+                  const isSpinnerActive = isProcessing && log.event === 'working' && idx === systemLogs.length - 1;
+                  return (
+                    <div key={idx} className="relative z-10 animate-float-up">
+                      <div className="flex items-start gap-4">
+                        <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${
+                          isSpinnerActive 
+                            ? 'bg-white border-[#e5e1da] text-[#c47c5a] shadow-sm' 
+                            : 'bg-[#edf3f0] border-white text-[#7a9e8e]'
+                        }`}>
+                          {isSpinnerActive ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div className="flex-1 bg-[#faf9f7] rounded-2xl p-4 border border-[#e5e1da] shadow-sm">
+                          <span className="text-[12px] font-semibold uppercase tracking-widest text-[#7c7872] block mb-1">
+                            {log.title || 'Sistem'}
+                          </span>
+                          <p className="text-[14px] text-[#1c1916] leading-relaxed">{log.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
         </div>
