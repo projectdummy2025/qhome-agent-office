@@ -46,3 +46,25 @@ class Product(Base):
     base_price = Column(Float)
     coverage_m2 = Column(Float)
     desc = Column(Text, nullable=True)
+    # Stok gudang — dipakai oleh Inventory Administrator agent
+    stock_qty = Column(Integer, default=50, nullable=False)
+
+
+class EstimationKPI(Base):
+    """
+    P6 — KPI Tracker: Mencatat metrik performa per sesi estimasi.
+    Digunakan untuk mengukur:
+    - lead_time_seconds: Waktu dari submit hingga selesai (target < 30 detik)
+    - agent_count: Jumlah agen yang terlibat
+    - product_count: Jumlah produk yang diestimasi
+    """
+    __tablename__ = "estimation_kpi"
+    id = Column(String, primary_key=True, index=True)
+    session_id = Column(String, ForeignKey("chat_sessions.id"), index=True)
+    started_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    lead_time_seconds = Column(Float, nullable=True)  # KPI: target < 30 detik
+    agent_count = Column(Integer, default=0)          # Jumlah agen yang di-hire
+    product_count = Column(Integer, default=0)        # Jumlah produk di output
+    brief_length = Column(Integer, default=0)         # Panjang brief (chars)
+    pdf_generated = Column(Integer, default=0)        # 0/1 apakah PDF digenerate
