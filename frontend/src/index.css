@@ -1,49 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Warm Earth Palette — calm, trustworthy, premium interior feel */
-  --color-canvas:         #faf9f7;      /* Warm off-white */
+  /* QHomeMart Supermarket Corporate Palette — Clean, modern commercial look */
+  --color-canvas:         #ffffff;      /* Pure white canvas */
   --color-surface:        #ffffff;
-  --color-surface-soft:   #f4f2ef;      /* Warm greige */
-  --color-surface-strong: #ede9e3;      /* Warm stone */
-  --color-hairline:       #e5e1da;      /* Soft warm border */
-  --color-ink:            #1c1916;      /* Deep warm black */
-  --color-ink-2:          #3d3935;      /* Secondary text */
-  --color-muted:          #7c7872;      /* Warm muted */
-  --color-muted-light:    #b5b0a8;      /* Light muted */
+  --color-surface-soft:   #f8fafc;      /* Clean slate-50 background */
+  --color-surface-strong: #f1f5f9;      /* Slate-100 */
+  --color-hairline:       #e2e8f0;      /* Slate-200 hairline border */
+  --color-ink:            #0f172a;      /* Slate-900 (Deep commercial near-black) */
+  --color-ink-2:          #334155;      /* Slate-700 (Body text) */
+  --color-muted:          #64748b;      /* Slate-500 (Sub-labels) */
+  --color-muted-light:    #94a3b8;      /* Slate-400 */
 
-  /* Accent — Warm Terracotta (soft, not aggressive) */
-  --color-accent:         #c47c5a;      /* Terracotta */
-  --color-accent-hover:   #b36a47;
-  --color-accent-soft:    #f5ede7;      /* Terracotta tint bg */
-  --color-accent-border:  #e8c5b0;
+  /* Primary Brand Accent — QHomeMart Flow Blue (flowing water, continuous growth) */
+  --color-accent:         #0052cc;      /* Royal Blue */
+  --color-accent-hover:   #0043a4;      /* Deep active blue */
+  --color-accent-soft:    #deebff;      /* Pale blue tint */
+  --color-accent-border:  #b3d4ff;      /* Soft blue stroke */
 
-  /* Sage Green — calm trust signal */
-  --color-sage:           #7a9e8e;
-  --color-sage-soft:      #edf3f0;
-  --color-sage-border:    #c4d9d1;
+  /* Secondary Brand Accent — QHomeMart Retail Gold/Yellow (optimism, cheerfulness, target) */
+  --color-sage:           #ff9f00;      /* Vibrant gold */
+  --color-sage-soft:      #fff8e6;      /* Soft gold bg */
+  --color-sage-border:    #ffe6ad;      /* Soft gold stroke */
 
-  /* Legacy compat (used in some classes) */
-  --color-primary:        #c47c5a;
-  --color-primary-active: #b36a47;
+  /* Legacy compat */
+  --color-primary:        #0052cc;
+  --color-primary-active: #0043a4;
 
-  --font-sans:    "DM Sans", system-ui, sans-serif;
-  --font-display: "DM Serif Display", Georgia, serif;
+  --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @layer base {
   :root {
-    --background:          35 20% 97%;
-    --foreground:          25 8% 11%;
-    --primary:             22 44% 56%;
+    --background:          0 0% 100%;
+    --foreground:          0 0% 13%;
+    --primary:             350 100% 61%;
     --primary-foreground:  0 0% 100%;
-    --muted:               30 12% 95%;
-    --muted-foreground:    30 5% 48%;
-    --border:              35 14% 89%;
-    --input:               35 14% 89%;
-    --ring:                22 44% 56%;
-    --radius:              0.75rem;
+    --muted:               0 0% 97%;
+    --muted-foreground:    0 0% 42%;
+    --border:              0 0% 87%;
+    --input:               0 0% 87%;
+    --ring:                350 100% 61%;
+    --radius:              8px;
   }
 }
 
