@@ -193,7 +193,7 @@ def synthesizer(state: AgentState):
         agent_reports_text += f"\n- Laporan {r['agent']}: {r['content']}"
         
     brief = state.get("brief", "")
-    prompt = f"Anda adalah Chief Supervisor di QHome-MAS. Klien memiliki permintaan berikut:\n'{brief}'\n\nTim spesialis telah memberikan rekomendasi berikut:{agent_reports_text}\n\nBuatlah 2-3 paragraf narasi profesional bergaya konsultan interior (tanpa sapaan salam, langsung to the point) yang merangkum solusi desain ini dan mengapa material yang dipilih (sebut nama produknya) sangat cocok untuk klien. Jangan buat rincian harga karena akan ditampilkan terpisah. Format output harus teks paragraf biasa."
+    prompt = f"Anda adalah Chief Supervisor di Kalkulator RAB QHomeMart. Klien memiliki permintaan material berikut:\n'{brief}'\n\nModul spesialis telah memberikan rekomendasi berikut:{agent_reports_text}\n\nBuatlah 2-3 paragraf narasi profesional bergaya Asisten Belanja Teknis Supermarket Bahan Bangunan QHomeMart (tanpa sapaan salam, langsung to the point) yang merangkum estimasi kebutuhan material ini, kesesuaian teknisnya, dan mengapa ulasan produk yang dipilih (sebut nama produknya) sangat tepat untuk kebutuhan proyek klien. Jangan buat rincian harga karena akan ditampilkan terpisah. Format output harus teks paragraf biasa."
     
     try:
         response = supervisor_llm.invoke(prompt)
