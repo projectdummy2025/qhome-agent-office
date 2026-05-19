@@ -6,13 +6,22 @@ Di dalam kantor digital ini, agen-agen kecerdasan buatan beroperasi layaknya **k
 
 ---
 
-## Arsitektur Teknologi Utama (The Stack)
+### 📂 Sistem Navigasi Dokumentasi (QHome-MAS)
+* 🏠 **[Panduan Utama (README)](README.md)**
+* 🏛️ **[Blueprint Arsitektur (ArchitectureConcept)](docs/ArchitectureConcept.md)**
+* 👥 **[Roster Karyawan Digital (AgentRoster)](docs/AgentRoster.md)**
+* 🏗️ **[Panduan Struktur Proyek (ProjectStructure)](docs/ProjectStructure.md)**
+* 🔄 **[Alur Skenario Sistem (UserSystemFlow)](docs/UserSystemFlow.md)**
+
+---
+
+## 🏛️ Arsitektur Teknologi Utama (The Stack)
 
 Proyek ini menggunakan *stack* mutakhir yang memisahkan beban kerja antara *backend* komputasi dan *frontend* visualisasi secara terstruktur.
 
 ### 1. Backend (Orkestrasi Agen & API)
 * **Framework Utama**: **FastAPI** (Python) untuk *endpoint* performa tinggi berbekal dukungan fungsi asinkron.
-* **Modular Architecture**: Menggunakan **APIRouter** (`api/routes`) dan pemisahan logika ke `services/` untuk menjamin kebersihan kode *main.py* dan kemudahan penambahan fitur di skala *Enterprise*.
+* **Modular Architecture**: Menggunakan **APIRouter** (`backend/api/routes`) dan pemisahan logika ke `backend/services/` untuk menjamin kebersihan kode dan kemudahan penambahan fitur di skala *Enterprise*.
 * **Orkestrasi AI**: **LangGraph** digunakan untuk menciptakan alur hirarki di mana Supervisor memegang kendali (DAG/State Graph) dalam mendelegasikan tugas ke spesialis lain secara bergiliran (*waterfall/throttled execution*).
 * **Komunikasi Data**: **Server-Sent Events (SSE)** digunakan untuk men- *stream* proses pemikiran agen ke *frontend* secara instan.
 * **Integrasi Alat (Custom MCP)**: Sebuah *Model Context Protocol* kustom di *backend* yang menjembatani agen LLM dengan Kalkulator Matematika Sipil deterministik (anti-halusinasi) dan Vector DB.
@@ -22,12 +31,12 @@ Proyek ini menggunakan *stack* mutakhir yang memisahkan beban kerja antara *back
 * **Styling**: Mematuhi aturan desain estetis tinggi menggunakan **Vanilla CSS murni** untuk menghadirkan efek *premium Glassmorphism* dan *Dark Mode*, tanpa bergantung pada Tailwind.
 
 ### 3. Database (Long-Term Memory & RAG)
-* **Relational DB**: **SQLite / PostgreSQL** menyimpan kepastian harga dasar produk dan riwayat interaksi (*audit logs*), mengeliminasi probabilitas agen salah menebak harga.
+* **Relational DB**: **SQLite** menyimpan kepastian harga dasar produk dan riwayat interaksi (*audit logs*), mengeliminasi probabilitas agen salah menebak harga.
 * **Vector DB**: **ChromaDB** menyimpan *embeddings* dari pustaka material/SOP untuk pencarian semantik agen (RAG).
 
 ---
 
-## Strategi "Dynamic LLM Routing"
+## 🧠 Strategi "Dynamic LLM Routing"
 
 Untuk mengakali batasan *Rate Limit* pada penyedia layanan API pihak ketiga, serta menyeimbangkan biaya dan *reasoning quality*, sistem ini menggunakan **Distribusi LLM Otomatis**:
 
@@ -37,7 +46,7 @@ Untuk mengakali batasan *Rate Limit* pada penyedia layanan API pihak ketiga, ser
 
 ---
 
-## Tim Karyawan (Agent Roster)
+## 👥 Tim Karyawan (Agent Roster)
 
 1. **Chief Project Supervisor (Manajer)**: Menganalisis niat pelanggan (*buyer's intent*) dan HANYA memanggil agen yang relevan. (*Gemini 3 Flash*)
 2. **Ceramic & Tile Estimator**: Menghitung kebutuhan ubin, *wastage*, dan sak perekat ubin. (*Gemini 2.5 Flash*)
@@ -48,25 +57,105 @@ Untuk mengakali batasan *Rate Limit* pada penyedia layanan API pihak ketiga, ser
 
 ---
 
-## Mitigasi Infrastruktur Sistem
-Mengingat infrastruktur API gratis memiliki batasan (seperti model Groq yang dibatasi maksimal **6.000 TPM**), eksekusi agen tidak dilakukan secara paralel murni. Supervisor mendelegasikan perintah secara sekuensial (*waterfall*), dibantu dengan metode *Ultra-Lean Prompting* yang sangat ringkas, serta perlindungan tangkapan *error 429* untuk otomatis melakukan *graceful fallback* agar sistem tidak pernah hancur (crash).
+## 🚀 Panduan Setup & Instalasi Utama (Developer Onboarding)
+
+Ikuti langkah-langkah di bawah ini untuk menjalankan seluruh sistem QHome-MAS di komputer lokal Anda.
+
+### 📋 Prasyarat Sistem
+* **OS**: Linux / macOS (Windows disarankan menggunakan WSL2).
+* **Python**: Versi 3.10 atau lebih tinggi.
+* **Node.js**: Versi 18 atau lebih tinggi dengan `npm` / `yarn`.
+* **Docker**: Dipasang dan dapat berjalan di latar belakang (untuk ChromaDB & PostgreSQL).
+* **RTK (Rust Token Killer)**: CLI proxy penghemat token wajib dipasang (lihat aturan global).
 
 ---
 
-## Persiapan Database (Docker & Seeding)
-Untuk mendukung *scale* level *Enterprise*, proyek ini menggunakan **PostgreSQL** (Chat History BSON/JSONB) dan **ChromaDB** (Vector RAG) yang berjalan di dalam Docker Container. 
+### 🛠️ Langkah 1: Kloning & Persiapan Environment
+Salin file template `.env.example` menjadi `.env` di direktori utama:
+```bash
+cp .env.example .env
+```
+Buka file `.env` dan lengkapi API Key berikut:
+* `GEMINI_API_KEY`: Kunci akses API Gemini Anda.
+* `GROQ_API_KEY`: Kunci akses API Groq Anda.
+* `TAVILY_API_KEY`: Kunci akses pencarian web Tavily.
 
-1. Pastikan Docker/Podman sudah terinstal.
-2. Putar container database di latar belakang:
+---
+
+### 🐳 Langkah 2: Menjalankan Database (Docker Compose)
+Putar kontainer database relasional dan database vektor (ChromaDB) di latar belakang:
+```bash
+docker compose up -d
+```
+Pastikan kontainer berjalan normal dengan mengecek status:
+```bash
+docker compose ps
+```
+
+---
+
+### 🐍 Langkah 3: Setup & Seeding Backend (Python)
+1. Buka folder root proyek dan buat virtual environment:
    ```bash
-   docker compose up -d
+   python3 -m venv venv
+   source venv/bin/activate
    ```
-3. Lakukan injeksi (*seeding*) 80+ katalog material QHomeMart dari Markdown langsung ke dalam database:
+2. Instal semua dependensi pustaka Python yang dibutuhkan:
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+3. Lakukan **Seeding Katalog Produk** (menyemai 80+ item produk QHomeMart ke SQLite dan ChromaDB Vector Store):
    ```bash
    python backend/seed.py
    ```
 
 ---
 
-## Persiapan Pengembangan Awal (Getting Started)
-Lihat konfigurasi kerangka sistem pada folder `/docs`. Modul `.env.example` sudah disertakan di repositori ini. Salin file tersebut menjadi `.env` dan isi dengan **GEMINI_API_KEY**, **GROQ_API_KEY**, **TAVILY_API_KEY** serta konfigurasi **DATABASE_URL** dan **CHROMA_PORT** milik Anda sebelum memulai *scaffolding* server.
+### ⚡ Langkah 4: Menjalankan Server Backend
+Jalankan server API FastAPI dengan menggunakan Uvicorn:
+```bash
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+Server backend sekarang aktif di `http://127.0.0.1:8000`. Anda dapat mengakses dokumentasi interaktif Swagger API di `http://127.0.0.1:8000/docs`.
+
+---
+
+### 📦 Langkah 5: Setup & Menjalankan Frontend (React)
+1. Buka direktori `frontend`:
+   ```bash
+   cd frontend
+   ```
+2. Instal seluruh dependensi Node.js:
+   ```bash
+   npm install
+   ```
+3. Jalankan server pengembangan Vite:
+   ```bash
+   npm run dev
+   ```
+4. Buka peramban (browser) dan akses alamat `http://localhost:5173`.
+
+---
+
+## 🛠️ Panduan RTK (Rust Token Killer)
+
+Selaku pengembang, Anda **wajib** menggunakan CLI proxy `rtk` untuk menghemat token dan melihat analitik performa:
+
+```bash
+# Menampilkan total token yang berhasil diselamatkan
+rtk gain
+
+# Melihat riwayat pemanggilan perintah beserta efisiensi tokennya
+rtk gain --history
+
+# Menganalisis riwayat pengerjaan Claude Code untuk mencari optimalisasi baru
+rtk discover
+```
+
+---
+
+## 🛡️ Kebijakan Penanganan Batasan & Mitigasi Rate Limit
+Meningkatnya batasan kuota API Developer (Groq dibatasi maksimum **6.000 TPM**):
+1. **Panggilan Sekuensial (Waterfall Flow)**: Agen spesialis dipanggil bergantian, bukan paralel penuh.
+2. **Ultra-Lean Prompting**: Mengurangi muatan teks yang dikirim ke model agar tetap hemat token.
+3. **Graceful Fallback**: Mengalihkan proses secara otomatis ke mesin kalkulator lokal sipil (`backend/mcp_tools/calculators.py`) atau model fallback jika terdeteksi galat `429 Too Many Requests`.
