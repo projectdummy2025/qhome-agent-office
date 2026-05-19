@@ -27,15 +27,18 @@ def parse_markdown_catalog():
                 if len(cols) >= 7:
                     price_str = cols[4].replace('.', '')
                     try:
+                        # Bersihkan nilai coverage (misalnya "5 m²" atau "3 m" menjadi "5" atau "3")
+                        coverage_clean = cols[5].split()[0] if cols[5] else "0.0"
                         products.append({
                             "sku": cols[0],
                             "name": cols[1],
                             "category": cols[3].lower(),
                             "base_price": float(price_str),
-                            "coverage_m2": float(cols[5]),
+                            "coverage_m2": float(coverage_clean),
                             "desc": cols[6]
                         })
-                    except ValueError:
+                    except ValueError as e:
+                        print(f"Skipping row {cols[0]} due to parsing error: {e}")
                         continue
     return products
 
