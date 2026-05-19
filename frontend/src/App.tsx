@@ -1,5 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, ChevronDown, Plus, Search, PanelLeftClose, PanelLeftOpen, Send, UserCog, Brain, Maximize2 } from 'lucide-react';
+import { 
+  Loader2, 
+  ChevronDown, 
+  Plus, 
+  Search, 
+  PanelLeftClose, 
+  PanelLeftOpen, 
+  Send, 
+  UserCog, 
+  Brain, 
+  Maximize2, 
+  Package,
+  Palette,
+  HardHat,
+  Store,
+  ShieldCheck
+} from 'lucide-react';
+import AdminPortal from './components/AdminPortal';
+import OrderPortal from './components/OrderPortal';
+import MaterialCatalog from './components/MaterialCatalog';
 
 
 // Komponen Helper untuk membungkus teks panjang dengan tombol Selengkapnya / Lebih Sedikit
@@ -43,7 +62,57 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
 }
 
 
+const PERSONAS = [
+  {
+    role: 'architect',
+    roleDisplay: 'Arsitek (Persona 1)',
+    name: 'Ibu Amalia',
+    icon: Palette,
+    iconBg: 'bg-blue-50 text-blue-600 border border-blue-100/50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30',
+    iconColor: 'text-blue-600 dark:text-blue-400',
+    desc: 'Simulasi fokus pada visual estetika, rekomendasi gaya ruang tamu mewah, dan moodboard terkurasi.',
+    colorClass: 'border-hairline hover:border-blue-300 hover:shadow-[0_8px_30px_rgb(219,234,254,0.3)] hover:bg-blue-50/5 focus:ring-blue-100',
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-300'
+  },
+  {
+    role: 'contractor',
+    roleDisplay: 'Kontraktor (Persona 2)',
+    name: 'Bapak Joko',
+    icon: HardHat,
+    iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100/50 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30',
+    iconColor: 'text-emerald-600 dark:text-emerald-400',
+    desc: 'Simulasi fokus pada akurasi volume material, kalkulator semen/perekat, wastage margin, dan estimasi RAB.',
+    colorClass: 'border-hairline hover:border-emerald-300 hover:shadow-[0_8px_30px_rgb(209,250,229,0.3)] hover:bg-emerald-50/5 focus:ring-emerald-100',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+  },
+  {
+    role: 'retailer',
+    roleDisplay: 'Toko Bangunan (Persona 3)',
+    name: 'Ibu Santi',
+    icon: Store,
+    iconBg: 'bg-purple-50 text-purple-600 border border-purple-100/50 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/30',
+    iconColor: 'text-purple-600 dark:text-purple-400',
+    desc: 'Simulasi fokus pada kuantitas stok volume besar, verifikasi pergudangan QHomeMart, dan substitusi alternatif barang.',
+    colorClass: 'border-hairline hover:border-purple-300 hover:shadow-[0_8px_30px_rgb(243,232,255,0.3)] hover:bg-purple-50/5 focus:ring-purple-100',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-100/60 dark:bg-purple-950/40 dark:text-purple-300'
+  },
+  {
+    role: 'admin',
+    roleDisplay: 'Staf Administrasi',
+    name: 'Bapak Rudi',
+    icon: ShieldCheck,
+    iconBg: 'bg-amber-50 text-amber-600 border border-amber-100/50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30',
+    iconColor: 'text-amber-600 dark:text-amber-400',
+    desc: 'Melakukan intervensi stok habis, validasi harga manual produk kustom, dan memantau log koordinasi Multi-Agent.',
+    colorClass: 'border-hairline hover:border-amber-300 hover:shadow-[0_8px_30px_rgb(254,243,199,0.3)] hover:bg-amber-50/5 focus:ring-amber-100',
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-100/60 dark:bg-amber-950/40 dark:text-amber-300'
+  }
+];
+
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [activePortal, setActivePortal] = useState<'chat' | 'admin' | 'order' | 'catalog'>('chat');
+  const [landingTab, setLandingTab] = useState<'simulation' | 'catalog'>('simulation');
   const [brief, setBrief] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
@@ -54,6 +123,101 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentAgentOnDuty, setCurrentAgentOnDuty] = useState<string | null>(null); // Konsep petugas aktif saat ini
   const [isModalOpen, setIsModalOpen] = useState(false); // State untuk pengeditan prompt skala besar dalam popup modal
+
+  // Dapatkan salam dan petunjuk dynamic berdasarkan persona aktif
+  const getPersonaGreeting = () => {
+    switch (currentUser?.role) {
+      case 'architect':
+        return {
+          title: "Halo Ibu Amalia, mari ciptakan estetika ruang yang mewah.",
+          subtitle: "Simulasi fokus pada visual estetika, moodboard premium, and keselarasan desain ruang.",
+          presets: [
+            {
+              title: "Kalkulasi Lantai Granit Mewah",
+              desc: "Ubin granit Carrara putih mewah untuk ruang tamu premium seluas 25 m² dengan pola vintage.",
+              prompt: "Saya butuh rekomendasi ubin lantai granit berwarna putih mewah Carrara untuk ruang tamu premium seluas 25 m2 dengan pola diagonal/vintage."
+            },
+            {
+              title: "Dinding Dekoratif Kayu Jati",
+              desc: "Panel dekorasi kayu fluted WPC premium untuk area seluas 18 m².",
+              prompt: "Desain dinding dekoratif kamar tidur utama seluas 18 m2 menggunakan WPC fluted panel kayu jati premium."
+            },
+            {
+              title: "Paduan Warna Cat Estetik",
+              desc: "Kombinasi cat monokromatik abu-abu estetik untuk ruang makan seluas 12 m².",
+              prompt: "Rekomendasi paduan cat interior warna abu-abu monokromatik estetik untuk ruang makan seluas 12 m2."
+            }
+          ]
+        };
+      case 'contractor':
+        return {
+          title: "Halo Bapak Joko, mari hitung volume material & anggaran.",
+          subtitle: "Simulasi fokus pada kalkulator semen nat pendukung, wastage ubin, and efisiensi anggaran lapangan.",
+          presets: [
+            {
+              title: "Volume Granit & Semen Nat",
+              desc: "Kalkulasi semen nat, perekat, dan ubin granit untuk lantai garasi 6x4 meter.",
+              prompt: "Hitung semen nat dan ubin granit standard untuk lantai garasi 6x4 meter dengan wastage standard 5%."
+            },
+            {
+              title: "Estimasi WPC & Kaleng Coating",
+              desc: "Kebutuhan panel kayu WPC seluas 15 m² beserta kaleng pelindung UV.",
+              prompt: "Berapa lembar panel kayu WPC untuk dinding 15 m2 dan butuh berapa kaleng coating pelindung UV?"
+            },
+            {
+              title: "Dinding Batu & Heavy-Duty Bonding",
+              desc: "Batu alam veneer seluas 20 m² lengkap dengan bonding agent heavy-duty.",
+              prompt: "Kalkulasi kebutuhan batu alam veneer seluas 20 m2, hitung heavy-duty bonding agent dan joint filler-nya."
+            }
+          ]
+        };
+      case 'retailer':
+        return {
+          title: "Halo Ibu Santi, mari cek ketersediaan stok pergudangan.",
+          subtitle: "Simulasi fokus pada kuantitas stok volume besar, substitusi alternatif barang, and logistik B2B.",
+          presets: [
+            {
+              title: "Cek Stok Granit Aula 50 m²",
+              desc: "Verifikasi stok ubin granit premium dari katalog lokal QHomeMart.",
+              prompt: "Verifikasi stok ubin granit premium ubin lantai dari katalog lokal QHomeMart untuk luas renovasi aula 50 m2."
+            },
+            {
+              title: "Substitusi Cat Interior Cepat",
+              desc: "Pencarian alternatif cat interior dengan stok melimpah untuk dinding 30 m².",
+              prompt: "Cari alternatif cat interior yang stoknya melimpah untuk kebutuhan dinding kamar 30 m2."
+            },
+            {
+              title: "Konsolidasi Total Material B2B",
+              desc: "Kalkulasi total biaya panel kayu jati dan batu alam seluas 15 m².",
+              prompt: "Kalkulasi total biaya bahan bangunan untuk dinding batu alam dan panel kayu jati seluas 15 m2."
+            }
+          ]
+        };
+      case 'admin':
+      default:
+        return {
+          title: "Halo Bapak Rudi, selamat datang di Panel Kontrol Admin.",
+          subtitle: "Simulasi fokus pada penanganan stok habis, validasi harga manual, and pengawasan log multi-agent.",
+          presets: [
+            {
+              title: "Uji Stok Habis / Substitusi",
+              desc: "Simulasi item dengan stok terbatas/habis untuk memicu substitusi barang otomatis.",
+              prompt: "Simulasikan kebutuhan ubin lantai granit premium dengan stok terbatas untuk memicu draf substitusi barang di admin."
+            },
+            {
+              title: "Uji Kalkulator Multi-Agent",
+              desc: "Mendelegasikan tugas komprehensif ke agen Tile, Wood, dan Paint.",
+              prompt: "Hitung kebutuhan ubin granit lantai 25 m2, panel kayu dinding 12 m2, dan cat dinding abu-abu 20 m2."
+            },
+            {
+              title: "Uji Stok Gudang & Logistik",
+              desc: "Verifikasi stok total material volume besar untuk logistik armada B2B.",
+              prompt: "Kalkulasi material renovasi besar lantai aula 80 m2 menggunakan ubin granit dan cat alkali sealer dasar."
+            }
+          ]
+        };
+    }
+  };
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -149,7 +313,10 @@ export default function App() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/projects/sessions");
+      const url = currentUser 
+        ? `http://localhost:8000/api/projects/sessions?user_id=${currentUser.role}`
+        : "http://localhost:8000/api/projects/sessions";
+      const res = await fetch(url);
       const data = await res.json();
       setChatHistory(data);
     } catch (e) {
@@ -159,10 +326,11 @@ export default function App() {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [currentUser]);
 
   const handleSelectSession = async (session: any) => {
     setCurrentSessionId(session.id);
+    setActivePortal('chat');
     setIsProcessing(false);
     setCurrentAgentOnDuty(null);
     setActiveAgents([]);
@@ -184,6 +352,7 @@ export default function App() {
     setBrief("");
     setCurrentSessionId(null);
     setCurrentAgentOnDuty(null);
+    setActivePortal('chat');
   };
 
 
@@ -200,7 +369,11 @@ export default function App() {
       const res = await fetch("http://localhost:8000/api/projects/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief, session_id: currentSessionId })
+        body: JSON.stringify({ 
+          brief, 
+          session_id: currentSessionId,
+          user_id: currentUser?.role || "default-user"
+        })
       });
       const dataInfo = await res.json();
       setCurrentSessionId(dataInfo.session_id);
@@ -265,6 +438,218 @@ export default function App() {
     }
   };
 
+  if (!currentUser) {
+    if (landingTab === 'catalog') {
+      return (
+        <MaterialCatalog 
+          onBack={() => setLandingTab('simulation')} 
+        />
+      );
+    }
+
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-tr from-slate-50 via-white to-slate-50 font-sans relative overflow-hidden">
+        {/* Subtle Decorative Ambient Background Glows */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-100/30 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-amber-100/20 blur-[120px] pointer-events-none" />
+        
+        {/* Sleek Enterprise Top Header Bar */}
+        <header className="w-full border-b border-hairline bg-white/70 backdrop-blur-md sticky top-0 z-50">
+          <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-extrabold text-ink tracking-widest uppercase">QHomeMart</span>
+              <span className="text-[11px] font-light text-muted-light">/</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-muted-light mt-0.5">Digital Office</span>
+            </div>
+
+            {/* Header Navigation Menus (Swiss Editorial Segment) */}
+            <div className="flex items-center gap-8">
+              <button
+                onClick={() => setLandingTab('simulation')}
+                className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative ${
+                  (landingTab as string) === 'simulation' 
+                    ? 'text-accent' 
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                <span className="text-[8px] font-mono mr-1 text-accent/80">01 //</span>
+                Simulasi Chat
+                {(landingTab as string) === 'simulation' && (
+                  <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-accent animate-fade-in" />
+                )}
+              </button>
+              <button
+                onClick={() => setLandingTab('catalog')}
+                className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative ${
+                  (landingTab as string) === 'catalog' 
+                    ? 'text-accent' 
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                <span className="text-[8px] font-mono mr-1 text-accent/80">02 //</span>
+                Katalog Material
+                {(landingTab as string) === 'catalog' && (
+                  <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-accent animate-fade-in" />
+                )}
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Area — Editorial Layout aligned with max-w-[1400px] */}
+        <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-12 relative z-10 justify-between">
+          <div className="flex-1 flex flex-col justify-center animate-scale-in max-w-3xl w-full">
+
+            {/* Eyebrow + Headline */}
+            <div className="mb-10">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.3em] text-accent mb-4">
+                Portal Konsultasi & Estimasi Material B2B
+              </p>
+              <h1 className="text-[42px] font-light text-ink tracking-tight leading-[1.05] mb-5">
+                Selamat datang di<br />
+                <span className="font-extrabold text-ink">QHome-MAS</span>{' '}
+                <span className="text-muted font-light">Digital Office</span>
+              </h1>
+              <p className="text-[14px] text-muted leading-relaxed max-w-lg font-normal border-l-2 border-accent/40 pl-4">
+                Ekosistem Multi-Agent cerdas — kalkulasi presisi, verifikasi stok otomatis, dan kurasi gaya arsitektural.
+              </p>
+            </div>
+
+            {/* Divider with label */}
+            <div className="flex items-center gap-4 mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-light">Pilih Persona Simulasi</span>
+              <div className="flex-1 h-px bg-hairline" />
+              <span className="text-[10px] text-muted-light">{PERSONAS.length} tersedia</span>
+            </div>
+
+            {/* Editorial Persona List — no cards, dividers only */}
+            <div className="divide-y divide-hairline">
+              {PERSONAS.map((persona, idx) => {
+                const IconComponent = persona.icon;
+                return (
+                  <button
+                    key={persona.role}
+                    onClick={() => {
+                      setCurrentUser(persona);
+                      if (persona.role === 'admin') {
+                        setActivePortal('admin');
+                      } else {
+                        setActivePortal('chat');
+                      }
+                    }}
+                    className="w-full flex items-start gap-6 py-5 text-left group outline-none hover:bg-surface-soft/40 transition-colors duration-200 cursor-pointer px-4 -mx-4 rounded-full"
+                  >
+                    {/* Index number */}
+                    <span className="text-[12px] font-bold text-muted-light w-5 flex-shrink-0 group-hover:text-accent transition-colors tabular-nums mt-2.5">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+
+                    {/* Icon — minimal, flat */}
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-surface-soft border border-hairline group-hover:border-accent/30 transition-colors mt-0.5">
+                      <IconComponent className="w-4 h-4 text-muted group-hover:text-accent transition-colors" />
+                    </div>
+
+                    {/* Text block */}
+                    <div className="flex-1 min-w-0 mt-1">
+                      <div className="flex items-baseline gap-2.5 mb-1">
+                        <span className="text-[15.5px] font-bold text-ink group-hover:text-accent transition-colors leading-none">
+                          {persona.name}
+                        </span>
+                        <span className="text-[10px] font-semibold text-muted-light uppercase tracking-wider">
+                          {persona.roleDisplay}
+                        </span>
+                      </div>
+                      <div className="overflow-hidden max-h-[1.6em] group-hover:max-h-[4.5em] transition-all duration-300 ease-in-out">
+                        <p className="text-[12.5px] text-muted leading-relaxed">
+                          {persona.desc}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right — badge */}
+                    <div className="flex items-center gap-3 flex-shrink-0 mt-2">
+                      <span className="hidden sm:inline-block text-[9.5px] font-bold uppercase tracking-wider text-muted-light border border-hairline/60 px-3 py-0.5 rounded-full">
+                        {persona.role === 'admin' ? 'Admin' : 'B2B'}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+          </div>
+
+          {/* Footer pinned to the absolute bottom of the viewport */}
+          <footer className="text-[11px] text-muted-light mt-12 pt-6 border-t border-hairline/60 w-full">
+            QHomeMart Multi-Agent System &copy; 2026 · Digital Office B2B Platform · Dev Mode
+          </footer>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentUser && activePortal === 'catalog') {
+    return (
+      <MaterialCatalog 
+        onBack={() => setActivePortal('chat')}
+      />
+    );
+  }
+
+  if (currentUser && activePortal === 'admin') {
+    const systemMsg = messages.filter(m => m.role === 'system').reverse()[0];
+    const products = systemMsg?.products || [];
+    const userBrief = messages.filter(m => m.role === 'user')[0]?.content || "";
+
+    return (
+      <AdminPortal 
+        currentUser={currentUser}
+        currentSessionId={currentSessionId}
+        products={products}
+        brief={userBrief}
+        onBack={() => {
+          if (currentSessionId) {
+            setActivePortal('chat');
+          } else {
+            setCurrentUser(null);
+          }
+        }}
+        onUpdateProducts={(newProducts) => {
+          setMessages(prev => {
+            const updated = [...prev];
+            const lastSysIdx = updated.map(m => m.role).lastIndexOf('system');
+            if (lastSysIdx !== -1) {
+              updated[lastSysIdx] = {
+                ...updated[lastSysIdx],
+                products: newProducts
+              };
+            }
+            return updated;
+          });
+        }}
+      />
+    );
+  }
+
+  if (currentUser && activePortal === 'order') {
+    const systemMsg = messages.filter(m => m.role === 'system').reverse()[0];
+    const products = systemMsg?.products || [];
+    const userBrief = messages.filter(m => m.role === 'user')[0]?.content || "";
+
+    return (
+      <OrderPortal 
+        currentUser={currentUser}
+        currentSessionId={currentSessionId}
+        products={products}
+        brief={userBrief}
+        onBack={() => setActivePortal('chat')}
+        onPlaceOrder={(orderDetails) => {
+          console.log("Order placed:", orderDetails);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen bg-canvas font-sans overflow-hidden">
       
@@ -280,6 +665,13 @@ export default function App() {
             </span>
           </div>
           <div className="flex gap-2">
+            <button 
+              onClick={() => setActivePortal('catalog')} 
+              className="p-1 text-muted-light hover:text-accent transition-colors" 
+              title="Lihat Katalog Master"
+            >
+              <Package className="w-3.5 h-3.5 text-accent animate-pulse" />
+            </button>
             <button onClick={handleNewChat} className="p-1 text-muted-light hover:text-ink transition-colors" title="Konsultasi Baru">
               <Plus className="w-3.5 h-3.5" />
             </button>
@@ -407,18 +799,40 @@ export default function App() {
         
         {/* Header */}
         <header className="px-6 py-4 bg-canvas/90 backdrop-blur-xl flex justify-between items-center sticky top-0 z-20">
+          <div className="flex items-center gap-3">
             {!isSidebarOpen && (
               <button 
                 onClick={() => setIsSidebarOpen(true)} 
-                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group" 
+                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group mr-2" 
                 title="Buka Riwayat Estimasi"
               >
                 <PanelLeftOpen className="w-5 h-5 transition-transform group-hover:scale-110 text-accent" />
               </button>
             )}
+            {currentUser && (
+              <div className="flex items-center gap-2.5 bg-white/80 border border-hairline px-3.5 py-1.5 rounded-full shadow-sm animate-scale-in">
+                <span className="text-[14.5px] select-none">{currentUser.avatar}</span>
+                <div className="flex items-center gap-2 text-left">
+                  <span className="text-[11.5px] font-bold text-ink leading-none">{currentUser.name}</span>
+                  <span className="text-[9px] font-light text-muted-light">/</span>
+                  <span className="text-[9px] uppercase tracking-wider text-muted-light font-bold leading-none mt-0.5">{currentUser.roleDisplay}</span>
+                </div>
+                <div className="w-px h-4 bg-hairline mx-1.5" />
+                <button 
+                  onClick={() => {
+                    setCurrentUser(null);
+                    handleNewChat();
+                  }}
+                  className="text-[11px] font-bold text-red-500 hover:text-red-600 transition-colors focus:outline-none"
+                  title="Keluar / Ganti Akun"
+                >
+                  Keluar
+                </button>
+              </div>
+            )}
+          </div>
           
           <div className="flex items-center gap-4 ml-auto">
-
              {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) — Disembunyikan saat sidebar terbuka */}
              {!isRightSidebarOpen && (
                <button 
@@ -429,9 +843,6 @@ export default function App() {
                  <UserCog className="w-5 h-5 transition-transform group-hover:scale-110 text-accent" />
                </button>
              )}
-
-
-
           </div>
         </header>
 
@@ -452,10 +863,10 @@ export default function App() {
                 {/* Greeting & Deskripsi - Menghormati User dengan Nada Konsultan Profesional */}
                 <div className="space-y-4 max-w-2xl">
                   <h2 className="text-[28px] font-light text-ink leading-tight tracking-wide">
-                    Konsolidasi Spesifikasi & Perencanaan Material Proyek
+                    {getPersonaGreeting().title}
                   </h2>
                   <p className="text-[14px] text-muted leading-relaxed max-w-xl mx-auto font-normal">
-                    Asisten kolaboratif untuk rekayasa nilai dan estimasi volume material proyek Anda. Sampaikan spesifikasi dimensi atau deskripsi area untuk memulai analisis presisi.
+                    {getPersonaGreeting().subtitle}
                   </p>
                 </div>
                 
@@ -465,41 +876,20 @@ export default function App() {
                     CONTOH FORMULASI ESTIMASI MATERIAL
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button 
-                      onClick={() => setBrief("Berapa kebutuhan WPC fluted panel dari Panelku untuk menghias dinding dekoratif dengan luas area 15 meter persegi?")}
-                      className="bg-white border border-hairline hover:border-accent/40 rounded-xl p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between h-[135px] group"
-                    >
-                      <span className="font-semibold text-[13px] text-ink group-hover:text-accent transition-colors">
-                        Kalkulasi Fluted Panel WPC
-                      </span>
-                      <span className="text-[11.5px] text-muted-light leading-relaxed font-normal mt-1.5">
-                        Estimasi kebutuhan fluted panel WPC untuk dekorasi dinding seluas 15 m²
-                      </span>
-                    </button>
-                    
-                    <button 
-                      onClick={() => setBrief("Kalkulasi kebutuhan ubin granit Indogress 60x60 untuk lantai ruang tamu dengan luas area 6x6 meter.")}
-                      className="bg-white border border-hairline hover:border-accent/40 rounded-xl p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between h-[135px] group"
-                    >
-                      <span className="font-semibold text-[13px] text-ink group-hover:text-accent transition-colors">
-                        Analisis Lantai Granit Premium
-                      </span>
-                      <span className="text-[11.5px] text-muted-light leading-relaxed font-normal mt-1.5">
-                        Perhitungan kebutuhan ubin granit 60x60 untuk area lantai komersial 36 m²
-                      </span>
-                    </button>
-                    
-                    <button 
-                      onClick={() => setBrief("Hitung kebutuhan cat interior Vinilex/Dulux untuk kamar ukuran 3x4 meter dengan tinggi dinding 3 meter.")}
-                      className="bg-white border border-hairline hover:border-accent/40 rounded-xl p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between h-[135px] group"
-                    >
-                      <span className="font-semibold text-[13px] text-ink group-hover:text-accent transition-colors">
-                        Simulasi Pengecatan Interior
-                      </span>
-                      <span className="text-[11.5px] text-muted-light leading-relaxed font-normal mt-1.5">
-                        Kompilasi volume cat dinding primer & topcoat untuk kebutuhan ruang 3x4 m
-                      </span>
-                    </button>
+                    {getPersonaGreeting().presets.map((preset, index) => (
+                      <button 
+                        key={index}
+                        onClick={() => setBrief(preset.prompt)}
+                        className="bg-white border border-hairline hover:border-accent/40 rounded-xl p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between h-[135px] group"
+                      >
+                        <span className="font-semibold text-[13px] text-ink group-hover:text-accent transition-colors">
+                          {preset.title}
+                        </span>
+                        <span className="text-[11.5px] text-muted-light leading-relaxed font-normal mt-1.5">
+                          {preset.desc}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
                 
@@ -688,19 +1078,32 @@ export default function App() {
                                         </p>
                                       </div>
                                       
-                                      <div className="flex gap-2.5 w-full sm:w-auto">
+                                      <div className="flex gap-2.5 w-full sm:w-auto flex-wrap">
                                         {currentSessionId && (
                                           <a
                                             href={`http://localhost:8000/api/projects/${currentSessionId}/generate-pdf`}
                                             download={`Estimasi_QHome_${currentSessionId.substring(0, 8).toUpperCase()}.pdf`}
-                                            className="flex-1 sm:flex-none bg-white hover:bg-neutral-50 active:scale-[0.98] text-ink border border-hairline px-4.5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all text-center flex items-center justify-center"
+                                            className="flex-1 sm:flex-none bg-white hover:bg-neutral-50 active:scale-[0.98] text-ink border border-hairline px-4.5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all text-center flex items-center justify-center whitespace-nowrap focus:outline-none"
                                           >
-                                            Unduh Gaya
+                                            Unduh Rencana Belanja
                                           </a>
                                         )}
-                                        <button className="flex-1 sm:flex-none bg-ink hover:opacity-90 text-white px-5.5 py-2.5 rounded-xl text-[13.5px] font-bold active:scale-[0.97] transition-all text-center">
-                                          Ambil Koleksi
-                                        </button>
+                                        
+                                        {currentUser?.role === 'admin' ? (
+                                          <button 
+                                            onClick={() => setActivePortal('admin')}
+                                            className="flex-1 sm:flex-none bg-accent hover:bg-accent/90 text-white px-5.5 py-2.5 rounded-xl text-[13.5px] font-bold active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none"
+                                          >
+                                            Portal Evaluasi Admin &rarr;
+                                          </button>
+                                        ) : (
+                                          <button 
+                                            onClick={() => setActivePortal('order')}
+                                            className="flex-1 sm:flex-none bg-ink hover:opacity-90 text-white px-5.5 py-2.5 rounded-xl text-[13.5px] font-bold active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none"
+                                          >
+                                            Checkout Rencana B2B &rarr;
+                                          </button>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -959,7 +1362,7 @@ export default function App() {
                 onClick={() => setIsModalOpen(false)}
                 className="w-8 h-8 rounded-full hover:bg-hairline flex items-center justify-center text-muted hover:text-ink transition-all font-semibold"
               >
-                ✕
+                X
               </button>
             </div>
             
