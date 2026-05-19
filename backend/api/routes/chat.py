@@ -67,3 +67,46 @@ async def stream_logs(request: Request, session_id: str):
             await asyncio.sleep(0.5)
             
     return EventSourceResponse(event_generator())
+
+@router.get("/sessions")
+def get_sessions(db: Session = Depends(get_db)):
+    """Mendapatkan daftar seluruh riwayat proyek di sidebar"""
+    sessions = db.query(ChatSession).order_by(ChatSession.created_at.desc()).all()
+    return [{"id": s.id, "title": s.title} for s in sessions]
+
+@router.get("/sessions/{session_id}/messages")
+def get_session_messages(session_id: str, db: Session = Depends(get_db)):
+    """Mendapatkan seluruh pesan dan log agen dari sesi tertentu untuk ditampilkan ulang"""
+    messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc()).all()
+    
+    result = []
+    for msg in messages:
+        # Konversi logs jika bertipe string (misal representasi SQLite JSON)
+        logs = msg.agent_logs
+        if isinstance(logs, str):
+            try:
+                logs = json.loads(logs)
+            except:
+                pass
+                
+        # Status selesai jika rolenya system
+        status = 'completed' if msg.role == ChatRole.system else None
+        
+        # Ekstrak narasi akhir dan produk hasil kurasi dari event completed di dalam logs
+        narrative = ""
+        products = []
+        if msg.role == ChatRole.system and logs:
+            completed_log = next((l for l in logs if isinstance(l, dict) and l.get("event") == "completed"), None)
+            if completed_log:
+                narrative = completed_log.get("narrative", "")
+                products = completed_log.get("products", [])
+                
+        result.append({
+            "role": msg.role.value,
+            "content": msg.content,
+            "logs": logs or [],
+            "status": status,
+            "narrative": narrative,
+            "products": products
+        })
+    return result
