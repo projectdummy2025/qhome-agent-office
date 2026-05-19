@@ -70,9 +70,27 @@ def _llm_invoke_with_retry(llm, prompt: str, max_retries: int = 3):
 def chief_supervisor(state: AgentState):
     """Menganalisis brief dan menghire agen"""
     brief = state.get("brief", "")
+    reports = state.get("reports", [])
     
-    # Prompting Supervisor
-    prompt = f"Berdasarkan brief ini: '{brief}', agen apa saja yang dibutuhkan? (Pilih dari: tile, wood, stone, paint, researcher). Jawab dengan format list python, contoh: ['tile', 'wood']."
+    # Deteksi jika ini adalah revisi (ada report sebelumnya)
+    if reports:
+        existing_materials = []
+        for r in reports:
+            if "product" in r:
+                p = r["product"]
+                existing_materials.append(f"- {r['agent']}: {p.get('name')} (Qty: {p.get('qty')}, Total: Rp {p.get('total', 0):,})")
+        
+        materials_summary = "\n".join(existing_materials)
+        prompt = (
+            f"Klien mengajukan instruksi perubahan/revisi: '{brief}'.\n\n"
+            f"Rencana belanja saat ini:\n{materials_summary}\n\n"
+            "Analisislah instruksi baru ini. Tentukan agen spesialis mana saja yang perlu dipanggil kembali "
+            "untuk merevisi rancangan di atas (tile, wood, stone, paint, researcher).\n"
+            "Penting: Hanya pilih agen yang terpengaruh langsung oleh revisi klien. Jangan pilih agen yang tidak berubah.\n"
+            "Jawab dengan format list python, contoh: ['tile']"
+        )
+    else:
+        prompt = f"Berdasarkan brief ini: '{brief}', agen apa saja yang dibutuhkan? (Pilih dari: tile, wood, stone, paint, researcher). Jawab dengan format list python, contoh: ['tile', 'wood']."
     
     response = _llm_invoke_with_retry(supervisor_llm, prompt)
     
@@ -144,7 +162,8 @@ def tile_estimator(state: AgentState):
         product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Tile Estimator", "content": content, "product": product_data}
-    return {"reports": state.get("reports", []) + [report]}
+    old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Tile Estimator"]
+    return {"reports": old_reports + [report]}
 
 def wood_specialist(state: AgentState):
     """Wood Specialist"""
@@ -194,7 +213,8 @@ def wood_specialist(state: AgentState):
         product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Wood Specialist", "content": content, "product": product_data}
-    return {"reports": state.get("reports", []) + [report]}
+    old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Wood Specialist"]
+    return {"reports": old_reports + [report]}
 
 def paint_consultant(state: AgentState):
     """Paint Consultant"""
@@ -245,7 +265,8 @@ def paint_consultant(state: AgentState):
         product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Paint Consultant", "content": content, "product": product_data}
-    return {"reports": state.get("reports", []) + [report]}
+    old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Paint Consultant"]
+    return {"reports": old_reports + [report]}
 
 def stone_specialist(state: AgentState):
     """Stone Veneer Specialist — kalkulasi bonding agent dan persiapan permukaan"""
@@ -296,7 +317,8 @@ def stone_specialist(state: AgentState):
         product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Stone Veneer Specialist", "content": content, "product": product_data}
-    return {"reports": state.get("reports", []) + [report]}
+    old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Stone Veneer Specialist"]
+    return {"reports": old_reports + [report]}
 
 def market_researcher(state: AgentState):
     """Market Research Analyst"""
@@ -345,7 +367,8 @@ def market_researcher(state: AgentState):
         content = "Riset pasar saat ini difokuskan pada ketersediaan stok material di gudang lokal QHomeMart."
         
     report = {"agent": "Market Analyst", "content": content}
-    return {"reports": state.get("reports", []) + [report]}
+    old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Market Analyst"]
+    return {"reports": old_reports + [report]}
 
 
 
@@ -356,7 +379,8 @@ def inventory_administrator(state: AgentState):
     Jika stok rendah (< 20) atau habis, merekomendasikan produk substitusi secara otomatis
     dan memperbarui list produk agar proposal ter-update dinamis.
     """
-    reports = state.get("reports", [])
+    # Bersihkan dari laporan inventory lama sebelum memproses yang baru
+    reports = [r for r in state.get("reports", []) if r.get("agent") not in ["Inventory Administrator", "Inventory Administrator (Alt)"]]
     brief = state.get("brief", "")
 
     # Jalankan pengecekan stok
@@ -591,5 +615,7 @@ workflow.add_edge("researcher", "inventory")   # → Inventory Administrator
 workflow.add_edge("inventory", "synthesizer")  # → Chief Supervisor (final review)
 workflow.add_edge("synthesizer", END)
 
-app_graph = workflow.compile()
+from langgraph.checkpoint.memory import MemorySaver
+memory = MemorySaver()
+app_graph = workflow.compile(checkpointer=memory)
 

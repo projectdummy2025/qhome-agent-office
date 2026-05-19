@@ -21,7 +21,8 @@ async def run_agent_simulation(brief: str, session_id: str):
     try:
         from backend.agents.supervisor import app_graph
         
-        async for output in app_graph.astream({"brief": brief, "reports": []}, stream_mode="updates"):
+        config = {"configurable": {"thread_id": session_id}}
+        async for output in app_graph.astream({"brief": brief}, config=config, stream_mode="updates"):
             for node_name, state_update in output.items():
                 if node_name == "supervisor":
                     hired = state_update.get("hired_agents", [])

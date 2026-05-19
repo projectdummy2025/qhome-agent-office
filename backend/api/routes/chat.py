@@ -57,12 +57,13 @@ async def analyze_project(request: Request, db: Session = Depends(get_db)):
     data = await request.json()
     brief = data.get("brief", "")
     session_id = data.get("session_id")
+    user_id = data.get("user_id", "default-user")
     
     # 1. Pastikan ChatSession ada, jika belum buat baru
     if not session_id:
         session_id = str(uuid.uuid4())
         title = _generate_session_title(brief)
-        new_session = ChatSession(id=session_id, title=title)
+        new_session = ChatSession(id=session_id, title=title, user_id=user_id)
         db.add(new_session)
         db.commit()
     
@@ -111,9 +112,12 @@ async def stream_logs(request: Request, session_id: str):
     return EventSourceResponse(event_generator())
 
 @router.get("/sessions")
-def get_sessions(db: Session = Depends(get_db)):
+def get_sessions(user_id: str = None, db: Session = Depends(get_db)):
     """Mendapatkan daftar seluruh riwayat proyek di sidebar"""
-    sessions = db.query(ChatSession).order_by(ChatSession.created_at.desc()).all()
+    query = db.query(ChatSession)
+    if user_id:
+        query = query.filter(ChatSession.user_id == user_id)
+    sessions = query.order_by(ChatSession.created_at.desc()).all()
     result = []
     for s in sessions:
         # Cari pesan user pertama dari sesi ini untuk dijadikan brief lengkap
@@ -257,3 +261,97 @@ def get_kpi_summary(db: Session = Depends(get_db)):
         "total_pdf_generated": sum(r.pdf_generated for r in records),
         "avg_agents_per_session": round(sum(r.agent_count for r in records) / len(records), 1),
     }
+
+@router.get("/products")
+def get_products(db: Session = Depends(get_db)):
+    """Mendapatkan daftar seluruh katalog produk material beserta gambar kustom"""
+    from backend.models.schema import Product as DBProduct
+    products = db.query(DBProduct).all()
+    
+    # Map category to matching high-quality curated image URLs
+    category_images = {
+        "granit": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=500&q=80",
+        "keramik": "https://images.unsplash.com/photo-1502005229762-fc1b2b812ca5?auto=format&fit=crop&w=500&q=80",
+        "wood": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=500&q=80",
+        "panel": "https://images.unsplash.com/photo-1615876234886-fd9a39fda97f?auto=format&fit=crop&w=500&q=80",
+        "cat": "https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=500&q=80",
+        "stone": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=500&q=80",
+        "semen": "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=500&q=80"
+    }
+    
+    result = []
+    for p in products:
+        category_lower = p.category.lower() if p.category else ""
+        
+        # Cari pencocokan gambar terbaik berdasarkan kategori
+        image_url = "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=500&q=80" # Fallback
+        for cat_key, img_val in category_images.items():
+            if cat_key in category_lower:
+                image_url = img_val
+                break
+                
+        result.append({
+            "sku": p.sku,
+            "name": p.name,
+            "category": p.category,
+            "base_price": p.base_price,
+            "coverage_m2": p.coverage_m2,
+            "stock_qty": p.stock_qty,
+            "image_url": image_url
+        })
+    return result
+
+from pydantic import BaseModel
+from typing import List, Optional
+
+class OrderItemInput(BaseModel):
+    product_sku: str
+    qty: float
+    price: float
+    total: float
+
+class OrderInput(BaseModel):
+    session_id: Optional[str] = None
+    user_id: str
+    materials_total: float
+    shipping_cost: float
+    total_invoice: float
+    truck_type: str
+    delivery_date: str
+    notes: Optional[str] = None
+    items: List[OrderItemInput]
+
+@router.post("/orders")
+def create_order(payload: OrderInput, db: Session = Depends(get_db)):
+    """Menyimpan order logistik ke database secara ternormalisasi (3NF)"""
+    import uuid
+    from backend.models.schema import Order as DBOrder, OrderItem as DBOrderItem
+    
+    order_id = f"ORD-{uuid.uuid4().hex[:8].upper()}"
+    new_order = DBOrder(
+        id=order_id,
+        session_id=payload.session_id,
+        user_id=payload.user_id,
+        materials_total=payload.materials_total,
+        shipping_cost=payload.shipping_cost,
+        total_invoice=payload.total_invoice,
+        truck_type=payload.truck_type,
+        delivery_date=payload.delivery_date,
+        notes=payload.notes
+    )
+    db.add(new_order)
+    
+    for item in payload.items:
+        item_id = f"ORI-{uuid.uuid4().hex[:8].upper()}"
+        new_item = DBOrderItem(
+            id=item_id,
+            order_id=order_id,
+            product_sku=item.product_sku,
+            qty=item.qty,
+            price=item.price,
+            total=item.total
+        )
+        db.add(new_item)
+        
+    db.commit()
+    return {"status": "success", "order_id": order_id}
