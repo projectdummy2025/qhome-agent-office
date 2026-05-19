@@ -7,42 +7,34 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.core.database import SessionLocal, init_db, get_chroma_collection
 from backend.models.schema import Product
 
-import os
+import csv
 
-def parse_markdown_catalog():
+def parse_csv_catalog():
     products = []
-    # Dapatkan path ke file markdown
-    file_path = os.path.join(os.path.dirname(__file__), '..', 'docs', 'seed_database_products.md')
+    file_path = os.path.join(os.path.dirname(__file__), 'seed_products.csv')
     
     if not os.path.exists(file_path):
         print(f"File {file_path} tidak ditemukan!")
         return []
         
     with open(file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        for line in lines:
-            # Lewati header tabel dan separator
-            if line.startswith('|') and not line.startswith('| SKU') and not line.startswith('| :---'):
-                cols = [c.strip() for c in line.split('|')[1:-1]]
-                if len(cols) >= 7:
-                    price_str = cols[4].replace('.', '')
-                    try:
-                        # Bersihkan nilai coverage (misalnya "5 m²" atau "3 m" menjadi "5" atau "3")
-                        coverage_clean = cols[5].split()[0] if cols[5] else "0.0"
-                        products.append({
-                            "sku": cols[0],
-                            "name": cols[1],
-                            "category": cols[3].lower(),
-                            "base_price": float(price_str),
-                            "coverage_m2": float(coverage_clean),
-                            "desc": cols[6]
-                        })
-                    except ValueError as e:
-                        print(f"Skipping row {cols[0]} due to parsing error: {e}")
-                        continue
+        reader = csv.DictReader(f)
+        for row in reader:
+            try:
+                products.append({
+                    "sku": row["sku"],
+                    "name": row["name"],
+                    "category": row["category"].lower(),
+                    "base_price": float(row["base_price"]),
+                    "coverage_m2": float(row["coverage_m2"]),
+                    "desc": row["desc"]
+                })
+            except Exception as e:
+                print(f"Skipping row {row.get('sku')} due to parsing error: {e}")
+                continue
     return products
 
-PRODUCTS = parse_markdown_catalog()
+PRODUCTS = parse_csv_catalog()
 
 def seed_db():
     print("Initializing Database...")

@@ -1,0 +1,90 @@
+sku,name,brand,category,base_price,coverage_m2,desc
+TLE-001,Granit Tile 60x60 White Carara,Indogress,tile,150000.0,1.44,"Granit mengkilap motif marmer putih, cocok untuk ruang tamu klasik."
+TLE-002,Keramik Lantai 40x40 Matte Grey,Roman Granite,tile,85000.0,0.96,"Keramik bertekstur *matte* anti-slip, ideal untuk teras atau kamar mandi."
+TLE-003,Granit Premium 80x80 Black Nero,Valentino Gress,tile,350000.0,1.92,Granit ukuran besar berwarna hitam elegan untuk kesan mewah modern.
+TLE-004,Keramik Dinding 25x50 Motif Bata,Platinum,tile,75000.0,1.0,Keramik dinding motif bata ekspos merah untuk nuansa industrial.
+TLE-005,Granit Wood Motif 20x100 Teak,Sandimas,tile,210000.0,1.2,"Granit memanjang motif kayu jati, tekstur urat kayu natural."
+TLE-006,Keramik Hexagon 20x20 Vintage,Milan,tile,95000.0,0.96,Keramik segi enam motif *vintage/shabby chic* untuk *backsplash* dapur.
+TLE-007,Granit Terrazzo 60x60 White Spotted,Arna,tile,165000.0,1.44,"Granit motif teraso putih bintik warna-warni, cocok untuk cafe komersial."
+TLE-008,Keramik Kolam Renang 10x10 Blue,Kuda Laut,tile,120000.0,1.0,Keramik mozaik biru tahan kaporit khusus untuk kolam renang.
+TLE-009,Granit Outdoor 60x60 Rough Stone,Deco Gress,tile,175000.0,1.44,Granit permukaan sangat kasar (*rustic*) anti-slip untuk garasi dan *carport*.
+TLE-010,Keramik 50x50 Beige Polos,Mulia,tile,65000.0,1.0,Keramik ekonomis warna krem polos untuk proyek rumah subsidi.
+TLE-011,Keramik Dinding Subway 10x20 White,Roman,tile,110000.0,1.0,Keramik dinding *subway* putih mengkilap (glossy) ala stasiun New York.
+TLE-012,Granit Marmer Slab 120x240 Statuario,Wisma Sehati,tile,1250000.0,2.88,Granit super besar (*slab*) motif marmer premium untuk *foyer* mewah.
+TLE-013,Keramik Kamar Mandi 25x25 Anti-Slip,KIA,tile,60000.0,1.0,Keramik lantai kamar mandi warna biru bertekstur sangat kasar agar tidak licin.
+TLE-014,Granit Wood Motif 15x60 Oak,Sandimas,tile,185000.0,1.08,Granit motif kayu Oak cerah bergaya Skandinavia/Japandi.
+TLE-015,Keramik Mozaik Kaca 30x30 Gold,Kuda Laut,tile,250000.0,0.9,Mozaik kaca berwarna emas memantulkan cahaya untuk dinding aksen.
+TLE-016,Granit 60x60 Concrete Grey,Indogress,tile,145000.0,1.44,Granit warna abu-abu semen ekspos murni untuk gaya industrialis murni.
+TLE-017,Keramik Dinding 30x60 3D Wave,Platinum,tile,95000.0,0.9,Keramik dinding putih dengan tekstur gelombang 3 dimensi yang menonjol.
+TLE-018,Granit 80x80 Calacatta Gold,Arna,tile,320000.0,1.92,Granit marmer putih dengan urat emas tebal dan mewah.
+TLE-019,Keramik Teras 40x40 Batu Kali,Milan,tile,80000.0,0.96,Keramik bermotif cetakan batu kali dan kerikil untuk taman.
+TLE-020,Granit 60x120 Statuario Glossy,Sandimas,tile,450000.0,1.44,Granit proporsi persegi panjang besar (60x120) untuk kesan ruangan tinggi.
+WPC-001,WPC Wall Panel Fluted Teak Wood,Panelku,wood,210000.0,0.45,"Panel dinding WPC motif kayu jati bergaris (*fluted*), tahan rayap."
+WPC-002,WPC Flat Panel Dark Walnut,Panelku,wood,235000.0,0.45,Panel datar motif kayu walnut gelap untuk aksen dinding elegan minimalis.
+WPC-003,PVC Sheet Wood Grain Maple,Generic,wood,185000.0,1.22,Lembaran pelapis PVC bermotif serat kayu cerah (maple).
+WPC-004,WPC Outdoor Decking 2.5m x 15cm,Duma,wood,280000.0,0.37,"Lantai WPC khusus *outdoor* pinggir kolam, tahan cuaca dan anti-lapuk."
+WPC-005,Solid Wood Panel Jati Perhutani,Local Craft,wood,550000.0,1.0,"Panel kayu jati asli kualitas ekspor, serat alami."
+WPC-006,WPC Fluted Panel Ash Grey,Panelku,wood,215000.0,0.45,"WPC motif bergaris warna abu-abu muda (*ash grey*), cocok untuk skandinavian."
+WPC-007,Acoustic Wood Slat Panel Pine,Generic,wood,320000.0,0.72,Panel kayu pinus dengan lapisan akustik peredam suara *home theater*.
+WPC-008,Recycle Mixwood Vintage Panel,Local Craft,wood,400000.0,1.0,Panel kayu daur ulang kapal (*recycled boat wood*) bergaya *rustic* warna-warni.
+WPC-009,WPC Fluted Panel White Matte,Panelku,wood,210000.0,0.45,"WPC bergaris warna putih doff, menciptakan kesan dinding bersih namun bertekstur."
+WPC-010,WPC Ceiling Panel Light Merbau,Duma,wood,195000.0,0.4,Panel WPC ringan khusus untuk plafon (langit-langit) motif kayu Merbau.
+WPC-011,Solid Wood Kisi-Kisi Meranti 3x3,Local Craft,wood,120000.0,0.2,Kayu meranti batangan (kisi-kisi) untuk partisi pemisah ruangan (*room divider*).
+WPC-012,WPC Decking Tile 30x30 Interlock,Generic,wood,45000.0,0.09,Kotak WPC 30x30cm yang bisa dipasang *puzzle* interlock untuk balkon apartemen.
+WPC-013,Plywood Sungkai Veneer 122x244,Taco,wood,350000.0,2.97,Papan multiplek berlapis *veneer* kayu sungkai terang untuk *custom furniture*.
+WPC-014,HPL Taco Woodgrain Dark Oak,Taco,wood,215000.0,2.97,Lembaran pelapis HPL motif kayu ek gelap anti gores untuk meja/kabinet.
+WPC-015,WPC Fluted Panel Black Charcoal,Panelku,wood,225000.0,0.45,WPC bergaris warna hitam arang pekat untuk ruang hiburan *gaming/cinema*.
+STN-001,Andesit Rustic 30x60,Qhomemart,stone,230000.0,1.0,"Batu andesit abu-abu bertekstur kasar (*rustic*), sangat kuat untuk eksterior."
+STN-002,Andesit Polish 60x60,Qhomemart,stone,322000.0,1.44,"Batu andesit yang dipoles halus, memberikan kesan alami namun rapi."
+STN-003,Mosaic White Interlock 30x30,Qhomemart,stone,189750.0,0.9,"Batu putih susun sirih model *interlock* memanjang, cocok untuk pilar."
+STN-004,Batu Palimanan RTM 20x40,Qhomemart,stone,175000.0,1.0,"Batu Palimanan krem cerah bertekstur rata mesin (RTM), butuh *coating*."
+STN-005,Batu Templek Purwakarta Acak,Qhomemart,stone,120000.0,1.0,"Batu lempeng hitam acak (*random*), pemasangan manual bak *puzzle* taman."
+STN-006,Batu Candi Hitam Berpori 20x20,Qhomemart,stone,145000.0,1.0,"Batu candi hitam pekat dengan pori besar, sangat natural resor tropis."
+STN-007,Koral Sikat Putih Kupang 20 KG,Qhomemart,stone,85000.0,1.0,Batu koral putih bulat untuk lantai sikat *carport* atau taman kering.
+STN-008,Wall Cladding Slate Grey 15x60,Qhomemart,stone,210000.0,0.9,"Panel batu sabak abu-abu susun rapi, instan menyerupai bata alam."
+STN-009,Paras Jogja Putih RTM 10x20,Qhomemart,stone,115000.0,1.0,"Batu paras putih lembut dari Jogja, indah namun rawan lumut jika *outdoor*."
+STN-010,Batu Basalt Grey Flamed 30x30,Qhomemart,stone,290000.0,1.0,Batu basalt abu-abu gelap dengan finishing *flamed* anti-slip sangat kuat.
+STN-011,Travertine Beige Slab 60x120,Import,stone,850000.0,0.72,Marmer travertine warna *beige* dengan pori alami eksotis khas Italia.
+STN-012,Koral Sikat Hitam Bengkulu 20 KG,Qhomemart,stone,75000.0,1.0,Batu koral pipih hitam legam untuk pijakan terapi atau sela-sela taman.
+STN-013,Batu Susun Sirih Merah 3x40,Qhomemart,stone,165000.0,1.0,Batu paras merah tipis susun sirih untuk aksen dinding gaya Bali.
+STN-014,Marmer Tulungagung Ujung Pandang,Lokal,stone,600000.0,1.0,Marmer asli nusantara warna krem cerah dengan gurat tipis.
+STN-015,Roster Bata Terakota 20x20,Lokal,stone,15000.0,0.04,Bata berlubang (*roster*) tanah liat terakota untuk ventilasi udara estetik.
+PNT-001,Jotaplast Interior Paint 5 KG,Jotun,paint,135000.0,15.0,"Cat interior ekonomis hasil *matte*, warna pastel standar."
+PNT-002,Majestic True Beauty 2.5 L,Jotun,paint,215000.0,12.0,"Cat premium hasil *silk* mengkilap, tahan noda dan ramah lingkungan."
+PNT-003,Dulux Easy Clean 25 KG,Dulux,paint,650000.0,75.0,"Cat interior pail besar, formula *KidProof+* mudah dibersihkan dari noda coretan."
+PNT-004,Propan Eco Emulsion 5 KG,Propan,paint,145000.0,15.0,"Cat emulsi akrilik interior, tahan jamur dan tanpa timbal."
+PNT-005,Nippon Paint Vinilex 5 KG,Nippon,paint,125000.0,14.0,"Cat *vinyl acrylic* serbaguna (interior/eksterior), anti pudar."
+PNT-006,Dulux Weathershield 2.5 L,Dulux,paint,280000.0,10.0,"Cat eksterior premium pelindung cuaca ekstrem, anti-kelupas hingga 5 tahun."
+PNT-007,Aquaproof Anti Bocor 4 KG Grey,Aquaproof,paint,225000.0,4.0,Pelapis *waterproofing* elastis warna abu-abu untuk dak beton.
+PNT-008,Mowilex Woodstain Clear Gloss 1 L,Mowilex,paint,95000.0,8.0,"Pelitur kayu transparan mengkilap, melindungi panel Kayu dari sinar UV."
+PNT-009,Propan Stone Care Clear 1 L,Propan,paint,85000.0,6.0,"Cairan pelapis (*coating*) batu alam anti-jamur, efek basah (*wet look*)."
+PNT-010,Jotun Jotashield Color Last 25 KG,Jotun,paint,1850000.0,80.0,"Cat eksterior kemasan besar, perlindungan warna terluar tahan lama."
+PNT-011,Dulux Alkali Resisting Primer 2.5 L,Dulux,paint,175000.0,12.0,Cat dasar (*primer*) anti-alkali mencegah cat belang pada tembok baru.
+PNT-012,Jotun Majestic Primer 5 KG,Jotun,paint,210000.0,25.0,Cat dasar interior premium meratakan daya resap dinding sebelum dicat warna.
+PNT-013,Nippon Paint Flawless 2.5 L,Nippon,paint,195000.0,11.0,Cat interior dengan efek *ultra-matte* menyembunyikan retak rambut pada dinding.
+PNT-014,Aquaproof 4 KG Transparent,Aquaproof,paint,240000.0,4.0,Pelapis anti-bocor bening/transparan untuk melindungi batu alam tanpa mengubah warna.
+PNT-015,Mowilex Acrylic Gloss Enamel 1 L,Mowilex,paint,80000.0,6.0,"Cat kayu & besi berbahan dasar air, tidak bau menyengat, cepat kering."
+PNT-016,Jotun Wood & Metal 1 L Black,Jotun,paint,95000.0,7.0,Cat minyak hitam doff untuk pintu besi kayu pagar.
+PNT-017,Propan Decorcryl 5 KG White,Propan,paint,165000.0,15.0,Cat akrilik interior putih bersih (brilliant white) untuk plafon gypsum.
+PNT-018,Dulux Catylac Exterior 5 KG,Dulux,paint,180000.0,14.0,Cat eksterior kelas menengah dari Dulux dengan *Chroma Brite UV Fight*.
+PNT-019,No Drop Anti Bocor 4 KG Bitumen,Avian,paint,215000.0,4.0,Pelapis anti bocor warna hitam aspal tebal untuk talang air rawan retak.
+PNT-020,Qpaint Gallery Custom Color 5 KG,Qpaint,paint,155000.0,15.0,Cat interior Qhomemart dengan opsi percampuran warna mesin otomatis (*tinting*).
+SUP-001,MU-400 Semen Perekat Keramik 40 KG,Mortar Utama,support,110000.0,5.0,Semen instan perekat ubin keramik standar.
+SUP-002,MU-480 Perekat Granit Premium 40 KG,Mortar Utama,support,165000.0,5.0,Semen instan daya rekat tinggi khusus untuk granit ukuran besar.
+SUP-003,AM-40 Semen Nat Keramik 1 KG White,AM,support,22000.0,4.0,Pengisi celah nat keramik anti-jamur warna Putih.
+SUP-004,AM-53 Heavy Duty Stone Cement 40 KG,AM,support,215000.0,4.0,"Semen perekat beban berat (*heavy-duty*), wajib untuk pemasangan Batu Alam/Marmer."
+SUP-005,Sealant Lem Silikon Kaca 300ml Clear,Dextone,support,45000.0,3.0,Lem perekat kaca dan akrilik transparan waterproof.
+SUP-006,Dempul Kayu Impra Wood Filler 1 KG,Impra,support,35000.0,5.0,Dempul penutup pori-pori kayu jati/meranti sebelum di-coating.
+SUP-007,MU-301 Plester Bata Ringan 40 KG,Mortar Utama,support,90000.0,4.0,Semen instan untuk meratakan tembok bata ringan (hebel) sebelum pasang batu alam.
+SUP-008,AM-40 Semen Nat Keramik 1 KG Black,AM,support,22000.0,4.0,Pengisi celah nat keramik anti-jamur warna Hitam Pekat.
+SUP-009,Lem Kuning Fox 168 Galon 2.5 KG,Fox,support,115000.0,6.0,Lem serbaguna untuk menempelkan lapisan HPL Taco ke papan multiplek/kayu.
+SUP-010,SikaTop 107 Plus Waterproofing,Sika,support,150000.0,3.0,Pelapis anti bocor berbahan dasar semen 2 komponen khusus untuk area basah kolam renang.
+PNT-021,Jotun Majestic Perfect Beauty Base A 2.5L,Jotun,paint,259500.0,12.0,"Cat interior premium dengan hasil akhir matt sangat halus, menutup sempurna, warna cerah tahan lama."
+PNT-022,Jotun Majestic True Beauty Sheen 2.5L,Jotun,paint,232500.0,12.0,"Cat interior premium hasil akhir kilap sutra (sheen) yang mewah, tahan noda mudah dibersihkan."
+PNT-023,Jotashield Colour Extreme 2.5L,Jotun,paint,445000.0,10.0,"Cat eksterior ultra-premium pelindung cuaca ekstrem, teknologi anti-kotoran, ketahanan warna hingga 8 tahun."
+PNT-024,Jotun Ultra Primer 2.5L,Jotun,paint,279890.0,12.0,Cat dasar (primer) berkualitas tinggi daya rekat kuat mencegah alkali dan kelembaban dinding baru.
+WPC-016,WPC Wallpanel Master-Q WOC14MQ Fluted Teak,Master-Q,wood,216000.0,0.44,"Panel kisi-kisi WPC Master-Q motif kayu jati natural 3 meter tahan air, anti rayap untuk dekorasi aksen mewah."
+WPC-017,WPC Line 5 Panel Jutop Marble White,Jutop,wood,234900.0,0.45,"Panel dekoratif WPC flat motif marmer putih bersih bergaya modern minimalis, tahan gores dan noda."
+TLE-021,Granit Roman 60x60 dStatuario KW1,Roman,tile,195000.0,1.44,"Granit tile kilap motif marmer putih Statuario KW1 Roman, presisi tinggi dan sangat tahan gores."
+TLE-022,Granit Arna 60x60 Cream Polished KW1,Arna,tile,135000.0,1.44,Granit tile polished warna krem polos KW1 kualitas premium tahan noda untuk ruang utama luas.
+TLE-023,Granit Fiorentino 60x120 Calacatta Glazed,Fiorentino,tile,245000.0,1.44,"Granit ukuran besar 60x120 glazed motif marmer emas Calacatta mewah, menciptakan ruangan berkesan lapang."
