@@ -25,6 +25,12 @@ def _generate_session_title(brief: str) -> str:
         )
         response = _llm_invoke_with_retry(gemini_specialist, prompt)
         title = response.content.strip()
+        
+        # Bersihkan tag <think>...</think> jika bocor ke judul
+        import re
+        title = re.sub(r'<think>[\s\S]*?</think>', '', title, flags=re.IGNORECASE).strip()
+        title = re.sub(r'<think>[\s\S]*', '', title, flags=re.IGNORECASE).strip()
+        
         title = title.replace('"', '').replace("'", "").strip()
         return title[:50]
     except Exception:

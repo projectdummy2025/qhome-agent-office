@@ -13,16 +13,14 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
   return (
     <div className="relative">
       <div className="relative">
-        <div className={`whitespace-pre-line transition-all duration-300 ${!isExpanded ? 'max-h-[128px] overflow-hidden pb-1' : ''}`}>
+        <div className={`whitespace-pre-line transition-all duration-500 ease-in-out overflow-hidden pb-1 ${!isExpanded ? 'max-h-[128px]' : 'max-h-[2000px]'}`}>
           {text}
         </div>
-        {!isExpanded && (
-          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-surface-soft via-surface-soft/50 to-transparent pointer-events-none" />
-        )}
+        <div className={`absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-surface-soft via-surface-soft/50 to-transparent pointer-events-none transition-opacity duration-500 ${!isExpanded ? 'opacity-100' : 'opacity-0'}`} />
       </div>
       
       {!isExpanded ? (
-        <div className="absolute bottom-1 right-0 bg-gradient-to-l from-surface-soft via-surface-soft via-surface-soft/90 to-transparent pl-14 pr-0.5 py-0.5 flex items-center">
+        <div className="absolute bottom-1 right-0 bg-gradient-to-l from-surface-soft via-surface-soft via-surface-soft/90 to-transparent pl-14 pr-0.5 py-0.5 flex items-center transition-all duration-300">
           <button
             onClick={() => setIsExpanded(true)}
             className="text-[12.5px] font-bold text-muted hover:text-accent transition-colors focus:outline-none bg-surface-soft px-1"
@@ -31,7 +29,7 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
           </button>
         </div>
       ) : (
-        <div className="mt-2 text-right">
+        <div className="mt-2 text-right transition-all duration-300">
           <button
             onClick={() => setIsExpanded(false)}
             className="text-[12.5px] font-bold text-muted hover:text-accent transition-colors focus:outline-none"
@@ -369,12 +367,10 @@ export default function App() {
             <div className="space-y-1">
               {(() => {
                 const filteredHistory = chatHistory.filter(session => {
-                  const details = getB2BProjectDetails(session.brief || session.title);
-                  return (
-                    details.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    details.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (session.brief || "").toLowerCase().includes(searchTerm.toLowerCase())
-                  );
+                  const title = (session.title || "").toLowerCase();
+                  const brief = (session.brief || "").toLowerCase();
+                  const search = searchTerm.toLowerCase();
+                  return title.includes(search) || brief.includes(search);
                 });
 
                 if (filteredHistory.length === 0) {
@@ -384,8 +380,25 @@ export default function App() {
                 }
 
                 return filteredHistory.map((session, idx) => {
-                  const project = getB2BProjectDetails(session.brief || session.title);
                   const isSelected = currentSessionId === session.id;
+                  
+                  // Tentukan kategori dinamis berdasarkan brief/title
+                  const textForCategory = (session.brief || session.title || "").toLowerCase();
+                  let category = "Material Kustom";
+                  if (textForCategory.includes("wpc") || textForCategory.includes("fluted") || textForCategory.includes("kisi") || textForCategory.includes("kayu")) {
+                    category = "Dinding & Panel";
+                  } else if (textForCategory.includes("granit") || textForCategory.includes("tile") || textForCategory.includes("lantai") || textForCategory.includes("ubin") || textForCategory.includes("keramik")) {
+                    category = "Lantai & Keramik";
+                  } else if (textForCategory.includes("cat") || textForCategory.includes("paint") || textForCategory.includes("pengecatan") || textForCategory.includes("tembok") || textForCategory.includes("primer")) {
+                    category = "Finishing & Cat";
+                  } else if (textForCategory.includes("stone") || textForCategory.includes("batu") || textForCategory.includes("andesit") || textForCategory.includes("candi")) {
+                    category = "Batu Alam";
+                  }
+
+                  // Gunakan title dinamis spesifik dari DB, bersihkan dari bocoran tag think
+                  let titleDisplay = session.title || "Estimasi Baru";
+                  titleDisplay = titleDisplay.replace(/<think>[\s\S]*?<\/think>/gi, "");
+                  titleDisplay = titleDisplay.replace(/<think>[\s\S]*/gi, "").trim();
 
                   return (
                     <div key={session.id || idx} className="py-0.5 group/sidebar-item">
@@ -413,19 +426,19 @@ export default function App() {
                         <span className={`block text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
                           isSelected ? 'text-accent' : 'text-muted-light'
                         }`}>
-                          {project.category}
+                          {category}
                         </span>
                         
                         {/* Judul Proyek Resmi */}
                         <span className={`block text-[13px] font-medium leading-tight truncate w-full ${
                           isSelected ? 'text-accent font-semibold' : 'text-ink group-hover:text-accent transition-colors'
                         }`}>
-                          {project.title}
+                          {titleDisplay}
                         </span>
 
                         {/* Penanda Kiri Saat Terpilih */}
                         {isSelected && (
-                          <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-accent" />
+                           <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-accent" />
                         )}
                       </button>
 
