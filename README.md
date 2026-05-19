@@ -6,16 +6,16 @@ Di dalam kantor digital ini, agen-agen kecerdasan buatan beroperasi layaknya **k
 
 ---
 
-### 📂 Sistem Navigasi Dokumentasi (QHome-MAS)
-* 🏠 **[Panduan Utama (README)](README.md)**
-* 🏛️ **[Blueprint Arsitektur (ArchitectureConcept)](docs/ArchitectureConcept.md)**
-* 👥 **[Roster Karyawan Digital (AgentRoster)](docs/AgentRoster.md)**
-* 🏗️ **[Panduan Struktur Proyek (ProjectStructure)](docs/ProjectStructure.md)**
-* 🔄 **[Alur Skenario Sistem (UserSystemFlow)](docs/UserSystemFlow.md)**
+### Sistem Navigasi Dokumentasi (QHome-MAS)
+* **[Panduan Utama (README)](README.md)**
+* **[Blueprint Arsitektur (ArchitectureConcept)](docs/ArchitectureConcept.md)**
+* **[Roster Karyawan Digital (AgentRoster)](docs/AgentRoster.md)**
+* **[Panduan Struktur Proyek (ProjectStructure)](docs/ProjectStructure.md)**
+* **[Alur Skenario Sistem (UserSystemFlow)](docs/UserSystemFlow.md)**
 
 ---
 
-## 🏛️ Arsitektur Teknologi Utama (The Stack)
+## Arsitektur Teknologi Utama (The Stack)
 
 Proyek ini menggunakan *stack* mutakhir yang memisahkan beban kerja antara *backend* komputasi dan *frontend* visualisasi secara terstruktur.
 
@@ -36,7 +36,7 @@ Proyek ini menggunakan *stack* mutakhir yang memisahkan beban kerja antara *back
 
 ---
 
-## 🧠 Strategi "Dynamic LLM Routing"
+## Strategi "Dynamic LLM Routing"
 
 Untuk mengakali batasan *Rate Limit* pada penyedia layanan API pihak ketiga, serta menyeimbangkan biaya dan *reasoning quality*, sistem ini menggunakan **Distribusi LLM Otomatis**:
 
@@ -46,7 +46,7 @@ Untuk mengakali batasan *Rate Limit* pada penyedia layanan API pihak ketiga, ser
 
 ---
 
-## 👥 Tim Karyawan (Agent Roster)
+## Tim Karyawan (Agent Roster)
 
 1. **Chief Project Supervisor (Manajer)**: Menganalisis niat pelanggan (*buyer's intent*) dan HANYA memanggil agen yang relevan. (*Gemini 3 Flash*)
 2. **Ceramic & Tile Estimator**: Menghitung kebutuhan ubin, *wastage*, dan sak perekat ubin. (*Gemini 2.5 Flash*)
@@ -57,11 +57,11 @@ Untuk mengakali batasan *Rate Limit* pada penyedia layanan API pihak ketiga, ser
 
 ---
 
-## 🚀 Panduan Setup & Instalasi Utama (Developer Onboarding)
+## Panduan Setup & Instalasi Utama (Developer Onboarding)
 
 Ikuti langkah-langkah di bawah ini untuk menjalankan seluruh sistem QHome-MAS di komputer lokal Anda.
 
-### 📋 Prasyarat Sistem
+### Prasyarat Sistem
 * **OS**: Linux / macOS (Windows disarankan menggunakan WSL2).
 * **Python**: Versi 3.10 atau lebih tinggi.
 * **Node.js**: Versi 18 atau lebih tinggi dengan `npm` / `yarn`.
@@ -70,7 +70,7 @@ Ikuti langkah-langkah di bawah ini untuk menjalankan seluruh sistem QHome-MAS di
 
 ---
 
-### 🛠️ Langkah 1: Kloning & Persiapan Environment
+### Langkah 1: Kloning & Persiapan Environment
 Salin file template `.env.example` menjadi `.env` di direktori utama:
 ```bash
 cp .env.example .env
@@ -82,7 +82,7 @@ Buka file `.env` dan lengkapi API Key berikut:
 
 ---
 
-### 🐳 Langkah 2: Menjalankan Database (Docker Compose)
+### Langkah 2: Menjalankan Database (Docker Compose)
 Putar kontainer database relasional dan database vektor (ChromaDB) di latar belakang:
 ```bash
 docker compose up -d
@@ -94,7 +94,7 @@ docker compose ps
 
 ---
 
-### 🐍 Langkah 3: Setup & Seeding Backend (Python)
+### Langkah 3: Setup & Seeding Backend (Python)
 1. Buka folder root proyek dan buat virtual environment:
    ```bash
    python3 -m venv venv
@@ -111,7 +111,7 @@ docker compose ps
 
 ---
 
-### ⚡ Langkah 4: Menjalankan Server Backend
+### Langkah 4: Menjalankan Server Backend
 Jalankan server API FastAPI dengan menggunakan Uvicorn:
 ```bash
 uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
@@ -120,7 +120,7 @@ Server backend sekarang aktif di `http://127.0.0.1:8000`. Anda dapat mengakses d
 
 ---
 
-### 📦 Langkah 5: Setup & Menjalankan Frontend (React)
+### Langkah 5: Setup & Menjalankan Frontend (React)
 1. Buka direktori `frontend`:
    ```bash
    cd frontend
@@ -137,7 +137,7 @@ Server backend sekarang aktif di `http://127.0.0.1:8000`. Anda dapat mengakses d
 
 ---
 
-## 🛠️ Panduan RTK (Rust Token Killer)
+## Panduan RTK (Rust Token Killer)
 
 Selaku pengembang, Anda **wajib** menggunakan CLI proxy `rtk` untuk menghemat token dan melihat analitik performa:
 
@@ -154,7 +154,7 @@ rtk discover
 
 ---
 
-## 🛡️ Kebijakan Penanganan Batasan & Mitigasi Rate Limit
+## Kebijakan Penanganan Batasan & Mitigasi Rate Limit
 Meningkatnya batasan kuota API Developer (Groq dibatasi maksimum **6.000 TPM**):
 1. **Panggilan Sekuensial (Waterfall Flow)**: Agen spesialis dipanggil bergantian, bukan paralel penuh.
 2. **Ultra-Lean Prompting**: Mengurangi muatan teks yang dikirim ke model agar tetap hemat token.

@@ -2,12 +2,12 @@
 
 ---
 
-### 📂 Sistem Navigasi Dokumentasi (QHome-MAS)
-* 🏠 **[Panduan Utama (README)](../README.md)**
-* 🏛️ **[Blueprint Arsitektur (ArchitectureConcept)](ArchitectureConcept.md)**
-* 👥 **[Roster Karyawan Digital (AgentRoster)](AgentRoster.md)**
-* 🏗️ **[Panduan Struktur Proyek (ProjectStructure)](ProjectStructure.md)**
-* 🔄 **[Alur Skenario Sistem (UserSystemFlow)](UserSystemFlow.md)**
+### Sistem Navigasi Dokumentasi (QHome-MAS)
+* **[Panduan Utama (README)](../README.md)**
+* **[Blueprint Arsitektur (ArchitectureConcept)](ArchitectureConcept.md)**
+* **[Roster Karyawan Digital (AgentRoster)](AgentRoster.md)**
+* **[Panduan Struktur Proyek (ProjectStructure)](ProjectStructure.md)**
+* **[Alur Skenario Sistem (UserSystemFlow)](UserSystemFlow.md)**
 
 ---
 
