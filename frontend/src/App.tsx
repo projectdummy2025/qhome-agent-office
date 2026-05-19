@@ -396,9 +396,22 @@ export default function App() {
                   }
 
                   // Gunakan title dinamis spesifik dari DB, bersihkan dari bocoran tag think
-                  let titleDisplay = session.title || "Estimasi Baru";
+                  let titleDisplay = session.title || "";
                   titleDisplay = titleDisplay.replace(/<think>[\s\S]*?<\/think>/gi, "");
                   titleDisplay = titleDisplay.replace(/<think>[\s\S]*/gi, "").trim();
+
+                  // Fallback jika judul kosong setelah dibersihkan
+                  if (!titleDisplay) {
+                    const briefText = session.brief || "";
+                    const cleanedBrief = briefText
+                      .replace(/<think>[\s\S]*?<\/think>/gi, "")
+                      .replace(/<think>[\s\S]*/gi, "")
+                      .trim();
+                    titleDisplay = cleanedBrief.substring(0, 30) + (cleanedBrief.length > 30 ? "..." : "");
+                  }
+                  if (!titleDisplay) {
+                    titleDisplay = "Estimasi Baru";
+                  }
 
                   return (
                     <div key={session.id || idx} className="py-0.5 group/sidebar-item">
@@ -416,30 +429,21 @@ export default function App() {
                           });
                         }}
                         onMouseLeave={() => setHoveredSession(null)}
-                        className={`w-full flex flex-col justify-center px-4 py-2 rounded-lg transition-all text-left border relative group my-0.5 ${
-                          isSelected 
-                            ? 'bg-white shadow-sm border-hairline/80 text-accent font-medium' 
-                            : 'border-transparent text-ink-2 hover:bg-white/80 hover:border-hairline/30'
-                        }`}
+                        className="w-full flex flex-col justify-center px-4 py-2.5 rounded-none transition-all text-left bg-transparent border-none outline-none"
                       >
-                        {/* Kategori Proyek Kecil */}
-                        <span className={`block text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
-                          isSelected ? 'text-accent' : 'text-muted-light'
+                        {/* Kategori Proyek Utama (Biru / Besar) */}
+                        <span className={`block text-[12.5px] font-bold uppercase tracking-wider mb-1 transition-colors ${
+                          isSelected ? 'text-accent' : 'text-ink group-hover:text-accent'
                         }`}>
                           {category}
                         </span>
                         
-                        {/* Judul Proyek Resmi */}
-                        <span className={`block text-[13px] font-medium leading-tight truncate w-full ${
-                          isSelected ? 'text-accent font-semibold' : 'text-ink group-hover:text-accent transition-colors'
+                        {/* Judul Proyek / Riwayat (Abu-abu Pekat / Kecil) */}
+                        <span className={`block text-[12px] font-medium leading-normal truncate w-full transition-colors ${
+                          isSelected ? 'text-muted' : 'text-muted-light group-hover:text-muted'
                         }`}>
                           {titleDisplay}
                         </span>
-
-                        {/* Penanda Kiri Saat Terpilih */}
-                        {isSelected && (
-                           <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-accent" />
-                        )}
                       </button>
 
                       {/* Garis Pembatas Bawah Memudar (Hanya Muncul Saat Hover - Transisi Halus) */}
@@ -914,17 +918,57 @@ export default function App() {
           }}
         >
           {(() => {
-            const project = getB2BProjectDetails(hoveredSession.brief || hoveredSession.title);
+            // Tentukan kategori dinamis berdasarkan brief/title
+            const textForCategory = (hoveredSession.brief || hoveredSession.title || "").toLowerCase();
+            let category = "Material Kustom";
+            if (textForCategory.includes("wpc") || textForCategory.includes("fluted") || textForCategory.includes("kisi") || textForCategory.includes("kayu")) {
+              category = "Dinding & Panel";
+            } else if (textForCategory.includes("granit") || textForCategory.includes("tile") || textForCategory.includes("lantai") || textForCategory.includes("ubin") || textForCategory.includes("keramik")) {
+              category = "Lantai & Keramik";
+            } else if (textForCategory.includes("cat") || textForCategory.includes("paint") || textForCategory.includes("pengecatan") || textForCategory.includes("tembok") || textForCategory.includes("primer")) {
+              category = "Finishing & Cat";
+            } else if (textForCategory.includes("stone") || textForCategory.includes("batu") || textForCategory.includes("andesit") || textForCategory.includes("candi")) {
+              category = "Batu Alam";
+            }
+
+            // Bersihkan title dari tag think
+            let titleDisplay = hoveredSession.title || "";
+            titleDisplay = titleDisplay.replace(/<think>[\s\S]*?<\/think>/gi, "");
+            titleDisplay = titleDisplay.replace(/<think>[\s\S]*/gi, "").trim();
+
+            if (!titleDisplay) {
+              const briefText = hoveredSession.brief || "";
+              const cleanedBrief = briefText
+                .replace(/<think>[\s\S]*?<\/think>/gi, "")
+                .replace(/<think>[\s\S]*/gi, "")
+                .trim();
+              titleDisplay = cleanedBrief.substring(0, 30) + (cleanedBrief.length > 30 ? "..." : "");
+            }
+            if (!titleDisplay) {
+              titleDisplay = "Estimasi Baru";
+            }
+
+            // Bersihkan deskripsi brief
+            let descDisplay = hoveredSession.brief || "";
+            descDisplay = descDisplay.replace(/<think>[\s\S]*?<\/think>/gi, "");
+            descDisplay = descDisplay.replace(/<think>[\s\S]*/gi, "").trim();
+            if (descDisplay.length > 120) {
+              descDisplay = descDisplay.substring(0, 120) + "...";
+            }
+            if (!descDisplay) {
+              descDisplay = "Belum ada detail deskripsi.";
+            }
+
             return (
               <>
                 <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-accent mb-1.5 block">
-                  {project.category}
+                  {category}
                 </span>
                 <h4 className="text-[13.5px] font-bold text-ink leading-tight mb-2">
-                  {project.title}
+                  {titleDisplay}
                 </h4>
                 <p className="text-[12px] text-muted leading-relaxed">
-                  {project.desc}
+                  {descDisplay}
                 </p>
               </>
             );

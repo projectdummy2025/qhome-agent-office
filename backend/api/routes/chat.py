@@ -19,22 +19,38 @@ def _generate_session_title(brief: str) -> str:
     try:
         from backend.agents.supervisor import gemini_specialist, _llm_invoke_with_retry
         prompt = (
-            f"Tulis HANYA judul singkat (maksimal 3-4 kata, bahasa Indonesia) yang paling menggambarkan proyek renovasi berikut: '{brief}'. "
-            "Contoh output: 'Estimasi Granit Kamar Mandi', 'Fasad Panel WPC Outdoor', 'Pengecatan Tembok Rumah'. "
-            "Jangan berikan tanda kutip, tanda baca, atau kalimat pengantar apapun, langsung judulnya."
+            f"Buat satu judul proyek singkat, padat, dan profesional (3-4 kata, bahasa Indonesia) untuk kebutuhan ini: '{brief}'. "
+            "Contoh: 'Estimasi Granit Teras', 'Fasad Panel WPC', 'Pengecatan Ruang Tamu'. "
+            "Keluarkan HANYA judul tersebut tanpa penjelasan atau kata pengantar apapun."
         )
         response = _llm_invoke_with_retry(gemini_specialist, prompt)
         title = response.content.strip()
         
-        # Bersihkan tag <think>...</think> jika bocor ke judul
+        # Bersihkan tag <think>...</think> jika ada
         import re
-        title = re.sub(r'<think>[\s\S]*?</think>', '', title, flags=re.IGNORECASE).strip()
-        title = re.sub(r'<think>[\s\S]*', '', title, flags=re.IGNORECASE).strip()
+        if "</think>" in title:
+            title = re.sub(r'<think>[\s\S]*?</think>', '', title, flags=re.IGNORECASE).strip()
+        else:
+            parts = re.split(r'<think>', title, flags=re.IGNORECASE)
+            if len(parts) > 1:
+                title = parts[-1].strip()
         
+        title = re.sub(r'<think>|<\/think>', '', title, flags=re.IGNORECASE).strip()
         title = title.replace('"', '').replace("'", "").strip()
+        
+        # Jika hasil pembersihan kosong, terlalu pendek, atau kotor, picu fallback deskriptif
+        if not title or len(title) < 3 or "think" in title.lower():
+            raise ValueError("Judul kosong atau terinfeksi tag")
+            
         return title[:50]
     except Exception:
-        return brief[:30] + "..."
+        import re
+        # Filter kata umum agar fallback lebih bernilai arsitektural/sipil
+        stop_words = {"kami", "saya", "ingin", "sedang", "tolong", "buatkan", "rencana", "estimasi", "butuh", "membutuhkan", "proyek", "adalah"}
+        words = [w.capitalize() for w in re.sub(r'[^\w\s]', '', brief).split() if w and w.lower() not in stop_words]
+        if not words:
+            words = [w.capitalize() for w in re.sub(r'[^\w\s]', '', brief).split() if w]
+        return "Estimasi " + " ".join(words[:3])
 
 @router.post("/analyze")
 async def analyze_project(request: Request, db: Session = Depends(get_db)):
