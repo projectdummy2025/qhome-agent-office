@@ -9,24 +9,24 @@
   --color-surface-strong: #f1f5f9;      /* Slate-100 */
   --color-hairline:       #e2e8f0;      /* Slate-200 hairline border */
   --color-ink:            #0f172a;      /* Slate-900 (Deep commercial near-black) */
-  --color-ink-2:          #334155;      /* Slate-700 (Body text) */
-  --color-muted:          #64748b;      /* Slate-500 (Sub-labels) */
-  --color-muted-light:    #94a3b8;      /* Slate-400 */
+  --color-ink-2:          #1e293b;      /* Slate-800 (Clear readable body text) */
+  --color-muted:          #475569;      /* Slate-600 (Darker, highly legible sub-labels) */
+  --color-muted-light:    #5b6c7f;      /* Slate-500 (Highly visible secondary text) */
 
-  /* Primary Brand Accent — QHomeMart Flow Blue (flowing water, continuous growth) */
-  --color-accent:         #0052cc;      /* Royal Blue */
-  --color-accent-hover:   #0043a4;      /* Deep active blue */
-  --color-accent-soft:    #deebff;      /* Pale blue tint */
-  --color-accent-border:  #b3d4ff;      /* Soft blue stroke */
+  /* Primary Brand Accent — QHomeMart Corporate Red (vibrant, trust, action) */
+  --color-accent:         #DE1A1A;      /* QHomeMart Vibrant Red */
+  --color-accent-hover:   #B81212;      /* Darker active brand red */
+  --color-accent-soft:    #FFF1F1;      /* Very soft warm pink-red tint */
+  --color-accent-border:  #FCA5A5;      /* Warm red outline */
 
-  /* Secondary Brand Accent — QHomeMart Retail Gold/Yellow (optimism, cheerfulness, target) */
-  --color-sage:           #ff9f00;      /* Vibrant gold */
-  --color-sage-soft:      #fff8e6;      /* Soft gold bg */
-  --color-sage-border:    #ffe6ad;      /* Soft gold stroke */
+  /* Secondary Brand Accent — QHomeMart Retail Gold/Yellow (optimism, target) */
+  --color-sage:           #FBBF24;      /* QHomeMart Warm Yellow */
+  --color-sage-soft:      #FFFBEB;      /* Soft warm amber bg */
+  --color-sage-border:    #FDE68A;      /* Soft yellow stroke */
 
   /* Legacy compat */
-  --color-primary:        #0052cc;
-  --color-primary-active: #0043a4;
+  --color-primary:        #DE1A1A;
+  --color-primary-active: #B81212;
 
   --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

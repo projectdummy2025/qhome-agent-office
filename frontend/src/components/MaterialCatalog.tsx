@@ -25,12 +25,13 @@ interface MaterialCatalogProps {
 
 const CATEGORIES = [
   { id: 'all', name: 'Semua' },
-  { id: 'granit', name: 'Granit / Ubin' },
-  { id: 'wood', name: 'Wood / Kayu' },
-  { id: 'panel', name: 'Dinding / Panel' },
-  { id: 'cat', name: 'Cat & Coating' },
-  { id: 'stone', name: 'Batu Alam' },
-  { id: 'semen', name: 'Semen / Nat' }
+  { id: 'building material', name: 'Building Material' },
+  { id: 'floor', name: 'Floor' },
+  { id: 'appliance & household', name: 'Appliance & Household' },
+  { id: 'furniture', name: 'Furniture' },
+  { id: 'sanitary & plumbing', name: 'Sanitary & Plumbing' },
+  { id: 'electrical & lighting', name: 'Electrical & Lighting' },
+  { id: 'tools & machinery', name: 'Tools & Machinery' }
 ];
 
 export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCatalogProps) {
@@ -41,13 +42,30 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   const [selectedCat, setSelectedCat] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
+  // Map internal database categories to the official QHomeMart categories
+  const mapCategory = (cat: string): string => {
+    const c = cat.toLowerCase();
+    if (c === 'tile') return 'floor';
+    if (c === 'wood') return 'furniture';
+    if (c === 'stone' || c === 'paint') return 'building material';
+    if (c === 'support') return 'tools & machinery';
+    if (c === 'appliance') return 'appliance & household';
+    if (c === 'sanitary') return 'sanitary & plumbing';
+    if (c === 'electrical') return 'electrical & lighting';
+    return cat;
+  };
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
       const res = await fetch("http://localhost:8000/api/projects/products");
       const data = await res.json();
-      setProducts(data);
-      setFilteredProducts(data);
+      const mappedData = data.map((p: any) => ({
+        ...p,
+        category: mapCategory(p.category)
+      }));
+      setProducts(mappedData);
+      setFilteredProducts(mappedData);
     } catch (e) {
       console.error("Error loading products:", e);
     } finally {
@@ -208,7 +226,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                         <span className="text-[13.5px] font-bold text-ink group-hover:text-accent transition-colors leading-tight">
                           {p.name}
                         </span>
-                        <span className="text-[9px] font-bold uppercase tracking-wider border border-hairline/70 px-1.5 py-0.5 rounded text-muted-light whitespace-nowrap">
+                        <span className="text-[9.5px] font-bold uppercase tracking-wider bg-surface-soft border border-hairline/70 px-2.5 py-0.5 rounded-full text-muted whitespace-nowrap">
                           {p.category}
                         </span>
                       </div>
@@ -280,7 +298,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
 
                 {/* Info — below image, no boxing */}
                 <div>
-                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-light block mb-0.5">
+                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-accent mb-1 block">
                     {p.category}
                   </span>
                   <h4 className="text-[12.5px] font-bold text-ink leading-snug group-hover:text-accent transition-colors line-clamp-2 mb-1">

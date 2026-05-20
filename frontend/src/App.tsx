@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Loader2, 
-  ChevronDown, 
-  Plus, 
-  Search, 
-  PanelLeftClose, 
-  PanelLeftOpen, 
-  Send, 
-  UserCog, 
-  Brain, 
-  Maximize2, 
+import {
+  Loader2,
+  ChevronDown,
+  Plus,
+  Search,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Send,
+  UserCog,
+  Brain,
+  Maximize2,
   Package,
   Palette,
   HardHat,
@@ -37,7 +37,7 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
         </div>
         <div className={`absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-surface-soft via-surface-soft/50 to-transparent pointer-events-none transition-opacity duration-500 ${!isExpanded ? 'opacity-100' : 'opacity-0'}`} />
       </div>
-      
+
       {!isExpanded ? (
         <div className="absolute bottom-1 right-0 bg-gradient-to-l from-surface-soft via-surface-soft via-surface-soft/90 to-transparent pl-14 pr-0.5 py-0.5 flex items-center transition-all duration-300">
           <button
@@ -62,48 +62,63 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
 }
 
 
+const getProductImage = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('paint') || n.includes('cat') || n.includes('jotaplast') || n.includes('interior')) {
+    return 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=240&auto=format&fit=crop';
+  }
+  if (n.includes('granit') || n.includes('tile') || n.includes('ceramic') || n.includes('ubin') || n.includes('lantai')) {
+    return 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=240&auto=format&fit=crop';
+  }
+  if (n.includes('fluted') || n.includes('panel') || n.includes('wood') || n.includes('wpc') || n.includes('dinding')) {
+    return 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=240&auto=format&fit=crop';
+  }
+  return 'https://images.unsplash.com/photo-1581094288338-2314dddb7ecc?q=80&w=240&auto=format&fit=crop';
+};
+
+
 const PERSONAS = [
   {
     role: 'architect',
-    roleDisplay: 'Arsitek (Persona 1)',
+    roleDisplay: 'Senior Architect & Designer',
     name: 'Ibu Amalia',
     icon: Palette,
     iconBg: 'bg-blue-50 text-blue-600 border border-blue-100/50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30',
     iconColor: 'text-blue-600 dark:text-blue-400',
-    desc: 'Simulasi fokus pada visual estetika, rekomendasi gaya ruang tamu mewah, dan moodboard terkurasi.',
+    desc: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior B2B.',
     colorClass: 'border-hairline hover:border-blue-300 hover:shadow-[0_8px_30px_rgb(219,234,254,0.3)] hover:bg-blue-50/5 focus:ring-blue-100',
     badgeColor: 'bg-blue-50 text-blue-700 border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-300'
   },
   {
     role: 'contractor',
-    roleDisplay: 'Kontraktor (Persona 2)',
+    roleDisplay: 'General Contractor & Engineer',
     name: 'Bapak Joko',
     icon: HardHat,
     iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100/50 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30',
     iconColor: 'text-emerald-600 dark:text-emerald-400',
-    desc: 'Simulasi fokus pada akurasi volume material, kalkulator semen/perekat, wastage margin, dan estimasi RAB.',
+    desc: 'Kalkulator volume struktural proyek, perhitungan wastage margin semen/perekat, verifikasi standar teknis, dan rancangan RAB.',
     colorClass: 'border-hairline hover:border-emerald-300 hover:shadow-[0_8px_30px_rgb(209,250,229,0.3)] hover:bg-emerald-50/5 focus:ring-emerald-100',
     badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-300'
   },
   {
     role: 'retailer',
-    roleDisplay: 'Toko Bangunan (Persona 3)',
+    roleDisplay: 'Retail & Procurement Partner',
     name: 'Ibu Santi',
     icon: Store,
     iconBg: 'bg-purple-50 text-purple-600 border border-purple-100/50 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/30',
     iconColor: 'text-purple-600 dark:text-purple-400',
-    desc: 'Simulasi fokus pada kuantitas stok volume besar, verifikasi pergudangan QHomeMart, dan substitusi alternatif barang.',
+    desc: 'Pemesanan volume besar (bulk procurement), koordinasi alokasi stok pergudangan terdistribusi, dan negosiasi pricing tier korporat.',
     colorClass: 'border-hairline hover:border-purple-300 hover:shadow-[0_8px_30px_rgb(243,232,255,0.3)] hover:bg-purple-50/5 focus:ring-purple-100',
     badgeColor: 'bg-purple-50 text-purple-700 border-purple-100/60 dark:bg-purple-950/40 dark:text-purple-300'
   },
   {
     role: 'admin',
-    roleDisplay: 'Staf Administrasi',
+    roleDisplay: 'Lead System Administrator',
     name: 'Bapak Rudi',
     icon: ShieldCheck,
     iconBg: 'bg-amber-50 text-amber-600 border border-amber-100/50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30',
     iconColor: 'text-amber-600 dark:text-amber-400',
-    desc: 'Melakukan intervensi stok habis, validasi harga manual produk kustom, dan memantau log koordinasi Multi-Agent.',
+    desc: 'Manajemen otorisasi diskon volume, intervensi stok kritis, pemutakhiran master catalog, dan audit log koordinasi multi-agent.',
     colorClass: 'border-hairline hover:border-amber-300 hover:shadow-[0_8px_30px_rgb(254,243,199,0.3)] hover:bg-amber-50/5 focus:ring-amber-100',
     badgeColor: 'bg-amber-50 text-amber-700 border-amber-100/60 dark:bg-amber-950/40 dark:text-amber-300'
   }
@@ -133,19 +148,19 @@ export default function App() {
           subtitle: "Simulasi fokus pada visual estetika, moodboard premium, and keselarasan desain ruang.",
           presets: [
             {
-              title: "Kalkulasi Lantai Granit Mewah",
-              desc: "Ubin granit Carrara putih mewah untuk ruang tamu premium seluas 25 m² dengan pola vintage.",
-              prompt: "Saya butuh rekomendasi ubin lantai granit berwarna putih mewah Carrara untuk ruang tamu premium seluas 25 m2 dengan pola diagonal/vintage."
+              title: "Granit Carrara Ruang Keluarga",
+              desc: "Spesifikasi lantai granit pola Carrara premium 60x60 cm dengan estetika marmer alam untuk area seluas 35 m².",
+              prompt: "Rekomendasikan ubin lantai granit dengan visual Carrara White premium berukuran 60x60 cm untuk ruang keluarga utama seluas 35 m2. Fokus pada keselarasan estetika marmer mewah dan finishing polished."
             },
             {
-              title: "Dinding Dekoratif Kayu Jati",
-              desc: "Panel dekorasi kayu fluted WPC premium untuk area seluas 18 m².",
-              prompt: "Desain dinding dekoratif kamar tidur utama seluas 18 m2 menggunakan WPC fluted panel kayu jati premium."
+              title: "Accent Wall Panel Kamar Utama",
+              desc: "Desain dinding aksen belakang tempat tidur seluas 20 m² menggunakan panel kayu fluted estetik.",
+              prompt: "Rancang panel dinding aksen (headboard wall) kamar tidur utama seluas 20 m2 menggunakan WPC Fluted Wood Panel berwarna Walnut gelap yang hangat dan elegan untuk aksen interior mewah."
             },
             {
-              title: "Paduan Warna Cat Estetik",
-              desc: "Kombinasi cat monokromatik abu-abu estetik untuk ruang makan seluas 12 m².",
-              prompt: "Rekomendasi paduan cat interior warna abu-abu monokromatik estetik untuk ruang makan seluas 12 m2."
+              title: "Skema Cat Minimalis Hangat",
+              desc: "Kombinasi warna cat interior beige hangat dan putih bersih untuk ruang makan seluas 18 m².",
+              prompt: "Rekomendasikan kombinasi warna cat interior berkarakter hangat (warm neutral) seperti beige lembut dan putih bersih dari brand premium untuk ruang makan keluarga seluas 18 m2."
             }
           ]
         };
@@ -155,19 +170,19 @@ export default function App() {
           subtitle: "Simulasi fokus pada kalkulator semen nat pendukung, wastage ubin, and efisiensi anggaran lapangan.",
           presets: [
             {
-              title: "Volume Granit & Semen Nat",
-              desc: "Kalkulasi semen nat, perekat, dan ubin granit untuk lantai garasi 6x4 meter.",
-              prompt: "Hitung semen nat dan ubin granit standard untuk lantai garasi 6x4 meter dengan wastage standard 5%."
+              title: "RAB Ubin & Perekat Semen Nat",
+              desc: "Estimasi presisi ubin granit 60x60 cm untuk lantai 40 m² dengan toleransi wastage 10% dan sak semen perekat.",
+              prompt: "Hitung kebutuhan ubin granit lantai 60x60 cm untuk ruangan 40 m2 dengan toleransi kerusakan (wastage margin) 10%. Sertakan jumlah sak semen perekat instan dan semen nat pendukung yang diperlukan."
             },
             {
-              title: "Estimasi WPC & Kaleng Coating",
-              desc: "Kebutuhan panel kayu WPC seluas 15 m² beserta kaleng pelindung UV.",
-              prompt: "Berapa lembar panel kayu WPC untuk dinding 15 m2 dan butuh berapa kaleng coating pelindung UV?"
+              title: "Volume Panel Dinding & Perekat",
+              desc: "Hitung jumlah lembar WPC Wood Panel untuk dinding 25 m² beserta botol sealant perekat.",
+              prompt: "Kalkulasikan kebutuhan lembar WPC Wood Panel untuk menutupi dinding berukuran total 25 m2. Hitung juga perkiraan botol perekat sealant konstruksi yang dibutuhkan agar terpasang kokoh."
             },
             {
-              title: "Dinding Batu & Heavy-Duty Bonding",
-              desc: "Batu alam veneer seluas 20 m² lengkap dengan bonding agent heavy-duty.",
-              prompt: "Kalkulasi kebutuhan batu alam veneer seluas 20 m2, hitung heavy-duty bonding agent dan joint filler-nya."
+              title: "Perhitungan Cat Tembok & Sealer",
+              desc: "Estimasi volume cat interior Jotaplast (dalam Pail 5kg) untuk luas dinding 60 m² lengkap dengan cat dasar alkali.",
+              prompt: "Estimasi volume cat interior Jotaplast (dalam Pail 5kg) untuk menutupi dinding seluas 60 m2 dengan 2 lapis pengecatan. Sertakan kebutuhan cat dasar alkali sealer untuk mencegah kelembaban."
             }
           ]
         };
@@ -177,19 +192,19 @@ export default function App() {
           subtitle: "Simulasi fokus pada kuantitas stok volume besar, substitusi alternatif barang, and logistik B2B.",
           presets: [
             {
-              title: "Cek Stok Granit Aula 50 m²",
-              desc: "Verifikasi stok ubin granit premium dari katalog lokal QHomeMart.",
-              prompt: "Verifikasi stok ubin granit premium ubin lantai dari katalog lokal QHomeMart untuk luas renovasi aula 50 m2."
+              title: "Bulk Order Ubin Granit Aula",
+              desc: "Pengadaan ubin granit lantai volume besar untuk proyek renovasi aula seluas 80 m².",
+              prompt: "Verifikasi ketersediaan stok pergudangan untuk pengadaan ubin granit volume besar (bulk order) guna merenovasi lantai aula serbaguna seluas 80 m2. Mohon rekomendasikan opsi lokal dengan stok memadai."
             },
             {
-              title: "Substitusi Cat Interior Cepat",
-              desc: "Pencarian alternatif cat interior dengan stok melimpah untuk dinding 30 m².",
-              prompt: "Cari alternatif cat interior yang stoknya melimpah untuk kebutuhan dinding kamar 30 m2."
+              title: "Pengadaan Cat Proyek Perumahan",
+              desc: "Pemesanan cat interior kuantitas besar untuk 5 unit rumah dengan total luas dinding 200 m².",
+              prompt: "Lakukan pengecekan stok gudang dan estimasi harga grosir untuk kebutuhan cat interior proyek perumahan (5 unit rumah) dengan total luas permukaan dinding 200 m2. Siapkan opsi tier diskon B2B."
             },
             {
-              title: "Konsolidasi Total Material B2B",
-              desc: "Kalkulasi total biaya panel kayu jati dan batu alam seluas 15 m².",
-              prompt: "Kalkulasi total biaya bahan bangunan untuk dinding batu alam dan panel kayu jati seluas 15 m2."
+              title: "Konsolidasi Material Kayu & Cat",
+              desc: "Kombinasi panel dinding WPC dan cat interior Jotaplast volume sedang seluas 30 m².",
+              prompt: "Konsolidasikan pengadaan logistik untuk kebutuhan material campuran: panel dinding kayu WPC seluas 20 m2 and cat interior Jotaplast seluas 10 m2. Pastikan kecocokan jadwal kirim armada CDD."
             }
           ]
         };
@@ -200,26 +215,26 @@ export default function App() {
           subtitle: "Simulasi fokus pada penanganan stok habis, validasi harga manual, and pengawasan log multi-agent.",
           presets: [
             {
-              title: "Uji Stok Habis / Substitusi",
-              desc: "Simulasi item dengan stok terbatas/habis untuk memicu substitusi barang otomatis.",
-              prompt: "Simulasikan kebutuhan ubin lantai granit premium dengan stok terbatas untuk memicu draf substitusi barang di admin."
+              title: "Simulasi Stok Habis & Substitusi",
+              desc: "Uji coba sistem penanganan stok kritis/habis pada ubin granit impor untuk memicu draf alternatif otomatis.",
+              prompt: "Simulasikan pesanan ubin granit premium impor bermotif langka yang stoknya sedang kosong (out of stock) untuk menguji apakah sistem asisten berhasil mencarikan alternatif substitusi setara secara otomatis."
             },
             {
-              title: "Uji Kalkulator Multi-Agent",
-              desc: "Mendelegasikan tugas komprehensif ke agen Tile, Wood, dan Paint.",
-              prompt: "Hitung kebutuhan ubin granit lantai 25 m2, panel kayu dinding 12 m2, dan cat dinding abu-abu 20 m2."
+              title: "Integrasi Penuh Multi-Agent (RAB)",
+              desc: "Delegasi tugas simultan ke agen Ubin, Kayu, dan Cat untuk estimasi komprehensif ruang kantor 100 m².",
+              prompt: "Uji koordinasi multi-agent secara simultan: hitung ubin granit lantai untuk area 60 m2, panel dinding kayu WPC untuk partisi 25 m2, dan cat interior Jotaplast untuk dinding seluas 40 m2 dalam satu sesi estimasi terpadu."
             },
             {
-              title: "Uji Stok Gudang & Logistik",
-              desc: "Verifikasi stok total material volume besar untuk logistik armada B2B.",
-              prompt: "Kalkulasi material renovasi besar lantai aula 80 m2 menggunakan ubin granit dan cat alkali sealer dasar."
+              title: "Override Diskon Volume B2B",
+              desc: "Pengadaan material bernilai tinggi di atas Rp 50 Juta untuk memicu verifikasi approval diskon khusus admin.",
+              prompt: "Simulasikan pengadaan material bernilai tinggi (total di atas Rp 50 Juta) untuk menguji modul approval diskon volume B2B khusus admin pada portal evaluasi."
             }
           ]
         };
     }
   };
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -238,73 +253,73 @@ export default function App() {
       textareaRef.current.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
     }
   }, [brief]);
- 
-   const scrollToBottom = () => {
-     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-   };
- 
-   // Helper untuk mendeteksi dan memisahkan blok <think>
-   const parseThinking = (text: string) => {
-     if (!text) return { thinking: null, content: "" };
-     const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
-     const matches = Array.from(text.matchAll(thinkRegex));
-     if (matches.length > 0) {
-       const thinking = matches.map(match => match[1].trim()).join("\n\n---\n\n");
-       const cleanContent = text.replace(thinkRegex, '').trim();
-       return { thinking, content: cleanContent };
-     }
-     return { thinking: null, content: text };
-   };
 
-    // Helper untuk merender markdown sederhana seperti teks tebal (**), miring (*), dll
-    const renderMarkdown = (text: string) => {
-      if (!text) return "";
-      let html = text;
-      // Bold: **text**
-      html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>');
-      // Italic: *text*
-      html = html.replace(/\*(.*?)\*/g, '<em class="italic text-accent font-medium bg-accent-soft/40 px-1.5 py-0.5 rounded">$1</em>');
-      return html;
-    };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    // Helper untuk membulatkan angka desimal pada string quantity
-    const formatQty = (qtyStr: string) => {
-      if (!qtyStr) return "";
-      return qtyStr.replace(/(\d+\.\d+)/g, (match) => {
-        const num = parseFloat(match);
-        return num.toFixed(2);
-      });
-    };
+  // Helper untuk mendeteksi dan memisahkan blok <think>
+  const parseThinking = (text: string) => {
+    if (!text) return { thinking: null, content: "" };
+    const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
+    const matches = Array.from(text.matchAll(thinkRegex));
+    if (matches.length > 0) {
+      const thinking = matches.map(match => match[1].trim()).join("\n\n---\n\n");
+      const cleanContent = text.replace(thinkRegex, '').trim();
+      return { thinking, content: cleanContent };
+    }
+    return { thinking: null, content: text };
+  };
 
- 
-   // Sub-komponen Akordeon Berpikir Agen (Premium)
-   const ThinkingBlock = ({ text }: { text: string }) => {
-     const [isOpen, setIsOpen] = useState(false);
-     if (!text) return null;
-     
-     return (
-       <div className="mb-4 border border-hairline rounded-xl overflow-hidden bg-surface-soft shadow-sm animate-scale-in">
-         <button 
-           onClick={() => setIsOpen(!isOpen)}
-           className="w-full px-4 py-2.5 flex items-center justify-between text-left text-muted hover:text-ink hover:bg-white/50 transition-colors"
-         >
-           <div className="flex items-center gap-2 text-[12px] font-semibold tracking-wider uppercase">
-             <Brain className="w-3.5 h-3.5 text-muted-light animate-pulse" />
-             <span>Proses Berpikir Agen</span>
-           </div>
-           <ChevronDown className={`w-3.5 h-3.5 text-muted-light transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-         </button>
-         
-         {isOpen && (
-           <div className="px-4 pb-4 pt-2 border-t border-hairline/60 bg-white/40 max-h-[220px] overflow-y-auto scrollbar-warm">
-             <p className="text-[12.5px] text-muted-light leading-relaxed whitespace-pre-line italic">
-               {text}
-             </p>
-           </div>
-         )}
-       </div>
-     );
-   };
+  // Helper untuk merender markdown sederhana seperti teks tebal (**), miring (*), dll
+  const renderMarkdown = (text: string) => {
+    if (!text) return "";
+    let html = text;
+    // Bold: **text**
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>');
+    // Italic: *text*
+    html = html.replace(/\*(.*?)\*/g, '<em class="italic text-accent font-medium bg-accent-soft/40 px-1.5 py-0.5 rounded">$1</em>');
+    return html;
+  };
+
+  // Helper untuk membulatkan angka desimal pada string quantity
+  const formatQty = (qtyStr: string) => {
+    if (!qtyStr) return "";
+    return qtyStr.replace(/(\d+\.\d+)/g, (match) => {
+      const num = parseFloat(match);
+      return num.toFixed(2);
+    });
+  };
+
+
+  // Sub-komponen Akordeon Berpikir Agen (Premium)
+  const ThinkingBlock = ({ text }: { text: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    if (!text) return null;
+
+    return (
+      <div className="mb-4 border border-hairline rounded-xl overflow-hidden bg-surface-soft shadow-sm animate-scale-in">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full px-4 py-2.5 flex items-center justify-between text-left text-muted hover:text-ink hover:bg-white/50 transition-colors"
+        >
+          <div className="flex items-center gap-2 text-[12px] font-semibold tracking-wider uppercase">
+            <Brain className="w-3.5 h-3.5 text-muted-light animate-pulse" />
+            <span>Proses Berpikir Agen</span>
+          </div>
+          <ChevronDown className={`w-3.5 h-3.5 text-muted-light transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && (
+          <div className="px-4 pb-4 pt-2 border-t border-hairline/60 bg-white/40 max-h-[220px] overflow-y-auto scrollbar-warm">
+            <p className="text-[12.5px] text-muted-light leading-relaxed whitespace-pre-line italic">
+              {text}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
 
   useEffect(() => {
@@ -313,7 +328,7 @@ export default function App() {
 
   const fetchHistory = async () => {
     try {
-      const url = currentUser 
+      const url = currentUser
         ? `http://localhost:8000/api/projects/sessions?user_id=${currentUser.role}`
         : "http://localhost:8000/api/projects/sessions";
       const res = await fetch(url);
@@ -334,12 +349,12 @@ export default function App() {
     setIsProcessing(false);
     setCurrentAgentOnDuty(null);
     setActiveAgents([]);
-    
+
     try {
       const res = await fetch(`http://localhost:8000/api/projects/sessions/${session.id}/messages`);
       const data = await res.json();
       setMessages(data);
-      
+
       const hasSystemMessage = data.some((m: any) => m.role === 'system');
       setIsRightSidebarOpen(hasSystemMessage);
     } catch (e) {
@@ -358,19 +373,19 @@ export default function App() {
 
   const handleHire = async () => {
     if (!brief.trim()) return;
-    
+
     setMessages(prev => [...prev, { role: "user", content: brief }]);
     setBrief("");
     setIsProcessing(true);
     setCurrentAgentOnDuty("Chief Supervisor"); // Dimulai dari koordinasi Chief Supervisor
     setActiveAgents([]);
-    
+
     try {
       const res = await fetch("http://localhost:8000/api/projects/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          brief, 
+        body: JSON.stringify({
+          brief,
           session_id: currentSessionId,
           user_id: currentUser?.role || "default-user"
         })
@@ -378,9 +393,9 @@ export default function App() {
       const dataInfo = await res.json();
       setCurrentSessionId(dataInfo.session_id);
       fetchHistory(); // Segarkan riwayat di sidebar kiri
-      
+
       const sse = new EventSource(`http://localhost:8000/api/projects/${dataInfo.session_id}/stream`);
-      
+
       setMessages(prev => {
         const newIdx = prev.length;
         setIsRightSidebarOpen(true);
@@ -389,7 +404,7 @@ export default function App() {
 
       sse.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        
+
         setMessages(prev => {
           const newMessages = [...prev];
           const lastMsg = newMessages[newMessages.length - 1];
@@ -412,7 +427,7 @@ export default function App() {
         }
 
         if (data.event === "working" && data.agent) {
-           setActiveAgents(prev => Array.from(new Set([...prev, data.agent])));
+          setActiveAgents(prev => Array.from(new Set([...prev, data.agent])));
         }
 
         if (data.event === "completed") {
@@ -441,8 +456,8 @@ export default function App() {
   if (!currentUser) {
     if (landingTab === 'catalog') {
       return (
-        <MaterialCatalog 
-          onBack={() => setLandingTab('simulation')} 
+        <MaterialCatalog
+          onBack={() => setLandingTab('simulation')}
         />
       );
     }
@@ -452,7 +467,7 @@ export default function App() {
         {/* Subtle Decorative Ambient Background Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-100/30 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-amber-100/20 blur-[120px] pointer-events-none" />
-        
+
         {/* Sleek Enterprise Top Header Bar */}
         <header className="w-full border-b border-hairline bg-white/70 backdrop-blur-md sticky top-0 z-50">
           <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
@@ -466,11 +481,10 @@ export default function App() {
             <div className="flex items-center gap-8">
               <button
                 onClick={() => setLandingTab('simulation')}
-                className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative ${
-                  (landingTab as string) === 'simulation' 
-                    ? 'text-accent' 
+                className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative ${(landingTab as string) === 'simulation'
+                    ? 'text-accent'
                     : 'text-muted hover:text-ink'
-                }`}
+                  }`}
               >
                 <span className="text-[8px] font-mono mr-1 text-accent/80">01 //</span>
                 Simulasi Chat
@@ -480,11 +494,10 @@ export default function App() {
               </button>
               <button
                 onClick={() => setLandingTab('catalog')}
-                className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative ${
-                  (landingTab as string) === 'catalog' 
-                    ? 'text-accent' 
+                className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative ${(landingTab as string) === 'catalog'
+                    ? 'text-accent'
                     : 'text-muted hover:text-ink'
-                }`}
+                  }`}
               >
                 <span className="text-[8px] font-mono mr-1 text-accent/80">02 //</span>
                 Katalog Material
@@ -503,15 +516,15 @@ export default function App() {
             {/* Eyebrow + Headline */}
             <div className="mb-10">
               <p className="text-[10.5px] font-bold uppercase tracking-[0.3em] text-accent mb-4">
-                Portal Konsultasi & Estimasi Material B2B
+                QHomeMart B2B Enterprise Workspace
               </p>
               <h1 className="text-[42px] font-light text-ink tracking-tight leading-[1.05] mb-5">
-                Selamat datang di<br />
-                <span className="font-extrabold text-ink">QHome-MAS</span>{' '}
-                <span className="text-muted font-light">Digital Office</span>
+                Portal Estimasi &<br />
+                <span className="font-extrabold text-ink">Procurement</span>{' '}
+                <span className="text-accent font-light">B2B</span>
               </h1>
               <p className="text-[14px] text-muted leading-relaxed max-w-lg font-normal border-l-2 border-accent/40 pl-4">
-                Ekosistem Multi-Agent cerdas — kalkulasi presisi, verifikasi stok otomatis, dan kurasi gaya arsitektural.
+                Sistem multi-agent terintegrasi untuk otomatisasi kalkulasi volume material proyek, sinkronisasi stok gudang real-time, dan kurasi spesifikasi arsitektural bagi mitra profesional.
               </p>
             </div>
 
@@ -590,7 +603,7 @@ export default function App() {
 
   if (currentUser && activePortal === 'catalog') {
     return (
-      <MaterialCatalog 
+      <MaterialCatalog
         onBack={() => setActivePortal('chat')}
       />
     );
@@ -602,7 +615,7 @@ export default function App() {
     const userBrief = messages.filter(m => m.role === 'user')[0]?.content || "";
 
     return (
-      <AdminPortal 
+      <AdminPortal
         currentUser={currentUser}
         currentSessionId={currentSessionId}
         products={products}
@@ -637,7 +650,7 @@ export default function App() {
     const userBrief = messages.filter(m => m.role === 'user')[0]?.content || "";
 
     return (
-      <OrderPortal 
+      <OrderPortal
         currentUser={currentUser}
         currentSessionId={currentSessionId}
         products={products}
@@ -652,31 +665,39 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-canvas font-sans overflow-hidden">
-      
+
       {/* Left Sidebar — Premium B2B Studio List */}
       <div className={`bg-canvas border-r border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[260px]' : 'w-0 overflow-hidden border-none'}`}>
-        
+
         {/* Header Sidebar — Ultra Minimalis (Harmonis dengan Sidebar Kanan) */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[260px]">
           <div className="flex items-center gap-3">
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
             <span className="text-[11px] font-semibold text-muted-light tracking-[0.18em] uppercase">
-              MAS Studio
+              CHAT
             </span>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setActivePortal('catalog')} 
-              className="p-1 text-muted-light hover:text-accent transition-colors" 
+          <div className="flex gap-2.5">
+            <button
+              onClick={() => setActivePortal('catalog')}
+              className="p-1.5 text-muted-light hover:text-accent transition-colors hover:bg-neutral-50 rounded-md"
               title="Lihat Katalog Master"
             >
-              <Package className="w-3.5 h-3.5 text-accent animate-pulse" />
+              <Package className="w-4.5 h-4.5 text-accent animate-pulse" />
             </button>
-            <button onClick={handleNewChat} className="p-1 text-muted-light hover:text-ink transition-colors" title="Konsultasi Baru">
-              <Plus className="w-3.5 h-3.5" />
+            <button
+              onClick={handleNewChat}
+              className="p-1.5 text-muted-light hover:text-ink transition-colors hover:bg-neutral-50 rounded-md"
+              title="Konsultasi Baru"
+            >
+              <Plus className="w-4.5 h-4.5" />
             </button>
-            <button onClick={() => setIsSidebarOpen(false)} className="p-1 text-muted-light hover:text-ink transition-colors" title="Tutup Sidebar">
-              <PanelLeftClose className="w-3.5 h-3.5" />
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 text-muted-light hover:text-ink transition-colors hover:bg-neutral-50 rounded-md"
+              title="Tutup Sidebar"
+            >
+              <PanelLeftClose className="w-4.5 h-4.5" />
             </button>
           </div>
         </div>
@@ -685,7 +706,7 @@ export default function App() {
         {/* Cari Estimasi Fungsional */}
         <div className="px-6 mt-4 min-w-[260px]">
           <div className="relative flex items-center bg-white/50 border border-hairline rounded-xl px-3 py-1.5 shadow-sm focus-within:border-accent/40 focus-within:bg-white transition-all">
-            <Search className="w-3.5 h-3.5 text-muted-light mr-2 flex-shrink-0" />
+            <Search className="w-4 h-4 text-muted-light mr-2 flex-shrink-0" />
             <input
               type="text"
               placeholder="Cari simulasi RAB..."
@@ -702,7 +723,7 @@ export default function App() {
             <div className="px-2 mb-2.5 flex items-center justify-between">
               <span className="text-[10px] font-semibold text-muted-light uppercase tracking-widest">Daftar Simulasi RAB</span>
             </div>
-            
+
             <div className="space-y-1">
               {(() => {
                 const filteredHistory = chatHistory.filter(session => {
@@ -720,7 +741,7 @@ export default function App() {
 
                 return filteredHistory.map((session, idx) => {
                   const isSelected = currentSessionId === session.id;
-                  
+
                   // Tentukan kategori dinamis berdasarkan brief/title
                   const textForCategory = (session.brief || session.title || "").toLowerCase();
                   let category = "Material Kustom";
@@ -754,7 +775,7 @@ export default function App() {
 
                   return (
                     <div key={session.id || idx} className="py-0.5">
-                      <button 
+                      <button
                         onClick={() => handleSelectSession(session)}
                         onMouseEnter={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
@@ -765,23 +786,20 @@ export default function App() {
                           });
                         }}
                         onMouseLeave={() => setHoveredSession(null)}
-                        className={`w-full flex flex-col justify-center px-3.5 py-2.5 rounded-xl transition-all text-left border-none outline-none ${
-                          isSelected 
-                            ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-hairline/80' 
+                        className={`w-full flex flex-col justify-center px-3.5 py-2.5 rounded-xl transition-all text-left border-none outline-none ${isSelected
+                            ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-hairline/80'
                             : 'bg-transparent hover:bg-white/40'
-                        }`}
+                          }`}
                       >
                         {/* Kategori Proyek Utama (Biru / Besar) */}
-                        <span className={`block text-[12px] font-bold uppercase tracking-wider mb-1 transition-colors ${
-                          isSelected ? 'text-accent' : 'text-ink group-hover:text-accent'
-                        }`}>
+                        <span className={`block text-[12px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-accent' : 'text-ink group-hover:text-accent'
+                          }`}>
                           {category}
                         </span>
-                        
+
                         {/* Judul Proyek / Riwayat (Abu-abu Pekat / Kecil) */}
-                        <span className={`block text-[11.5px] font-medium leading-normal truncate w-full transition-colors ${
-                          isSelected ? 'text-muted' : 'text-muted-light group-hover:text-muted'
-                        }`}>
+                        <span className={`block text-[11.5px] font-medium leading-normal truncate w-full transition-colors ${isSelected ? 'text-muted' : 'text-muted-light group-hover:text-muted'
+                          }`}>
                           {titleDisplay}
                         </span>
                       </button>
@@ -796,14 +814,14 @@ export default function App() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col relative h-full min-w-0 bg-canvas">
-        
+
         {/* Header */}
         <header className="px-6 py-4 bg-canvas/90 backdrop-blur-xl flex justify-between items-center sticky top-0 z-20">
           <div className="flex items-center gap-3">
             {!isSidebarOpen && (
-              <button 
-                onClick={() => setIsSidebarOpen(true)} 
-                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group mr-2" 
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group mr-2"
                 title="Buka Riwayat Estimasi"
               >
                 <PanelLeftOpen className="w-5 h-5 transition-transform group-hover:scale-110 text-accent" />
@@ -818,7 +836,7 @@ export default function App() {
                   <span className="text-[9px] uppercase tracking-wider text-muted-light font-bold leading-none mt-0.5">{currentUser.roleDisplay}</span>
                 </div>
                 <div className="w-px h-4 bg-hairline mx-1.5" />
-                <button 
+                <button
                   onClick={() => {
                     setCurrentUser(null);
                     handleNewChat();
@@ -831,18 +849,18 @@ export default function App() {
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center gap-4 ml-auto">
-             {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) — Disembunyikan saat sidebar terbuka */}
-             {!isRightSidebarOpen && (
-               <button 
-                 onClick={() => setIsRightSidebarOpen(true)}
-                 className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group"
-                 title="Buka Log Proses MAS"
-               >
-                 <UserCog className="w-5 h-5 transition-transform group-hover:scale-110 text-accent" />
-               </button>
-             )}
+            {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) — Disembunyikan saat sidebar terbuka */}
+            {!isRightSidebarOpen && (
+              <button
+                onClick={() => setIsRightSidebarOpen(true)}
+                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group"
+                title="Buka Log Proses MAS"
+              >
+                <UserCog className="w-5 h-5 transition-transform group-hover:scale-110 text-accent" />
+              </button>
+            )}
           </div>
         </header>
 
@@ -851,7 +869,7 @@ export default function App() {
           <div className="p-6 md:p-10 space-y-10 w-full max-w-4xl mx-auto pb-10">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-12 animate-float-up min-h-[68vh] px-4">
-                
+
                 {/* Brand Context - Sangat Tenang & Tipis */}
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent">
@@ -859,7 +877,7 @@ export default function App() {
                   </span>
                   <div className="w-6 h-px bg-hairline mx-auto mt-2.5" />
                 </div>
-                
+
                 {/* Greeting & Deskripsi - Menghormati User dengan Nada Konsultan Profesional */}
                 <div className="space-y-4 max-w-2xl">
                   <h2 className="text-[28px] font-light text-ink leading-tight tracking-wide">
@@ -869,7 +887,7 @@ export default function App() {
                     {getPersonaGreeting().subtitle}
                   </p>
                 </div>
-                
+
                 {/* Preset Proyek B2B Minimalis - Bersih Tanpa Ikon */}
                 <div className="w-full max-w-3xl space-y-3.5 pt-4">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-light text-center mb-5">
@@ -877,7 +895,7 @@ export default function App() {
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {getPersonaGreeting().presets.map((preset, index) => (
-                      <button 
+                      <button
                         key={index}
                         onClick={() => setBrief(preset.prompt)}
                         className="bg-white border border-hairline hover:border-accent/40 rounded-xl p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between h-[135px] group"
@@ -892,12 +910,12 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-                
+
               </div>
             ) : (
               messages.map((msg, i) => (
                 <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-float-up w-full`}>
-                  
+
                   {msg.role === 'user' && (
                     <div className="bg-surface-soft border border-hairline text-ink px-6 py-4 rounded-2xl max-w-2xl text-[15px] leading-relaxed w-full sm:w-auto">
                       <ExpandableText text={msg.content} />
@@ -907,7 +925,7 @@ export default function App() {
                   {msg.role === 'system' && (
                     <div className="w-full mt-6">
                       <div className="max-w-3xl text-[15.5px] text-ink-2 leading-[1.7]">
-                        
+
                         {msg.status !== 'completed' && (
                           <div className="mb-8 space-y-3 animate-scale-in">
                             {/* Baris Status & Agent Aktif (Digabung - Space-Between / Justify-Between) */}
@@ -918,7 +936,7 @@ export default function App() {
                                 <div className="w-5 h-5 rounded-full bg-accent-soft flex items-center justify-center">
                                   <Loader2 className="w-3 h-3 animate-spin text-accent" />
                                 </div>
-                                
+
                                 {/* Title Kapital bergaya Span */}
                                 <span className="text-[11.5px] uppercase tracking-[0.15em] text-muted font-normal">
                                   SISTEM MULTI-AGENT SEDANG BEROPERASI
@@ -933,7 +951,7 @@ export default function App() {
                                 </span>
                               </div>
                             </div>
-                            
+
                             {/* Deskripsi Detail Operasi (Tanpa Card, Mengalir Bersih) */}
                             <p className="text-[14px] text-muted-light leading-relaxed pl-8">
                               {currentAgentOnDuty ? (
@@ -973,78 +991,104 @@ export default function App() {
                                 </div>
                               );
                             })() : (
-                               <p className="text-muted italic">Menyiapkan kurasi material...</p>
+                              <p className="text-muted italic">Menyiapkan kurasi material...</p>
                             )}
 
-                            
-                            {/* Premium Quote/Proposal Card */}
+
+                            {/* Premium Quote/Proposal Card — 100% Flat Editorial Style */}
                             {msg.products && msg.products.length > 0 && (() => {
                               const availableProds = msg.products.filter((p: any) => p.price > 0 && p.total > 0 && p.name !== "Menunggu Konfirmasi" && !p.name.toLowerCase().includes("konfirmasi"));
                               const unavailableProds = msg.products.filter((p: any) => p.price === 0 || p.total === 0 || p.name === "Menunggu Konfirmasi" || p.name.toLowerCase().includes("konfirmasi"));
                               return (
-                                <div className="space-y-6 mt-8 w-full">
-                                  
-                                  {/* Bagian 1: Keranjang Spesifikasi Terkurasi */}
-                                  <div className="relative w-full rounded-[22px] bg-white border border-hairline/80 shadow-[0_4px_24px_rgba(0,0,0,0.02)] overflow-hidden">
-                                    <div className="px-8 py-6 border-b border-hairline bg-gradient-to-b from-surface-soft/60 to-transparent flex justify-between items-center">
-                                      <div>
-                                        <h4 className="font-bold text-[18px] text-ink tracking-tight">
-                                          Keranjang Kolaborasi Desain
-                                        </h4>
-                                        <p className="text-[12px] text-muted-light mt-0.5">Direncanakan oleh AI Supervisor & Tim Desainer QHome</p>
-                                      </div>
-                                      <span className="text-[10px] font-bold tracking-widest uppercase text-accent bg-accent-soft px-3.5 py-1.5 rounded-full border border-accent-border/10 shadow-sm">
-                                        Koleksi Terpilih
-                                      </span>
+                                <div className="w-full pt-8 border-t border-hairline mt-8 space-y-6">
+
+                                  {/* Section Title — Flat Editorial Heading */}
+                                  <div className="flex justify-between items-end pb-3">
+                                    <div>
+                                      <span className="text-[10px] font-extrabold tracking-[0.25em] uppercase text-accent mb-1.5 block">Kolaborasi Pengadaan</span>
+                                      <h4 className="font-black text-[22px] text-ink tracking-tight">
+                                        Daftar Material Rekomendasi
+                                      </h4>
+                                      <p className="text-[12.5px] text-muted-light mt-0.5">Spesifikasi material terpilih yang disesuaikan khusus untuk proyek Anda</p>
                                     </div>
-                                    
-                                    {(() => {
-                                      return availableProds.length > 0 ? (
-                                        <div className="px-8 divide-y divide-hairline bg-white">
-                                          {availableProds.map((prod: any, pIdx: number) => {
-                                            const isSub = prod.qty.toLowerCase().includes("substitusi");
-                                            return (
-                                              <div key={pIdx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-5 group transition-colors duration-150">
-                                                <div>
-                                                  <div className="flex flex-wrap items-center gap-2">
-                                                    <p className="font-semibold text-[15px] text-ink leading-tight group-hover:text-accent transition-colors">{prod.name}</p>
-                                                    {isSub && (
-                                                      <span className="text-[9px] font-bold bg-amber-50 text-amber-600 border border-amber-200/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                                        Substitusi Otomatis
-                                                      </span>
-                                                    )}
-                                                  </div>
-                                                  <p className="text-[12.5px] text-muted mt-1.5 flex items-center gap-1.5">
-                                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                    Spesifikasi: <strong className="text-ink-2 font-medium">{formatQty(prod.qty)}</strong>
+                                    <span className="hidden sm:inline-block text-[10px] font-bold tracking-widest uppercase text-accent bg-accent-soft px-4 py-1.5 rounded-full border border-accent-border/20 shadow-sm">
+                                      Koleksi Terpilih
+                                    </span>
+                                  </div>
+
+                                  {/* Recommended Items — Gorgeous Standalone Cards or Horizontal Carousel */}
+                                  {(() => {
+                                    if (availableProds.length === 0) {
+                                      return (
+                                        <div className="p-8 text-center bg-white border border-hairline rounded-[20px] text-muted text-[13.5px] italic shadow-sm w-full">
+                                          Semua material terpilih memerlukan verifikasi ketersediaan khusus dari asisten desain kami.
+                                        </div>
+                                      );
+                                    }
+
+                                    const isCarousel = availableProds.length > 3;
+
+                                    return (
+                                      <div className={isCarousel ? "flex gap-5 overflow-x-auto pb-4 scrollbar-warm w-full snap-x snap-mandatory" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5"}>
+                                        {availableProds.map((prod: any, pIdx: number) => {
+                                          const isSub = prod.qty.toLowerCase().includes("substitusi");
+                                          const productImg = getProductImage(prod.name);
+                                          return (
+                                            <div
+                                              key={pIdx}
+                                              className={`bg-white border border-hairline rounded-[22px] overflow-hidden hover:border-accent/40 hover:shadow-md transition-all duration-300 flex flex-col group animate-fade-in ${isCarousel ? "w-[280px] shrink-0 snap-start" : ""}`}
+                                            >
+                                              {/* Top Image Section */}
+                                              <div className="h-40 w-full bg-surface-soft overflow-hidden relative shrink-0">
+                                                <img
+                                                  src={productImg}
+                                                  alt={prod.name}
+                                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                                                  <span className="text-[9px] font-mono font-bold bg-ink/75 backdrop-blur-[2px] text-white px-2 py-0.5 rounded-md select-none">
+                                                    {prod.sku || 'QHM-MAT'}
+                                                  </span>
+                                                  {isSub && (
+                                                    <span className="text-[8.5px] font-bold bg-amber-500/90 text-white px-2 py-0.5 rounded-md uppercase tracking-wider select-none shadow-sm">
+                                                      Substitusi
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </div>
+
+                                              {/* Bottom Body Section */}
+                                              <div className="p-5 flex-1 flex flex-col justify-between">
+                                                <div className="space-y-1">
+                                                  <h5 className="font-bold text-[14.5px] text-ink leading-tight group-hover:text-accent transition-colors line-clamp-2" title={prod.name}>
+                                                    {prod.name}
+                                                  </h5>
+                                                  <p className="text-[12px] text-muted-light font-medium">
+                                                    {formatQty(prod.qty)}
                                                   </p>
                                                 </div>
-                                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-                                                  <span className="text-[10px] font-medium text-muted bg-neutral-100 border border-neutral-200/20 px-2.5 py-0.5 rounded-md">Harga Sesuai</span>
-                                                  <p className="font-bold text-[15.5px] text-ink">
+
+                                                <div className="pt-4 border-t border-hairline mt-4 flex items-center justify-end">
+                                                  <p className="font-extrabold text-[15.5px] text-ink">
                                                     Rp {prod.total.toLocaleString('id-ID')}
                                                   </p>
                                                 </div>
                                               </div>
-                                            );
-                                          })}
-                                        </div>
-                                      ) : (
-                                        <div className="p-8 text-center bg-white text-muted text-[14px] italic">
-                                          Semua material terpilih memerlukan verifikasi ketersediaan khusus dari asisten desain kami.
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-
-                                  {/* Bagian 2: Catatan Kurasi Personal Assistant */}
-                                  {unavailableProds.length > 0 && (
-                                    <div className="w-full p-6 bg-amber-50/20 border border-amber-200/40 rounded-[22px] space-y-3.5">
-                                      <div className="text-[13.5px] text-ink-2 leading-relaxed">
-                                        <span className="font-bold text-ink block mb-1">Catatan Kurasi Personal Assistant</span>
-                                        Demi menjaga kesempurnaan estetika desain ruang Anda, terdapat <strong className="text-accent font-bold">{unavailableProds.length} item spesifik</strong> yang saat ini memerlukan perhatian khusus atau penyesuaian oleh tim ahli kami:
+                                            </div>
+                                          );
+                                        })}
                                       </div>
-                                      
+                                    );
+                                  })()}
+
+                                  {/* Bagian 2: Catatan Teknis & Ketersediaan */}
+                                  {unavailableProds.length > 0 && (
+                                    <div className="w-full p-6 bg-amber-50/20 border border-amber-200/40 rounded-[22px] space-y-3.5 shadow-sm">
+                                      <div className="text-[13.5px] text-ink-2 leading-relaxed">
+                                        <span className="font-bold text-ink block mb-1">Catatan Teknis &amp; Ketersediaan</span>
+                                        Untuk menjaga akurasi spesifikasi proyek Anda, terdapat <strong className="text-accent font-bold">{unavailableProds.length} item</strong> yang saat ini memerlukan konfirmasi ketersediaan stok atau penyesuaian oleh tim teknis kami:
+                                      </div>
+
                                       <div className="divide-y divide-amber-200/20">
                                         {unavailableProds.map((prod: any, upIdx: number) => {
                                           const isHabis = prod.name.toLowerCase().includes("habis");
@@ -1054,12 +1098,11 @@ export default function App() {
                                               <span className="text-ink font-medium">
                                                 {cleanName}
                                               </span>
-                                              <span className={`text-[9.5px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shrink-0 border ${
-                                                isHabis 
-                                                  ? 'bg-amber-50 text-amber-600 border-amber-200/40' 
+                                              <span className={`text-[9.5px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shrink-0 border ${isHabis
+                                                  ? 'bg-amber-50 text-amber-600 border-amber-200/40'
                                                   : 'bg-accent-soft/50 text-accent border-accent-border/20'
-                                              }`}>
-                                                {isHabis ? 'Pencarian Alternatif Setara' : 'Reservasi Khusus Staf Ahli'}
+                                                }`}>
+                                                {isHabis ? 'Konfirmasi Alternatif Setara' : 'Konfirmasi Tim Lapangan'}
                                               </span>
                                             </div>
                                           );
@@ -1068,56 +1111,38 @@ export default function App() {
                                     </div>
                                   )}
 
-                                  {/* Bagian 3: Ringkasan Investasi & Tindakan */}
-                                  <div className="relative w-full rounded-[22px] bg-neutral-50 p-7 border border-hairline/85">
-                                    <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 z-10">
-                                      <div>
-                                        <p className="text-[12px] text-muted-light font-medium tracking-wide">Total Investasi</p>
-                                        <p className="text-2xl font-black text-ink mt-0.5">
-                                          Rp {availableProds.reduce((acc: number, curr: any) => acc + (curr.total || 0), 0).toLocaleString('id-ID')}
-                                        </p>
-                                      </div>
-                                      
-                                      <div className="flex gap-2.5 w-full sm:w-auto flex-wrap">
-                                        {currentSessionId && (
-                                          <a
-                                            href={`http://localhost:8000/api/projects/${currentSessionId}/generate-pdf`}
-                                            download={`Estimasi_QHome_${currentSessionId.substring(0, 8).toUpperCase()}.pdf`}
-                                            className="flex-1 sm:flex-none bg-white hover:bg-neutral-50 active:scale-[0.98] text-ink border border-hairline px-4.5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all text-center flex items-center justify-center whitespace-nowrap focus:outline-none"
-                                          >
-                                            Unduh Rencana Belanja
-                                          </a>
-                                        )}
-                                        
-                                        {currentUser?.role === 'admin' ? (
-                                          <button 
-                                            onClick={() => setActivePortal('admin')}
-                                            className="flex-1 sm:flex-none bg-accent hover:bg-accent/90 text-white px-5.5 py-2.5 rounded-xl text-[13.5px] font-bold active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none"
-                                          >
-                                            Portal Evaluasi Admin &rarr;
-                                          </button>
-                                        ) : (
-                                          <button 
-                                            onClick={() => setActivePortal('order')}
-                                            className="flex-1 sm:flex-none bg-ink hover:opacity-90 text-white px-5.5 py-2.5 rounded-xl text-[13.5px] font-bold active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none"
-                                          >
-                                            Checkout Rencana B2B &rarr;
-                                          </button>
-                                        )}
-                                      </div>
+                                  {/* Bagian 3: Ringkasan Investasi & Tindakan — 100% Flat Editorial Row */}
+                                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 pt-6 border-t border-hairline">
+                                    <div>
+                                      <p className="text-[12px] text-muted-light font-bold uppercase tracking-wider">TOTAL ESTIMASI INVESTASI</p>
+                                      <p className="text-3xl font-black text-ink mt-0.5">
+                                        Rp {availableProds.reduce((acc: number, curr: any) => acc + (curr.total || 0), 0).toLocaleString('id-ID')}
+                                      </p>
+                                    </div>
+
+                                    <div className="flex gap-2.5 w-full sm:w-auto justify-end">
+                                      {currentUser?.role === 'admin' ? (
+                                        <button
+                                          onClick={() => setActivePortal('admin')}
+                                          className="flex-1 sm:flex-none bg-accent hover:bg-accent/90 text-white px-8 py-3 rounded-full text-[13px] font-bold tracking-widest active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none uppercase shadow-sm cursor-pointer"
+                                        >
+                                          PORTAL EVALUASI ADMIN
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => setActivePortal('order')}
+                                          className="flex-1 sm:flex-none bg-ink hover:opacity-90 text-white px-8 py-3 rounded-full text-[13px] font-bold tracking-widest active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none uppercase shadow-sm cursor-pointer"
+                                        >
+                                          CHECKOUT B2B
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
 
-                                  {/* Bagian 4: Disclaimer Teknis (Footnote Minimalis) */}
-                                  {msg.logs?.find((l: any) => l.event === 'completed')?.disclaimer && (
-                                    <div className="px-4 py-2 text-[12px] text-muted-light leading-relaxed text-center">
-                                      {msg.logs.find((l: any) => l.event === 'completed').disclaimer}
-                                    </div>
-                                  )}
 
                                 </div>
                               );
-                           })()}
+                            })()}
                           </div>
                         )}
                       </div>
@@ -1144,7 +1169,7 @@ export default function App() {
                 placeholder="Sampaikan spesifikasi area, dimensi ruang, atau kebutuhan material proyek Anda..."
                 disabled={isProcessing}
                 onKeyDown={(e) => {
-                  if(e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleHire();
                   }
@@ -1182,7 +1207,7 @@ export default function App() {
 
       {/* Right Sidebar — Blueprint Timeline */}
       <div className={`bg-canvas border-l border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isRightSidebarOpen ? 'w-[320px]' : 'w-0 overflow-hidden border-none'}`}>
-        
+
         {/* Sidebar Header — Ultra Minimalis */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[320px]">
           <div className="flex items-center gap-3">
@@ -1216,9 +1241,8 @@ export default function App() {
                     <div key={idx} className="flex gap-4 animate-scale-in">
                       {/* Garis Vertikal Timeline + Dot */}
                       <div className="flex flex-col items-center flex-shrink-0">
-                        <div className={`w-2 h-2 rounded-full mt-0.5 flex-shrink-0 transition-all ${
-                          isSpinnerActive ? 'bg-accent ring-4 ring-accent/15 animate-pulse' : 'bg-hairline border border-muted-light/40'
-                        }`} />
+                        <div className={`w-2 h-2 rounded-full mt-0.5 flex-shrink-0 transition-all ${isSpinnerActive ? 'bg-accent ring-4 ring-accent/15 animate-pulse' : 'bg-hairline border border-muted-light/40'
+                          }`} />
                         {!isLast && <div className="w-px flex-1 bg-hairline mt-1.5 mb-0" />}
                       </div>
 
@@ -1226,9 +1250,8 @@ export default function App() {
                       <div className={`pb-7 flex-1 min-w-0 ${isLast ? '' : ''}`}>
                         {/* Header: Nama Agen + Status */}
                         <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <span className={`text-[11.5px] font-semibold uppercase tracking-wider ${
-                            isSpinnerActive ? 'text-accent' : 'text-ink'
-                          }`}>
+                          <span className={`text-[11.5px] font-semibold uppercase tracking-wider ${isSpinnerActive ? 'text-accent' : 'text-ink'
+                            }`}>
                             {agentTitle}
                           </span>
                           {isSpinnerActive ? (
@@ -1277,10 +1300,10 @@ export default function App() {
       </div>
       {/* Floating Hover Card (B2B Tooltip) */}
       {hoveredSession && (
-        <div 
+        <div
           className="fixed w-[280px] bg-white border border-hairline rounded-[18px] shadow-2xl p-4.5 z-[9999] animate-scale-in flex flex-col pointer-events-none"
-          style={{ 
-            left: `${tooltipPos.x}px`, 
+          style={{
+            left: `${tooltipPos.x}px`,
             top: `${tooltipPos.y}px`
           }}
         >
@@ -1358,14 +1381,14 @@ export default function App() {
                   <p className="text-[11px] text-muted mt-0.5">Tulis spesifikasi arsitektural dan civil engineering secara leluasa</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="w-8 h-8 rounded-full hover:bg-hairline flex items-center justify-center text-muted hover:text-ink transition-all font-semibold"
               >
                 X
               </button>
             </div>
-            
+
             {/* Textarea Modal */}
             <div className="p-6 flex-1 flex flex-col bg-white">
               <textarea
@@ -1376,7 +1399,7 @@ export default function App() {
                 disabled={isProcessing}
               />
             </div>
-            
+
             {/* Footer Modal */}
             <div className="px-6 py-4.5 border-t border-hairline bg-canvas flex items-center justify-between">
               <div className="text-[11.5px] text-muted-light font-medium">

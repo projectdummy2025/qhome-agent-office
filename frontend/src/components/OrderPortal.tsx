@@ -3,7 +3,6 @@ import {
   Calendar, 
   Package, 
   Award,
-  ChevronRight,
   Truck
 } from 'lucide-react';
 
@@ -63,7 +62,7 @@ export default function OrderPortal({
   const [isOrdered, setIsOrdered] = useState(false);
 
   const activeTruck = TRUCKS.find(t => t.id === selectedTruck) || TRUCKS[0];
-  const materialsTotal = products.reduce((acc, p) => acc + (p.price * p.qty), 0);
+  const materialsTotal = products.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
   const shippingCost = activeTruck.price;
   const totalInvoice = materialsTotal + shippingCost;
 
@@ -137,47 +136,168 @@ export default function OrderPortal({
       <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-10">
 
         {isOrdered ? (
-          /* ── Success State ── */
-          <div className="max-w-lg mx-auto py-16 animate-scale-in">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <ChevronRight className="w-5 h-5 text-emerald-600" />
+          /* ── Success State: B2B Invoice & QRIS Payment Tutorial ── */
+          <div className="w-full flex flex-col gap-8 animate-scale-in">
+            {/* Header Success */}
+            <div className="border-b border-hairline pb-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-600 mb-2 block">TRANSAKSI TELAH DIKONFIRMASI</span>
+              <h1 className="text-[32px] font-light text-ink tracking-tight leading-tight">
+                Nota Pembelian &amp; <span className="font-extrabold text-ink">Metode Pembayaran</span>
+              </h1>
+              <p className="text-[13px] text-muted mt-1.5 max-w-xl">
+                Pesanan material B2B Anda telah terdaftar di sistem pergudangan terdistribusi QHomeMart. Silakan lakukan pembayaran QRIS di bawah ini untuk mengaktifkan armada logistik.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+              {/* Left Column: Official Invoice (Nota) — span 7 */}
+              <div className="lg:col-span-7 bg-white border border-hairline rounded-[22px] shadow-sm overflow-hidden">
+                {/* Invoice Ribbon */}
+                <div className="h-2 w-full bg-ink" />
+                
+                <div className="p-8">
+                  {/* Invoice Header */}
+                  <div className="flex justify-between items-start border-b border-hairline pb-6 mb-6">
+                    <div>
+                      <span className="text-[14px] font-black text-ink tracking-widest uppercase">QHOMEMART B2B</span>
+                      <p className="text-[10px] text-muted-light mt-0.5">PT QHomeMart Indonesia (Procurement Div)</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-block text-[9.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-0.5 rounded-full mb-2">
+                        MENUNGGU PEMBAYARAN
+                      </span>
+                      <p className="text-[11px] font-mono text-muted">INV/QHM-B2B/{currentSessionId?.substring(0, 8).toUpperCase() || 'PROJ-EST'}</p>
+                    </div>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="grid grid-cols-2 gap-6 text-[12.5px] border-b border-hairline pb-6 mb-6">
+                    <div>
+                      <p className="text-muted-light font-medium uppercase text-[9px] tracking-wider mb-1">Diterbitkan Untuk</p>
+                      <p className="font-bold text-ink">{currentUser?.name || 'Mitra Korporat'}</p>
+                      <p className="text-muted mt-0.5 text-[11.5px] uppercase tracking-wide font-medium">{currentUser?.roleDisplay || 'B2B Partner'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-muted-light font-medium uppercase text-[9px] tracking-wider mb-1">Jadwal Pengiriman</p>
+                      <p className="font-bold text-ink">{activeTruck.name}</p>
+                      <p className="text-muted mt-0.5 text-[11.5px]">
+                        {new Date(deliveryDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Material Line Items */}
+                  <div className="space-y-4">
+                    <p className="text-muted-light font-medium uppercase text-[9px] tracking-wider">Rincian Item Material</p>
+                    <div className="divide-y divide-hairline">
+                      {products.map((prod) => (
+                        <div key={prod.sku} className="py-3 flex justify-between text-[12.5px] items-center">
+                          <div className="min-w-0 flex-1 pr-4">
+                            <p className="font-semibold text-ink truncate">{prod.name}</p>
+                            <p className="text-[11.5px] text-muted-light font-mono mt-0.5">SKU: {prod.sku}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="font-bold text-ink">Rp {prod.total.toLocaleString('id-ID')}</p>
+                            <p className="text-[11px] text-muted mt-0.5">{prod.qty} unit &times; Rp {prod.price.toLocaleString('id-ID')}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Totals Block */}
+                  <div className="border-t border-hairline pt-5 mt-6 space-y-2.5">
+                    <div className="flex justify-between text-[12.5px]">
+                      <span className="text-muted">Subtotal Material</span>
+                      <span className="font-semibold text-ink">Rp {materialsTotal.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between text-[12.5px]">
+                      <span className="text-muted">Biaya Pengiriman ({activeTruck.name})</span>
+                      <span className="font-semibold text-ink">Rp {shippingCost.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="h-px bg-hairline/60 my-2" />
+                    <div className="flex justify-between items-baseline pt-1">
+                      <span className="text-[14px] font-black text-ink uppercase tracking-wide">GRAND TOTAL INVOICE</span>
+                      <span className="text-[22px] font-extrabold text-accent">
+                        Rp {totalInvoice.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h2 className="text-[22px] font-extrabold text-ink tracking-tight leading-tight">
-                  Pesanan Berhasil Dibuat
-                </h2>
-                <p className="text-[12.5px] text-muted">Faktur dan jadwal armada kargo sedang dipersiapkan.</p>
+
+              {/* Right Column: QRIS Payment Stand & Tutorial — span 5 */}
+              <div className="lg:col-span-5 bg-neutral-50 border border-hairline p-8 rounded-[22px] flex flex-col items-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-2xl" />
+                
+                {/* Authentic QRIS simulated stand using SVG */}
+                <div className="mb-6 flex justify-center">
+                  <svg width="220" height="290" viewBox="0 0 220 290" className="shadow-md rounded-xl overflow-hidden border border-neutral-200 bg-white">
+                    {/* Header Block QRIS */}
+                    <rect x="0" y="0" width="220" height="50" fill="#E11D48" />
+                    <text x="110" y="32" fill="#ffffff" fontSize="18" fontWeight="900" textAnchor="middle" letterSpacing="2" fontFamily="sans-serif">QRIS</text>
+                    
+                    {/* Body */}
+                    <rect x="0" y="50" width="220" height="240" fill="#ffffff" />
+                    
+                    {/* QR Code Outer Boundary */}
+                    <rect x="25" y="65" width="170" height="170" fill="none" stroke="#E11D48" strokeWidth="2" rx="4" />
+                    
+                    {/* Simulated QR Code Pixels */}
+                    <path d="M35 75h30v30H35zm0 10h10v10H35zm10 0h10v10H45zm40-10h10v10H85zm20 0h20v10h-20zm30 0h30v30h-30zm10 10h10v10h-10zm10 0h10v10h-10zM35 125h10v20H35zm20-10h10v10H55zm20 0h10v20H75zm20-10h10v10H95zm10 10h15v10H105zm30-10h10v20h-10zm20 0h10v10h-10zm15 10h10v20h-10zM35 165h35v10H35zm50-10h10v10H85zm20 10h10v10h-10zm15-10h20v10h-20zm30 0h10v20h-10zm-95 30h10v15H85zm20-10h20v10h-20zm30 10h10v10h-10zm15-10h10v20h-10z" fill="#171717" />
+                    
+                    {/* QR Corners */}
+                    <rect x="40" y="80" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
+                    <rect x="47" y="87" width="6" height="6" fill="#171717" />
+                    
+                    <rect x="160" y="80" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
+                    <rect x="167" y="87" width="6" height="6" fill="#171717" />
+                    
+                    <rect x="40" y="200" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
+                    <rect x="47" y="207" width="6" height="6" fill="#171717" />
+                    
+                    <rect x="160" y="200" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
+                    <rect x="167" y="207" width="6" height="6" fill="#171717" />
+
+                    {/* Footer merchant label */}
+                    <text x="110" y="253" fill="#6B7280" fontSize="8" fontWeight="bold" textAnchor="middle" letterSpacing="0.5" fontFamily="monospace">NMID: ID102026889271</text>
+                    <text x="110" y="270" fill="#E11D48" fontSize="10" fontWeight="900" textAnchor="middle" letterSpacing="0.5" fontFamily="sans-serif">QHOMEMART PROCURE B2B</text>
+                  </svg>
+                </div>
+
+                {/* Tutorial Pembayaran */}
+                <div className="w-full space-y-4">
+                  <p className="text-[13px] font-bold text-ink uppercase tracking-wider text-center border-b border-hairline pb-2.5">
+                    PANDUAN PEMBAYARAN QRIS
+                  </p>
+                  
+                  <ol className="text-[12px] text-muted space-y-2.5 list-decimal pl-4">
+                    <li>Buka aplikasi <strong>m-Banking</strong> (BCA, Mandiri, dll.) atau <strong>e-Wallet</strong> (GoPay, ShopeePay, OVO) Anda.</li>
+                    <li>Pilih menu <strong>Pindai / QRIS / Scan</strong>.</li>
+                    <li>Arahkan kamera ponsel Anda ke gambar barcode QRIS di atas.</li>
+                    <li>Pastikan nama merchant tertera <strong>QHOMEMART PROCURE B2B</strong> dengan jumlah tagihan tepat <strong>Rp {totalInvoice.toLocaleString('id-ID')}</strong>.</li>
+                    <li>Masukkan PIN transaksi Anda untuk menyelesaikan pembayaran.</li>
+                  </ol>
+
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3.5 mt-2">
+                    <p className="text-[11.5px] text-emerald-800 leading-relaxed text-center font-medium">
+                      Verifikasi pembayaran berjalan otomatis dalam 2-3 menit. Status pesanan Anda di portal administrasi akan diperbarui secara real-time.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="border-t border-hairline pt-5 space-y-3.5">
-              <div className="flex justify-between text-[13px] pb-3 border-b border-hairline/60">
-                <span className="text-muted">Metode Pengiriman</span>
-                <span className="font-semibold text-ink">{activeTruck.name}</span>
-              </div>
-              <div className="flex justify-between text-[13px] pb-3 border-b border-hairline/60">
-                <span className="text-muted">Tanggal Pengiriman</span>
-                <span className="font-semibold text-ink">
-                  {new Date(deliveryDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </span>
-              </div>
-              <div className="flex justify-between items-baseline pt-1">
-                <span className="text-[14px] font-bold text-ink">Total Faktur</span>
-                <span className="text-[22px] font-extrabold text-accent">
-                  Rp {totalInvoice.toLocaleString('id-ID')}
-                </span>
-              </div>
+            {/* Back Button */}
+            <div className="flex justify-center mt-6">
+              <button 
+                onClick={onBack}
+                className="px-8 py-2.5 bg-ink hover:opacity-90 text-white rounded-full text-[11px] font-bold tracking-widest active:scale-[0.97] transition-all cursor-pointer uppercase focus:outline-none"
+              >
+                KEMBALI KE PORTAL KONSULTASI
+              </button>
             </div>
-
-            <button 
-              onClick={onBack}
-              className="mt-8 px-6 py-2.5 bg-ink hover:opacity-90 text-white rounded-full text-[13px] font-bold tracking-wide active:scale-[0.97] transition-all cursor-pointer uppercase text-[11px]"
-            >
-              Kembali ke Portal Konsultasi
-            </button>
           </div>
-
         ) : (
           /* ── Checkout Form ── */
           <>
