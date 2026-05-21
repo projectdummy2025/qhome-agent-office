@@ -170,9 +170,11 @@ def get_session_messages(session_id: str, db: Session = Depends(get_db)):
 @router.get("/{session_id}/generate-pdf")
 def generate_pdf(session_id: str, db: Session = Depends(get_db)):
     """
-    P3 — PDF Estimasi Resmi: Generate dokumen PDF dari hasil estimasi sesi tertentu.
-    Mengambil data dari log agen yang tersimpan di DB.
+    P3 — PDF Estimasi Resmi / Nota B2B: Generate dokumen PDF dari hasil estimasi atau order sesi tertentu.
+    Mengambil data dari log agen yang tersimpan di DB atau rincian transaksi Order B2B jika ada.
     """
+    from backend.models.schema import Order as DBOrder
+
     messages = db.query(ChatMessage).filter(
         ChatMessage.session_id == session_id
     ).order_by(ChatMessage.created_at.asc()).all()
@@ -212,6 +214,45 @@ def generate_pdf(session_id: str, db: Session = Depends(get_db)):
         from backend.agents.supervisor import DISCLAIMER_TEXT
         disclaimer = DISCLAIMER_TEXT
 
+    # Cari apakah sudah ada Order B2B resmi untuk sesi ini
+    order = db.query(DBOrder).filter(DBOrder.session_id == session_id).order_by(DBOrder.created_at.desc()).first()
+    
+    order_id = None
+    client_name = None
+    client_role = None
+    materials_total = None
+    shipping_cost = None
+    total_invoice = None
+    truck_type = None
+    delivery_date = None
+    distance_km = None
+    notes = None
+
+    if order:
+        order_id = order.id
+        materials_total = order.materials_total
+        shipping_cost = order.shipping_cost
+        total_invoice = order.total_invoice
+        truck_type = order.truck_type
+        delivery_date = order.delivery_date
+        distance_km = order.distance_km
+        notes = order.notes
+        
+        client_name = order.client_name or "Klien B2B"
+        client_role = order.client_role or "Mitra Profesional"
+
+        # Rekonstruksi daftar produk dari order_items aktual di DB
+        if order.items:
+            products = []
+            for item in order.items:
+                products.append({
+                    "sku": item.product_sku,
+                    "name": item.product.name if item.product else "Material QHome",
+                    "price": item.price,
+                    "qty": f"{int(item.qty)} unit" if item.qty.is_integer() else f"{item.qty} unit",
+                    "total": item.total
+                })
+
     pdf_bytes = generate_estimation_pdf(
         session_id=session_id,
         brief=brief,
@@ -219,6 +260,16 @@ def generate_pdf(session_id: str, db: Session = Depends(get_db)):
         products=products,
         disclaimer=disclaimer,
         generated_at=generated_at,
+        order_id=order_id,
+        client_name=client_name,
+        client_role=client_role,
+        materials_total=materials_total,
+        shipping_cost=shipping_cost,
+        total_invoice=total_invoice,
+        truck_type=truck_type,
+        delivery_date=delivery_date,
+        distance_km=distance_km,
+        notes=notes
     )
 
     # P6 — Update KPI: tandai pdf_generated = 1
@@ -229,7 +280,8 @@ def generate_pdf(session_id: str, db: Session = Depends(get_db)):
         kpi.pdf_generated = 1
         db.commit()
 
-    filename = f"Estimasi_QHome_{session_id[:8].upper()}.pdf"
+    filename_prefix = "Nota_B2B" if order_id is not None else "Estimasi_QHome"
+    filename = f"{filename_prefix}_{session_id[:8].upper()}.pdf"
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
@@ -313,11 +365,14 @@ class OrderItemInput(BaseModel):
 class OrderInput(BaseModel):
     session_id: Optional[str] = None
     user_id: str
+    client_name: Optional[str] = None
+    client_role: Optional[str] = None
     materials_total: float
     shipping_cost: float
     total_invoice: float
     truck_type: str
     delivery_date: str
+    distance_km: Optional[float] = None
     notes: Optional[str] = None
     items: List[OrderItemInput]
 
@@ -332,11 +387,14 @@ def create_order(payload: OrderInput, db: Session = Depends(get_db)):
         id=order_id,
         session_id=payload.session_id,
         user_id=payload.user_id,
+        client_name=payload.client_name,
+        client_role=payload.client_role,
         materials_total=payload.materials_total,
         shipping_cost=payload.shipping_cost,
         total_invoice=payload.total_invoice,
         truck_type=payload.truck_type,
         delivery_date=payload.delivery_date,
+        distance_km=payload.distance_km,
         notes=payload.notes
     )
     db.add(new_order)
