@@ -7,7 +7,7 @@ from backend.models.schema import ChatMessage, ChatRole, EstimationKPI
 # State In-Memory sementara untuk SSE Streaming (karena HTTP bersifat stateless)
 active_streams = {}
 
-async def run_agent_simulation(brief: str, session_id: str):
+async def run_agent_simulation(brief: str, session_id: str, history_summary: str = ""):
     def add_log(msg):
         if session_id in active_streams:
             active_streams[session_id]["logs"].append(msg)
@@ -22,7 +22,7 @@ async def run_agent_simulation(brief: str, session_id: str):
         from backend.agents.supervisor import app_graph
         
         config = {"configurable": {"thread_id": session_id}}
-        async for output in app_graph.astream({"brief": brief}, config=config, stream_mode="updates"):
+        async for output in app_graph.astream({"brief": brief, "history_summary": history_summary}, config=config, stream_mode="updates"):
             for node_name, state_update in output.items():
                 if node_name == "supervisor":
                     hired = state_update.get("hired_agents", [])
@@ -112,6 +112,39 @@ async def run_agent_simulation(brief: str, session_id: str):
                 pdf_generated=0,
             )
             db.add(kpi_record)
+            
+            # --- UPDATE SUMMARY ---
+            try:
+                from backend.agents.supervisor import gemini_specialist, _llm_invoke_with_retry
+                
+                # Kita ambil narasi terakhir yang di-generate synthesizer
+                last_narrative = ""
+                for log in active_streams[session_id]["logs"]:
+                    if isinstance(log, dict) and log.get("event") == "completed":
+                        last_narrative = log.get("narrative", "")
+                        break
+                
+                summary_prompt = (
+                    "Anda adalah asisten AI yang bertugas merangkum riwayat percakapan agar sistem tidak lupa konteks.\n\n"
+                    f"Ringkasan Percakapan Sebelumnya:\n{history_summary if history_summary else 'Belum ada ringkasan.'}\n\n"
+                    f"Input Pengguna Terbaru:\n{brief}\n\n"
+                    f"Respons Agen Terbaru:\n{last_narrative}\n\n"
+                    "Buatlah 'Ringkasan Percakapan' yang komprehensif, singkat, padat, dan mencakup semua poin penting "
+                    "dari awal sampai putaran terakhir ini. Fokus pada kebutuhan proyek (misal: ruang tamu, 30m2, cat Jotaplast biru). "
+                    "HANYA berikan teks ringkasan, tanpa kata pengantar."
+                )
+                
+                summary_response = _llm_invoke_with_retry(gemini_specialist, summary_prompt)
+                new_summary = str(summary_response.content).strip()
+                import re
+                new_summary = re.sub(r"<think>[\s\S]*?</think>", "", new_summary, flags=re.IGNORECASE).strip()
+                
+                session_record = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+                if session_record:
+                    session_record.summary = new_summary
+            except Exception as sum_err:
+                print(f"Gagal generate summary: {sum_err}")
+                
             db.commit()
         finally:
             db.close()

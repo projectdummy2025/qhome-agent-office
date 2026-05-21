@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  CheckCircle2, 
+  CheckCircle2,
   UserCog, 
   Check,
   Edit2,
@@ -59,8 +59,19 @@ export default function AdminPortal({
   const [editPrice, setEditPrice] = useState<number>(0);
   const [editQty, setEditQty] = useState<number>(0);
   
-  const [isSaved, setIsSaved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  // Auto-persist products to the database whenever any admin action mutates the list
+  const persistToDb = async (updatedProducts: Product[]) => {
+    if (!currentSessionId) return;
+    try {
+      await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/products`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: updatedProducts })
+      });
+    } catch (err) {
+      console.error('Auto-persist failed:', err);
+    }
+  };
 
   // Tracks quantity additions per SKU in the restock panel
   const [addedQtys, setAddedQtys] = useState<Record<string, number>>({});
@@ -162,6 +173,7 @@ export default function AdminPortal({
 
         setProducts(finalProducts);
         onUpdateProducts(finalProducts);
+        persistToDb(finalProducts);
 
         // Update local master stock list to reflect new database stock
         setMasterProducts(prev => prev.map(mp => 
@@ -211,6 +223,7 @@ export default function AdminPortal({
 
     setProducts(finalProducts);
     onUpdateProducts(finalProducts);
+    persistToDb(finalProducts);
   };
 
   // Inline table edits (Power-user feature)
@@ -235,33 +248,11 @@ export default function AdminPortal({
     });
     setProducts(updated);
     onUpdateProducts(updated);
+    persistToDb(updated);
     setEditingSku(null);
   };
 
-  // 3. FINALISASI & KIRIM PERSISTENCE TO SQLITE
-  const handleFinalSave = async () => {
-    setIsSaving(true);
-    try {
-      if (currentSessionId) {
-        const res = await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/products`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ products: products })
-        });
-        if (!res.ok) {
-          console.error("Failed to persist products in DB");
-        }
-      }
-      
-      onUpdateProducts(products);
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 3000);
-    } catch (err) {
-      console.error("Error saving session products:", err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+
 
   // Segregation of products into business categories
   const restockProducts = products.filter(p => 
@@ -325,26 +316,7 @@ export default function AdminPortal({
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleFinalSave}
-              disabled={isSaving}
-              className={`px-6 py-2.5 rounded-full text-[12.5px] font-bold tracking-wide transition-all duration-300 flex items-center gap-2 cursor-pointer border shadow-sm ${
-                isSaved 
-                  ? 'bg-emerald-600 border-emerald-600 text-white' 
-                  : 'bg-accent border-accent text-white hover:bg-accent-hover'
-              } disabled:opacity-50`}
-            >
-              {isSaving ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : isSaved ? (
-                <Check className="w-3.5 h-3.5" />
-              ) : (
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              )}
-              {isSaving ? 'Menyimpan...' : isSaved ? 'Disinkronkan ke DB!' : 'Finalisasi & Simpan DB'}
-            </button>
-          </div>
+
         </div>
 
         {/* Dynamic Client Brief Quote */}

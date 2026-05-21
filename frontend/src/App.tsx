@@ -144,18 +144,18 @@ export default function App() {
           presets: [
             {
               title: "Granit Carrara Ruang Keluarga",
-              desc: "Spesifikasi lantai granit pola Carrara premium 60x60 cm dengan estetika marmer alam untuk area seluas 35 m².",
-              prompt: "Rekomendasikan ubin lantai granit dengan visual Carrara White premium berukuran 60x60 cm untuk ruang keluarga utama seluas 35 m2. Fokus pada keselarasan estetika marmer mewah dan finishing polished."
+              desc: "Kurasi visual & keselarasan ubin granit premium bermotif marmer Carrara (glossy) seluas 35 m² untuk konsep interior modern klasik.",
+              prompt: "Rancang konsep interior dan moodboard visual terperinci untuk area ruang tamu utama seluas 35 m² dengan mengusung gaya Modern Klasik Kontemporer yang mewah. Fokus utama adalah mengombinasikan ubin lantai granit premium bermotif marmer Carrara White berukuran 60x60 cm (misalnya Sandimas Tile Polished 60x60 #8 atau sejenisnya) yang memiliki finishing polished/glossy tinggi untuk memaksimalkan pantulan cahaya alami dari jendela besar di sisi barat. Evaluasi keselarasan warna abu-abu urat marmer (veining) pada lantai dengan rencana aplikasi cat tembok interior bertekstur halus warna beige hangat (warm sand) sebagai warna dasar dinding. Tambahkan opsi panel kayu Walnut gelap di sudut ruangan sebagai titik aksen visual (focal point). Berikan ulasan arsitektural komprehensif mengenai transisi visual antar material ini untuk menciptakan suasana ruang yang lapang, anggun, namun tetap terasa hangat."
             },
             {
               title: "Accent Wall Panel Kamar Utama",
-              desc: "Desain dinding aksen belakang tempat tidur seluas 20 m² menggunakan panel kayu fluted estetik.",
-              prompt: "Rancang panel dinding aksen (headboard wall) kamar tidur utama seluas 20 m2 menggunakan WPC Fluted Wood Panel berwarna Walnut gelap yang hangat dan elegan untuk aksen interior mewah."
+              desc: "Integrasi visual panel dinding kayu fluted 3D warna Walnut gelap seluas 20 m² dengan sistem pencahayaan LED tersembunyi.",
+              prompt: "Rancang detail arsitektural dan skema estetika untuk dinding aksen (headboard wall) kamar tidur utama seluas 20 m² menggunakan panel kayu fluted 3D (misalnya dari brand Taco atau Duma, seperti Panel Series-5) berwarna Walnut gelap yang hangat. Konsep ini bertujuan untuk menghadirkan kedalaman tekstur tiga dimensi dan menyembunyikan instalasi kabel terintegrasi secara elegan. Harap padukan panel kayu ini dengan skema pencahayaan linier LED tersembunyi (warm white 2700K) di celah atas panel untuk menonjolkan bayangan vertikal yang dramatis. Analisis keselarasan kontras antara tekstur kayu yang pekat dan bergaris tegas ini dengan ubin lantai granit bertekstur matte bernuansa abu-abu muda di bawahnya, serta rekomendasikan elemen furnitur pengisi (seperti nakas melayang) yang serasi untuk melengkapi moodboard kamar tidur bergaya luxury minimalist ini."
             },
             {
               title: "Skema Cat Minimalis Hangat",
-              desc: "Kombinasi warna cat interior beige hangat dan putih bersih untuk ruang makan seluas 18 m².",
-              prompt: "Rekomendasikan kombinasi warna cat interior berkarakter hangat (warm neutral) seperti beige lembut dan putih bersih dari brand premium untuk ruang makan keluarga seluas 18 m2."
+              desc: "Perpaduan warna cat tembok interior matte beige hangat dan putih bersih seluas 18 m² untuk ruang makan bertema Japandi.",
+              prompt: "Buat panduan palet warna dan spesifikasi estetika cat dinding interior untuk area ruang makan berkonsep Japandi Minimalis seluas 18 m² (dimensi 4.5m x 4m, tinggi dinding 3.2m). Rekomendasikan kombinasi cat premium ramah lingkungan dengan tingkat kilap matte/sheen yang rendah untuk meredam refleksi cahaya yang berlebihan, menggabungkan warna dasar beige hangat (warm sand/earthy beige) untuk tiga sisi dinding utama, dan aksen warna putih bersih (pure alabaster white) pada area lis profil plafon, kusen, dan satu sisi dinding partisi untuk menciptakan kontras bayangan yang dinamis. Evaluasi bagaimana kombinasi cat interior ini berinteraksi dengan pencahayaan buatan menggunakan lampu gantung anyaman bambu berwarna kekuningan, serta jelaskan bagaimana transisi warna ini mendukung suasana makan keluarga yang tenang, hangat, dan alami."
             }
           ]
         };
@@ -166,18 +166,18 @@ export default function App() {
           presets: [
             {
               title: "RAB Ubin & Perekat Semen Nat",
-              desc: "Estimasi presisi ubin granit 60x60 cm untuk lantai 40 m² dengan toleransi wastage 10% dan sak semen perekat.",
-              prompt: "Hitung kebutuhan ubin granit lantai 60x60 cm untuk ruangan 40 m2 dengan toleransi kerusakan (wastage margin) 10%. Sertakan jumlah sak semen perekat instan dan semen nat pendukung yang diperlukan."
+              desc: "Estimasi presisi ubin granit 60x60 cm pola diagonal untuk lantai 40 m² dengan wastage 10% dan kebutuhan semen perekat instan.",
+              prompt: "Lakukan kalkulasi teknis terperinci dan susun Rencana Anggaran Biaya (RAB) terperinci untuk pekerjaan lantai ruang serbaguna seluas 40 m² menggunakan ubin granit berukuran 60x60 cm (misalnya Tile Polished 60x60 #11). Berhubung ubin akan dipasang dengan pola diagonal yang memiliki tingkat kerumitan potong tinggi di sepanjang tepi dinding, terapkan margin toleransi kerusakan/sisa pemotongan (wastage margin) sebesar 10% dari luas bersih. Hitung secara akurat: (1) Total dus ubin granit yang harus dipesan (asumsikan 1 dus berisi 4 keping ubin / 1.44 m²), (2) Jumlah kebutuhan sak semen perekat instan heavy-duty (misalnya Semen Instan QHome dari brand MortarOne atau CemPro dengan daya sebar standar per sak 40 kg untuk ketebalan 3 mm), dan (3) Kebutuhan pengisi nat (tile grout) anti-jamur dan fleksibel untuk mencegah retak akibat pemuaian. Sertakan langkah-langkah pencegahan teknis di lapangan guna menghindari risiko ubin kopong (popping) di kemudian hari akibat kelembapan tanah atau pergerakan struktur bangunan."
             },
             {
               title: "Volume Panel Dinding & Perekat",
-              desc: "Hitung jumlah lembar WPC Wood Panel untuk dinding 25 m² beserta botol sealant perekat.",
-              prompt: "Kalkulasikan kebutuhan lembar WPC Wood Panel untuk menutupi dinding berukuran total 25 m2. Hitung juga perkiraan botol perekat sealant konstruksi yang dibutuhkan agar terpasang kokoh."
+              desc: "Hitung volume WPC Wood Panel seluas 25 m² dikurangi bukaan pintu, lengkap dengan sealant konstruksi dan paku beton mini.",
+              prompt: "Hitung kebutuhan material secara presisi untuk pemasangan panel dinding kayu WPC (Wood Plastic Composite, misalnya Panel Series-5 Taco atau Duma) pada dinding partisi kantor berukuran lebar 8 meter dan tinggi 3.2 meter (luas total bruto 25.6 m²). Perhitungan harus dikurangi dengan celah bukaan pintu geser kaca berukuran 1.8 meter x 2.1 meter. Tentukan: (1) Jumlah lembaran panel WPC yang harus dibeli jika spesifikasi per lembar panel memiliki lebar efektif 15 cm dan panjang 3 meter, dengan menambahkan wastage margin standar contractor sebesar 5% untuk potongan sisa di bagian atas, (2) Jumlah botol perekat sealant konstruksi heavy-duty (max-strength adhesive) yang dibutuhkan jika asumsi 1 botol sealant dapat mengelem area seluas 2 m², dan (3) Kebutuhan paku beton mini/sekrup klip pengunci stainless steel untuk pemasangan rangka bracket besi hollow di belakangnya agar struktur panel terpasang kokoh tanpa risiko melengkung akibat perubahan suhu ruangan."
             },
             {
               title: "Perhitungan Cat Tembok & Sealer",
-              desc: "Estimasi volume cat interior Jotaplast (dalam Pail 5kg) untuk luas dinding 60 m² lengkap dengan cat dasar alkali.",
-              prompt: "Estimasi volume cat interior Jotaplast (dalam Pail 5kg) untuk menutupi dinding seluas 60 m2 dengan 2 lapis pengecatan. Sertakan kebutuhan cat dasar alkali sealer untuk mencegah kelembaban."
+              desc: "Estimasi volume cat interior dan cat dasar alkali primer untuk dinding acian baru seluas 60 m² (sistem 2 lapis).",
+              prompt: "Lakukan estimasi kebutuhan volume cat secara komprehensif untuk menutupi bidang dinding tembok interior baru seluas 60 m² (luas bersih setelah dikurangi area jendela dan pintu). Dinding dalam kondisi acian semen baru yang berpotensi memiliki kadar alkali tinggi. Spesifikasi pengecatan wajib menggunakan sistem multi-lapisan: (1) 1 lapis cat dasar penahan garam alkali (alkali-resisting primer/sealer) untuk mencegah pengkristalan alkali semen dan kelembaban parah, serta (2) 2 lapis cat tembok interior premium (misalnya dari brand Jotaplast atau sejenisnya). Hitung dengan presisi kebutuhan masing-masing cairan dalam satuan liter atau Pail (asumsi 1 Pail = 20 Liter, 1 Galon = 2.5 Liter atau 5 kg), dengan asumsi daya sebar cat dasar adalah 10 m²/liter per lapis dan daya sebar cat akhir adalah 12 m²/liter per lapis. Berikan rekomendasi waktu jeda pengeringan antar lapisan (curing time) yang optimal di iklim tropis lembab untuk memastikan daya rekat maksimal cat tembok tersebut."
             }
           ]
         };
@@ -188,18 +188,18 @@ export default function App() {
           presets: [
             {
               title: "Bulk Order Ubin Granit Aula",
-              desc: "Pengadaan ubin granit lantai volume besar untuk proyek renovasi aula seluas 80 m².",
-              prompt: "Verifikasi ketersediaan stok pergudangan untuk pengadaan ubin granit volume besar (bulk order) guna merenovasi lantai aula serbaguna seluas 80 m2. Mohon rekomendasikan opsi lokal dengan stok memadai."
+              desc: "Pengadaan ubin granit lantai 80 m² dalam satu single-batch produksi untuk menjamin kesamaan warna (tonality) dengan harga tier B2B.",
+              prompt: "Verifikasi ketersediaan stok pergudangan terdistribusi QHomeMart untuk pengadaan grosir (bulk procurement) ubin granit lantai ukuran 60x60 cm (misalnya Tile Polished 60x60 #8 Sandimas atau Tile Matte 50x50 #12 TileCo) guna merenovasi lantai aula serbaguna seluas 80 m². Berhubung area lantai sangat luas, pembeli menegaskan syarat mutlak bahwa seluruh ubin granit harus berasal dari single-batch produksi yang sama (tonality matching) untuk menghindari perbedaan gradasi warna sekecil apa pun di area terbuka. Tolong cari produk dari brand lokal berkualitas tinggi yang memiliki stok terjamin minimal 65 dus di gudang utama. Berikan rincian perhitungan harga khusus untuk tier mitra B2B (volume discount), masa garansi pecah selama proses pengiriman, dan buatkan draf surat penawaran harga resmi (proforma invoice) yang mencakup diskon volume khusus pengadaan institusi."
             },
             {
               title: "Pengadaan Cat Proyek Perumahan",
-              desc: "Pemesanan cat interior kuantitas besar untuk 5 unit rumah dengan total luas dinding 200 m².",
-              prompt: "Lakukan pengecekan stok gudang dan estimasi harga grosir untuk kebutuhan cat interior proyek perumahan (5 unit rumah) dengan total luas permukaan dinding 200 m2. Siapkan opsi tier diskon B2B."
+              desc: "Pengadaan cat interior volume besar untuk 5 unit rumah (total 200 m²) dengan skema harga khusus di atas Rp 50 Juta.",
+              prompt: "Lakukan audit ketersediaan stok inventaris dan formulasikan penawaran harga grosir B2B untuk pengadaan cat tembok interior premium dalam jumlah besar guna menutupi dinding interior 5 unit rumah baru di kompleks perumahan kelas menengah (total luas permukaan dinding pengecatan bruto mencapai 200 m²). Tentukan kebutuhan total cat akhir (misalnya cat akhir dari brand Jotaplast atau sejenisnya) dan cat dasar sealer alkali primer dalam satuan Pail besar (20 kg). Pastikan stok kode warna yang sama (tinting code) tersedia melimpah di gudang utama atau gudang cabang Sleman dan Bantul untuk menghindari keterlambatan proyek. Susun skema penawaran harga dengan diskon kemitraan bertingkat (B2B pricing tier) karena nilai transaksi diproyeksikan melebihi Rp 50 juta rupiah, lengkap dengan opsi ketentuan termin pembayaran kredit (term of payment) selama 30 hari (TOP 30) untuk kontraktor terdaftar."
             },
             {
               title: "Konsolidasi Material Kayu & Cat",
-              desc: "Kombinasi panel dinding WPC dan cat interior Jotaplast volume sedang seluas 30 m².",
-              prompt: "Konsolidasikan pengadaan logistik untuk kebutuhan material campuran: panel dinding kayu WPC seluas 20 m2 and cat interior Jotaplast seluas 10 m2. Pastikan kecocokan jadwal kirim armada CDD."
+              desc: "Konsolidasi pengiriman campuran panel kayu WPC 20 m² dan cat 10 m² dalam satu armada Colt Diesel Double (CDD) terintegrasi.",
+              prompt: "Konsolidasikan rantai pengiriman logistik B2B dan rencanakan distribusi kargo terpadu untuk pesanan campuran multi-material proyek komersil: panel kayu WPC (furniture) seluas 20 m² (berat estimasi 250 kg) dan cat tembok interior beserta cat dasar (building material) seluas 10 m² (berat estimasi 80 kg). Tolong verifikasi ketersediaan stok kedua material tersebut secara real-time di Gudang Pusat QHomeMart Yogyakarta. Hitung total berat kargo keseluruhan, tentukan kubikasi volume barang, dan susun rute pengiriman logistik yang paling efisien menggunakan armada truk Colt Diesel Double (CDD) agar kedua material dapat dikirimkan dalam satu perjalanan tanpa risiko kerusakan cat bocor atau panel kayu patah terhimpit. Jadwalkan waktu tiba yang sinkron di lokasi proyek pada pagi hari sebelum jam operasional pekerja bangunan dimulai."
             }
           ]
         };
@@ -346,8 +346,7 @@ export default function App() {
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-1.5 text-muted-light hover:text-ink font-medium transition-colors cursor-pointer select-none"
         >
-          <span className="text-[13px]">💡</span>
-          <span>Thinking completed</span>
+          <span className="text-[13px]">Thinking completed</span>
           <ChevronRight className={`w-3.5 h-3.5 text-muted-light/60 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
         </button>
 
@@ -422,6 +421,36 @@ export default function App() {
   useEffect(() => {
     fetchHistory();
   }, [currentUser]);
+
+  useEffect(() => {
+    try {
+      const channel = new BroadcastChannel('qhome_payment_channel');
+      channel.onmessage = async (event) => {
+        if (event.data && event.data.event === 'payment_confirmed' && event.data.sessionId) {
+          const sid = event.data.sessionId;
+          if (sid === currentSessionId) {
+            try {
+              const res = await fetch(`http://localhost:8000/api/projects/sessions/${sid}/messages`);
+              const data = await res.json();
+              setMessages(data);
+              
+              // Smooth scroll to bottom to show the agent's new thank-you response
+              setTimeout(() => {
+                scrollToBottom();
+              }, 300);
+            } catch (err) {
+              console.error('Failed to reload messages on broadcasted payment confirmation:', err);
+            }
+          }
+        }
+      };
+      return () => {
+        channel.close();
+      };
+    } catch (err) {
+      console.error('Failed to establish BroadcastChannel:', err);
+    }
+  }, [currentSessionId]);
 
   const handleSelectSession = async (session: any) => {
     setCurrentSessionId(session.id);
@@ -736,8 +765,19 @@ export default function App() {
         products={products}
         brief={userBrief}
         onBack={() => setActivePortal('chat')}
-        onPlaceOrder={(orderDetails) => {
-          console.log("Order placed:", orderDetails);
+        onPlaceOrder={async (_orderDetails) => {
+          // Setelah konfirmasi pembayaran, pindah ke chat dan refresh pesan
+          // agar balasan agen langsung terlihat tanpa reload halaman
+          setActivePortal('chat');
+          if (currentSessionId) {
+            try {
+              const res = await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/messages`);
+              const data = await res.json();
+              setMessages(data);
+            } catch (err) {
+              console.error('Failed to reload messages after payment:', err);
+            }
+          }
         }}
       />
     );
@@ -822,17 +862,25 @@ export default function App() {
                 return filteredHistory.map((session, idx) => {
                   const isSelected = currentSessionId === session.id;
 
-                  // Tentukan kategori dinamis berdasarkan brief/title
+                  // Heuristik kategori selaras dengan taksonomi resmi baru (ditampilkan dalam Bahasa Indonesia)
                   const textForCategory = (session.brief || session.title || "").toLowerCase();
-                  let category = "Material Kustom";
-                  if (textForCategory.includes("wpc") || textForCategory.includes("fluted") || textForCategory.includes("kisi") || textForCategory.includes("kayu")) {
-                    category = "Dinding & Panel";
+                  let category = "Bahan Bangunan"; // default
+                  if (textForCategory.includes("wpc") || textForCategory.includes("fluted") || textForCategory.includes("kisi") || textForCategory.includes("kayu") || textForCategory.includes("panel")) {
+                    category = "Furnitur";
                   } else if (textForCategory.includes("granit") || textForCategory.includes("tile") || textForCategory.includes("lantai") || textForCategory.includes("ubin") || textForCategory.includes("keramik")) {
-                    category = "Lantai & Keramik";
+                    category = "Lantai";
                   } else if (textForCategory.includes("cat") || textForCategory.includes("paint") || textForCategory.includes("pengecatan") || textForCategory.includes("tembok") || textForCategory.includes("primer")) {
-                    category = "Finishing & Cat";
+                    category = "Bahan Bangunan";
                   } else if (textForCategory.includes("stone") || textForCategory.includes("batu") || textForCategory.includes("andesit") || textForCategory.includes("candi")) {
-                    category = "Batu Alam";
+                    category = "Bahan Bangunan";
+                  } else if (textForCategory.includes("appliance") || textForCategory.includes("kompor") || textForCategory.includes("kulkas") || textForCategory.includes("mesin cuci") || textForCategory.includes("peralatan rumah")) {
+                    category = "Peralatan Rumah Tangga";
+                  } else if (textForCategory.includes("sanitary") || textForCategory.includes("toilet") || textForCategory.includes("wc") || textForCategory.includes("wastafel") || textForCategory.includes("pipa") || textForCategory.includes("plumbing") ) {
+                    category = "Sanitasi & Perpipaan";
+                  } else if (textForCategory.includes("electrical") || textForCategory.includes("lampu") || textForCategory.includes("lighting") || textForCategory.includes("listrik") || textForCategory.includes("saklar") || textForCategory.includes("stopkontak")) {
+                    category = "Kelistrikan";
+                  } else if (textForCategory.includes("tool") || textForCategory.includes("gerinda") || textForCategory.includes("bor") || textForCategory.includes("mesin") || textForCategory.includes("peralatan") ) {
+                    category = "Peralatan & Mesin";
                   }
 
                   // Gunakan title dinamis spesifik dari DB, bersihkan dari bocoran tag think
@@ -932,21 +980,29 @@ export default function App() {
 
           <div className="flex items-center gap-2.5 ml-auto">
             {/* Tombol Keranjang Belanja B2B (Buka Tab Baru) */}
-            {messages.some(m => m.role === 'system' && m.products && m.products.length > 0) && (
-              <button
-                onClick={() => window.open(`/?portal=order&session_id=${currentSessionId}&user_role=${currentUser?.role}`, '_blank')}
-                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-accent hover:border-accent group relative cursor-pointer"
-                title="Buka Keranjang Pengadaan B2B (Tab Baru)"
-              >
-                <ShoppingBag className="w-4.5 h-4.5 text-accent transition-transform group-hover:scale-110" />
-                <span className="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-sm font-sans">
-                  {(() => {
-                    const latestSys = messages.filter(m => m.role === 'system').reverse()[0];
-                    return latestSys?.products?.length || 0;
-                  })()}
-                </span>
-              </button>
-            )}
+            {(() => {
+              const isPaymentConfirmed = messages.some(
+                m => m.role === 'system' && m.content && (
+                  m.content.includes("Pembayaran QRIS Diterima") ||
+                  m.content.includes("Kargo Diaktifkan")
+                )
+              );
+              return messages.some(m => m.role === 'system' && m.products && m.products.length > 0) && !isPaymentConfirmed && (
+                <button
+                  onClick={() => window.open(`/?portal=order&session_id=${currentSessionId}&user_role=${currentUser?.role}`, '_blank')}
+                  className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-accent hover:border-accent group relative cursor-pointer"
+                  title="Buka Keranjang Pengadaan B2B (Tab Baru)"
+                >
+                  <ShoppingBag className="w-4.5 h-4.5 text-accent transition-transform group-hover:scale-110" />
+                  <span className="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-sm font-sans">
+                    {(() => {
+                      const latestSys = messages.filter(m => m.role === 'system').reverse()[0];
+                      return latestSys?.products?.length || 0;
+                    })()}
+                  </span>
+                </button>
+              );
+            })()}
 
             {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) */}
             <button
@@ -1262,18 +1318,26 @@ export default function App() {
           }}
         >
           {(() => {
-            // Tentukan kategori dinamis berdasarkan brief/title
-            const textForCategory = (hoveredSession.brief || hoveredSession.title || "").toLowerCase();
-            let category = "Material Kustom";
-            if (textForCategory.includes("wpc") || textForCategory.includes("fluted") || textForCategory.includes("kisi") || textForCategory.includes("kayu")) {
-              category = "Dinding & Panel";
-            } else if (textForCategory.includes("granit") || textForCategory.includes("tile") || textForCategory.includes("lantai") || textForCategory.includes("ubin") || textForCategory.includes("keramik")) {
-              category = "Lantai & Keramik";
-            } else if (textForCategory.includes("cat") || textForCategory.includes("paint") || textForCategory.includes("pengecatan") || textForCategory.includes("tembok") || textForCategory.includes("primer")) {
-              category = "Finishing & Cat";
-            } else if (textForCategory.includes("stone") || textForCategory.includes("batu") || textForCategory.includes("andesit") || textForCategory.includes("candi")) {
-              category = "Batu Alam";
-            }
+              // Heuristik kategori selaras dengan taksonomi resmi baru (ditampilkan dalam Bahasa Indonesia)
+              const textForCategory = (hoveredSession.brief || hoveredSession.title || "").toLowerCase();
+              let category = "Bahan Bangunan";
+              if (textForCategory.includes("wpc") || textForCategory.includes("fluted") || textForCategory.includes("kisi") || textForCategory.includes("kayu") || textForCategory.includes("panel")) {
+                category = "Furnitur";
+              } else if (textForCategory.includes("granit") || textForCategory.includes("tile") || textForCategory.includes("lantai") || textForCategory.includes("ubin") || textForCategory.includes("keramik")) {
+                category = "Lantai";
+              } else if (textForCategory.includes("cat") || textForCategory.includes("paint") || textForCategory.includes("pengecatan") || textForCategory.includes("tembok") || textForCategory.includes("primer")) {
+                category = "Bahan Bangunan";
+              } else if (textForCategory.includes("stone") || textForCategory.includes("batu") || textForCategory.includes("andesit") || textForCategory.includes("candi")) {
+                category = "Bahan Bangunan";
+              } else if (textForCategory.includes("appliance") || textForCategory.includes("kompor") || textForCategory.includes("kulkas") || textForCategory.includes("mesin cuci") || textForCategory.includes("peralatan rumah")) {
+                category = "Peralatan Rumah Tangga";
+              } else if (textForCategory.includes("sanitary") || textForCategory.includes("toilet") || textForCategory.includes("wc") || textForCategory.includes("wastafel") || textForCategory.includes("pipa") || textForCategory.includes("plumbing")) {
+                category = "Sanitasi & Perpipaan";
+              } else if (textForCategory.includes("electrical") || textForCategory.includes("lampu") || textForCategory.includes("lighting") || textForCategory.includes("listrik") || textForCategory.includes("saklar") || textForCategory.includes("stopkontak")) {
+                category = "Kelistrikan";
+              } else if (textForCategory.includes("tool") || textForCategory.includes("gerinda") || textForCategory.includes("bor") || textForCategory.includes("mesin") || textForCategory.includes("peralatan")) {
+                category = "Peralatan & Mesin";
+              }
 
             // Bersihkan title dari tag think
             let titleDisplay = hoveredSession.title || "";
