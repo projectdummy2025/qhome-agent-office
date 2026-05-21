@@ -101,18 +101,25 @@ User menekan tombol "Lanjutkan ke Pengiriman" untuk masuk ke **Step 2 (Logistics
    * [ ] *"Saya menyetujui jadwal pengiriman kargo dan biaya logistik B2B..."*
 3. Tombol **"PROSES TRANSAKSI RESMI B2B"** menyala aktif setelah kedua kotak tercentang. User mengklik tombol untuk menyelesaikan transaksi.
 
-### Langkah 7: Success Payment & Nota PDF QRIS
+### Langkah 7: Success Payment, Verifikasi QRIS Interaktif & Sinkronisasi Chat Real-Time
 1. Pesanan dikirim secara aman ke database pergudangan.
 2. Panel kanan beralih ke **Step 3 (Success)**:
    * Menampilkan ID Tagihan resmi (misal: `ORD-5D7E8F1A`).
    * Menampilkan **Simulated QRIS Stand** interaktif bergaya GPN Standard Indonesia lengkap dengan matrix piksel dinamis sebagai metode pembayaran B2B.
    * Menyediakan tombol **"Unduh PDF Nota Belanja Resmi"** yang memicu backend memproduksi dokumen nota komersial resmi dengan grafis vektor stand QR Code.
+   * Menyediakan tombol **"Konfirmasi Sudah Bayar"** interaktif. Ketika diklik, sistem mengirim sinyal verifikasi pembayaran ke backend secara real-time.
+   * **Sinkronisasi Otomatis Tanpa Reload**: Setelah tombol konfirmasi diklik, sistem menggunakan **BroadcastChannel (`qhome_payment_channel`)** untuk memicu sinkronisasi riwayat obrolan secara instan di tab obrolan utama. Pengguna otomatis dialihkan kembali ke layar chat utama setelah 1.5 detik dengan gelembung chat dari agen yang langsung menampilkan status verifikasi pembayaran sukses dan pengaktifan kargo logistik tanpa perlu me-reload halaman.
 
 ---
 
 ## 3. System Flow (Di Balik Layar / Under the Hood)
 
 Bagaimana FastAPI, LangGraph, Groq, dan Gemini bekerja mengorkestrasi ekosistem multi-agent:
+
+### Fase 0: Long-Term Memory & Persistent Chat Context
+1. **Pengambilan Konteks (Database)**: Sebelum simulasi dijalankan, sistem mengambil riwayat sesi dari database (`ChatSession`). Jika ini adalah percakapan lanjutan, kolom `summary` (yang bertindak sebagai memori jangka panjang) dibaca dan disimpan sebagai variabel `history_summary`.
+2. **Injeksi Konteks ke Agen**: `history_summary` disuntikkan ke dalam *State Graph* LangGraph dan diteruskan ke seluruh agen spesialis (`Tile Estimator`, `Wood Specialist`, `Paint Consultant`, `Stone Specialist`, dll.) serta `Chief Supervisor` dan `Synthesizer`. Hal ini memastikan agen-agen dapat membedakan konteks baru dan mengingat riwayat percakapan revisi/estimasi sebelumnya.
+3. **Pembaruan Memori Otomatis**: Setelah simulasi selesai (`synthesizer` menyusun narasi akhir), asisten AI (menggunakan Gemini) akan merangkum seluruh percakapan terbaru beserta respons agen, lalu memperbarui kolom `summary` di database (`ChatSession.summary`) secara asinkron.
 
 ### Fase 1: Ingestion & Routing (Supervisor)
 1. React mengirimkan `POST /api/projects/analyze` berisi brief proyek ke FastAPI.
@@ -160,3 +167,15 @@ Saat tombol "Unduh PDF" ditekan:
 3. Sistem secara otomatis menyusun layout PDF bertema **Nota Belanja Resmi B2B**, mencakup rincian jarak logistik, armada pengiriman, jadwal pengantaran, catatan akses, subtotal, dan pajak.
 4. Di bagian bawah PDF, modul ReportLab shapes digunakan untuk menggambar representasi stand QRIS (grafik vektor) yang tajam untuk instruksi pembayaran profesional.
 5. Lembar PDF disajikan kembali ke klien secara asinkron sebagai berkas unduhan instan.
+
+### Fase 6: Verifikasi Transaksi & Sinkronisasi Obrolan Lintas-Tab (BroadcastChannel)
+Ketika pengguna mengklik "Konfirmasi Sudah Bayar" pada halaman sukses QRIS:
+1. Frontend mengirimkan request `POST /api/projects/orders/{order_id}/confirm-payment` ke backend.
+2. **Penyuntikan Pesan Otomatis (backend/api/routes/chat.py)**:
+   * Backend menyisipkan pesan baru bertindak sebagai pengguna (`role=user`) yang mengonfirmasi penyelesaian pembayaran QRIS.
+   * Backend menyisipkan tanggapan otomatis dari agen (`role=system`) yang menyatakan pembayaran sukses diterima dan kargo logistik diaktifkan secara resmi.
+   * Kedua pesan tersebut disimpan ke database SQL dengan UUID pesan (`id=str(uuid.uuid4())`) yang di-generate secara manual untuk menghindari pelanggaran not-null constraint.
+3. **Sinkronisasi Obrolan Instan (BroadcastChannel)**:
+   * Frontend mengirim sinyal `payment_confirmed` melalui `BroadcastChannel('qhome_payment_channel')`.
+   * Tab obrolan utama mendengarkan channel tersebut dan langsung me-refresh/memuat ulang seluruh riwayat chat secara asinkron dari API `/api/projects/sessions/{session_id}/messages` tanpa memicu pemuatan ulang halaman web secara keseluruhan (hard reload).
+   * Portal B2B ditutup secara elegan setelah 1.5 detik untuk transisi visual yang mulus.
