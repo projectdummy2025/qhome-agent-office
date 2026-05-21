@@ -295,8 +295,8 @@ export default function OrderPortal({
     URL.revokeObjectURL(url);
   };
 
-  // Mengambil item pertama untuk demo warning stok jika ada
-  const warningItem = products.length > 0 ? products[0] : null;
+  // Mencari produk yang masih memiliki status stok habis/terbatas atau harga 0
+  const warningItem = products.find(p => p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0);
 
   return (
     <div className="flex flex-col min-h-screen bg-canvas font-sans text-ink">
@@ -542,10 +542,15 @@ export default function OrderPortal({
                     </div>
 
                     <button 
-                      onClick={() => setCartStep('logistics')}
-                      className="w-full py-3.5 bg-accent hover:bg-accent/90 text-white rounded-full text-[12px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-accent/10 focus:outline-none"
+                      onClick={() => !warningItem && setCartStep('logistics')}
+                      disabled={!!warningItem}
+                      className={`w-full py-3.5 rounded-full text-[12px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md focus:outline-none ${
+                        warningItem
+                          ? 'bg-neutral-200 text-muted-light border border-hairline cursor-not-allowed shadow-none'
+                          : 'bg-accent hover:bg-accent/90 text-white shadow-accent/10 active:scale-[0.98]'
+                      }`}
                     >
-                      Lanjut ke Logistik
+                      {warningItem ? 'Penuhi Stok Terlebih Dahulu' : 'Lanjut ke Logistik'}
                       <ArrowRight className="w-4 h-4" />
                     </button>
                     

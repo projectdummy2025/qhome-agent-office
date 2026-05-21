@@ -413,3 +413,59 @@ def create_order(payload: OrderInput, db: Session = Depends(get_db)):
         
     db.commit()
     return {"status": "success", "order_id": order_id}
+
+
+class RestockPayload(BaseModel):
+    added_qty: int = 50
+
+@router.post("/products/{sku}/restock")
+def restock_product(sku: str, payload: RestockPayload, db: Session = Depends(get_db)):
+    """Penyelamatan: Restok barang di gudang utama secara real-time"""
+    from backend.models.schema import Product as DBProduct
+    p = db.query(DBProduct).filter(DBProduct.sku == sku).first()
+    if not p:
+        return {"error": "Produk tidak ditemukan"}, 404
+    p.stock_qty += payload.added_qty
+    db.commit()
+    return {"status": "success", "sku": sku, "new_stock": p.stock_qty}
+
+
+class UpdateProductsPayload(BaseModel):
+    products: List[dict]
+
+@router.put("/sessions/{session_id}/products")
+def update_session_products(session_id: str, payload: UpdateProductsPayload, db: Session = Depends(get_db)):
+    """Penyelamatan: Menyimpan daftar produk yang dimodifikasi admin kembali ke database"""
+    from backend.models.schema import ChatMessage as DBMessage, ChatRole
+    msg = db.query(DBMessage).filter(
+        DBMessage.session_id == session_id,
+        DBMessage.role == ChatRole.system
+    ).order_by(DBMessage.created_at.desc()).first()
+    
+    if not msg:
+        return {"error": "Pesan system tidak ditemukan untuk sesi ini"}, 404
+        
+    logs = msg.agent_logs
+    if isinstance(logs, str):
+        try:
+            logs = json.loads(logs)
+        except Exception:
+            logs = []
+            
+    updated = False
+    for log in logs:
+        if isinstance(log, dict) and log.get("event") == "completed":
+            log["products"] = payload.products
+            updated = True
+            break
+            
+    if not updated:
+        logs.append({
+            "event": "completed",
+            "products": payload.products,
+            "narrative": msg.content or "Material terkurasi oleh asisten B2B."
+        })
+        
+    msg.agent_logs = logs
+    db.commit()
+    return {"status": "success", "products": payload.products}

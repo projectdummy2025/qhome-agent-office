@@ -156,10 +156,10 @@ def tile_estimator(state: AgentState):
             f"Kalkulator sipil merekomendasikan tambahan {calc['cement_sacks_needed']} sak semen perekat "
             f"dan {calc['grout_bags_needed']} bag semen nat pendukung."
         )
-        product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
+        product_data = {"sku": meta["sku"], "name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception as e:
         content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"
-        product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
+        product_data = {"sku": "OOS-TILE", "name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Tile Estimator", "content": content, "product": product_data}
     old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Tile Estimator"]
@@ -207,10 +207,10 @@ def wood_specialist(state: AgentState):
             f"{reasoning}. Untuk luas bidang kayu {area_m2} m2, diperlukan sebanyak {qty} lembar panel. "
             f"Diperlukan pula {calc['coating_cans_needed']} kaleng cairan coating pelindung UV agar warna kayu tahan lama."
         )
-        product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
+        product_data = {"sku": meta["sku"], "name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception:
         content = "Maaf, saya tidak menemukan produk panel kayu yang sesuai di database."
-        product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
+        product_data = {"sku": "OOS-WOOD", "name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Wood Specialist", "content": content, "product": product_data}
     old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Wood Specialist"]
@@ -259,10 +259,10 @@ def paint_consultant(state: AgentState):
             f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
             f"dibutuhkan {qty} pail cat utama dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar."
         )
-        product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
+        product_data = {"sku": meta["sku"], "name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception:
         content = "Maaf, saya tidak menemukan cat interior yang spesifik sesuai permintaan."
-        product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
+        product_data = {"sku": "OOS-PAINT", "name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Paint Consultant", "content": content, "product": product_data}
     old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Paint Consultant"]
@@ -311,10 +311,10 @@ def stone_specialist(state: AgentState):
             f"Kalkulator merekomendasikan tambahan perekat khusus sebanyak {calc['bonding_agent_bags_needed']} sak heavy-duty bonding agent "
             f"dan {calc['grout_bags_needed']} sak joint filler pengisi nat batu."
         )
-        product_data = {"name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
+        product_data = {"sku": meta["sku"], "name": meta["name"], "price": meta["price"], "qty": f"{qty} {unit} (Est)", "total": meta["price"] * qty}
     except Exception as e:
         content = f"Maaf, produk Stone Veneer tidak ditemukan di katalog. Detail: {str(e)}"
-        product_data = {"name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
+        product_data = {"sku": "OOS-STONE", "name": "Menunggu Konfirmasi", "price": 0, "qty": "0", "total": 0}
         
     report = {"agent": "Stone Veneer Specialist", "content": content, "product": product_data}
     old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Stone Veneer Specialist"]
@@ -444,6 +444,7 @@ def inventory_administrator(state: AgentState):
                                     qty_int = 10
                                 
                                 # Tandai produk asli agar masuk ke "unavailable"
+                                prod["sku"] = db_product.sku
                                 prod["name"] = f"[STOK TERBATAS] {prod_name}"
                                 prod["price"] = 0
                                 prod["total"] = 0
@@ -456,6 +457,7 @@ def inventory_administrator(state: AgentState):
                                         break
                                 
                                 alt_product = {
+                                    "sku": alt.sku,
                                     "name": alt.name,
                                     "price": alt.base_price,
                                     "qty": f"{qty_int} {qty_suffix} (Substitusi)",
@@ -464,6 +466,7 @@ def inventory_administrator(state: AgentState):
                                 added_alternatives.append(alt_product)
                             else:
                                 status += " Tidak ada produk alternatif sejenis yang mencukupi saat ini."
+                                prod["sku"] = db_product.sku
                                 prod["name"] = f"[STOK HABIS] {prod_name}"
                                 prod["price"] = 0
                                 prod["total"] = 0
