@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Loader2,
   ChevronDown,
+  ChevronRight,
   Plus,
   Search,
   PanelLeftClose,
@@ -14,7 +15,8 @@ import {
   Palette,
   HardHat,
   Store,
-  ShieldCheck
+  ShieldCheck,
+  ShoppingBag
 } from 'lucide-react';
 import AdminPortal from './components/AdminPortal';
 import OrderPortal from './components/OrderPortal';
@@ -62,21 +64,6 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
 }
 
 
-const getProductImage = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes('paint') || n.includes('cat') || n.includes('jotaplast') || n.includes('interior')) {
-    return 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=240&auto=format&fit=crop';
-  }
-  if (n.includes('granit') || n.includes('tile') || n.includes('ceramic') || n.includes('ubin') || n.includes('lantai')) {
-    return 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=240&auto=format&fit=crop';
-  }
-  if (n.includes('fluted') || n.includes('panel') || n.includes('wood') || n.includes('wpc') || n.includes('dinding')) {
-    return 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=240&auto=format&fit=crop';
-  }
-  return 'https://images.unsplash.com/photo-1581094288338-2314dddb7ecc?q=80&w=240&auto=format&fit=crop';
-};
-
-
 const PERSONAS = [
   {
     role: 'architect',
@@ -87,7 +74,9 @@ const PERSONAS = [
     iconColor: 'text-blue-600 dark:text-blue-400',
     desc: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior B2B.',
     colorClass: 'border-hairline hover:border-blue-300 hover:shadow-[0_8px_30px_rgb(219,234,254,0.3)] hover:bg-blue-50/5 focus:ring-blue-100',
-    badgeColor: 'bg-blue-50 text-blue-700 border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-300'
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-300',
+    distanceKm: 8,
+    city: 'Sleman'
   },
   {
     role: 'contractor',
@@ -98,7 +87,9 @@ const PERSONAS = [
     iconColor: 'text-emerald-600 dark:text-emerald-400',
     desc: 'Kalkulator volume struktural proyek, perhitungan wastage margin semen/perekat, verifikasi standar teknis, dan rancangan RAB.',
     colorClass: 'border-hairline hover:border-emerald-300 hover:shadow-[0_8px_30px_rgb(209,250,229,0.3)] hover:bg-emerald-50/5 focus:ring-emerald-100',
-    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-300',
+    distanceKm: 15,
+    city: 'Bantul'
   },
   {
     role: 'retailer',
@@ -109,7 +100,9 @@ const PERSONAS = [
     iconColor: 'text-purple-600 dark:text-purple-400',
     desc: 'Pemesanan volume besar (bulk procurement), koordinasi alokasi stok pergudangan terdistribusi, dan negosiasi pricing tier korporat.',
     colorClass: 'border-hairline hover:border-purple-300 hover:shadow-[0_8px_30px_rgb(243,232,255,0.3)] hover:bg-purple-50/5 focus:ring-purple-100',
-    badgeColor: 'bg-purple-50 text-purple-700 border-purple-100/60 dark:bg-purple-950/40 dark:text-purple-300'
+    badgeColor: 'bg-purple-50 text-purple-700 border-emerald-100/60 dark:bg-purple-950/40 dark:text-purple-300',
+    distanceKm: 35,
+    city: 'Kulon Progo'
   },
   {
     role: 'admin',
@@ -118,9 +111,11 @@ const PERSONAS = [
     icon: ShieldCheck,
     iconBg: 'bg-amber-50 text-amber-600 border border-amber-100/50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30',
     iconColor: 'text-amber-600 dark:text-amber-400',
-    desc: 'Manajemen otorisasi diskon volume, intervensi stok kritis, pemutakhiran master catalog, dan audit log koordinasi multi-agent.',
+    desc: 'Manajemen otorisasi diskon volume, intervensi stok kritis, pemutakhiran master catalog, dan audit log koordinasi antar staf.',
     colorClass: 'border-hairline hover:border-amber-300 hover:shadow-[0_8px_30px_rgb(254,243,199,0.3)] hover:bg-amber-50/5 focus:ring-amber-100',
-    badgeColor: 'bg-amber-50 text-amber-700 border-amber-100/60 dark:bg-amber-950/40 dark:text-amber-300'
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-100/60 dark:bg-amber-950/40 dark:text-amber-300',
+    distanceKm: 0,
+    city: 'Yogyakarta (HQ)'
   }
 ];
 
@@ -212,7 +207,7 @@ export default function App() {
       default:
         return {
           title: "Halo Bapak Rudi, selamat datang di Panel Kontrol Admin.",
-          subtitle: "Simulasi fokus pada penanganan stok habis, validasi harga manual, and pengawasan log multi-agent.",
+          subtitle: "Simulasi fokus pada penanganan stok habis, validasi harga manual, and pengawasan log antar staf.",
           presets: [
             {
               title: "Simulasi Stok Habis & Substitusi",
@@ -220,9 +215,9 @@ export default function App() {
               prompt: "Simulasikan pesanan ubin granit premium impor bermotif langka yang stoknya sedang kosong (out of stock) untuk menguji apakah sistem asisten berhasil mencarikan alternatif substitusi setara secara otomatis."
             },
             {
-              title: "Integrasi Penuh Multi-Agent (RAB)",
-              desc: "Delegasi tugas simultan ke agen Ubin, Kayu, dan Cat untuk estimasi komprehensif ruang kantor 100 m².",
-              prompt: "Uji koordinasi multi-agent secara simultan: hitung ubin granit lantai untuk area 60 m2, panel dinding kayu WPC untuk partisi 25 m2, dan cat interior Jotaplast untuk dinding seluas 40 m2 dalam satu sesi estimasi terpadu."
+              title: "Integrasi Kolaborasi Staf (RAB)",
+              desc: "Delegasi tugas simultan ke staf Ubin, Kayu, dan Cat untuk estimasi komprehensif ruang kantor 100 m².",
+              prompt: "Uji koordinasi antar staf secara simultan: hitung ubin granit lantai untuk area 60 m2, panel dinding kayu WPC untuk partisi 25 m2, dan cat interior Jotaplast untuk dinding seluas 40 m2 dalam satu sesi estimasi terpadu."
             },
             {
               title: "Override Diskon Volume B2B",
@@ -254,6 +249,31 @@ export default function App() {
     }
   }, [brief]);
 
+  // Membaca URL Query Parameters untuk transfer state di tab baru (B2B Procurement Cart)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const portalParam = params.get('portal');
+    const sessionIdParam = params.get('session_id');
+    const userRoleParam = params.get('user_role');
+
+    if (portalParam === 'order' && sessionIdParam && userRoleParam) {
+      const matchedPersona = PERSONAS.find(p => p.role === userRoleParam);
+      if (matchedPersona) {
+        setCurrentUser(matchedPersona);
+        setCurrentSessionId(sessionIdParam);
+        setActivePortal('order');
+        
+        // Ambil riwayat pesan untuk mengekstrak daftar material
+        fetch(`http://localhost:8000/api/projects/sessions/${sessionIdParam}/messages`)
+          .then(res => res.json())
+          .then(data => {
+            setMessages(data);
+          })
+          .catch(err => console.error("Error loading cart session messages:", err));
+      }
+    }
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -282,14 +302,7 @@ export default function App() {
     return html;
   };
 
-  // Helper untuk membulatkan angka desimal pada string quantity
-  const formatQty = (qtyStr: string) => {
-    if (!qtyStr) return "";
-    return qtyStr.replace(/(\d+\.\d+)/g, (match) => {
-      const num = parseFloat(match);
-      return num.toFixed(2);
-    });
-  };
+  // formatQty is unused and removed to prevent TS errors.
 
 
   // Sub-komponen Akordeon Berpikir Agen (Premium)
@@ -315,6 +328,73 @@ export default function App() {
             <p className="text-[12.5px] text-muted-light leading-relaxed whitespace-pre-line italic">
               {text}
             </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
+  // Sub-komponen Akordeon Riwayat Aktivitas & Pemikiran Agen (Premium)
+  const CollapsibleAgentLogs = ({ logs }: { logs: any[] }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    if (!logs || logs.length === 0) return null;
+
+    return (
+      <div className="mb-4 text-[13px]">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-1.5 text-muted-light hover:text-ink font-medium transition-colors cursor-pointer select-none"
+        >
+          <span className="text-[13px]">💡</span>
+          <span>Thinking completed</span>
+          <ChevronRight className={`w-3.5 h-3.5 text-muted-light/60 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
+        </button>
+
+        {isOpen && (
+          <div className="mt-2.5 pl-4 border-l border-hairline/80 py-1 space-y-4 animate-scale-in">
+            {logs.map((log: any, idx: number) => {
+              const agentTitle = log.title || 'Sistem';
+              const logMsg = log.message || '';
+              const parsed = parseThinking(logMsg);
+              const isWorking = log.event === 'working';
+
+              return (
+                <div key={idx} className="text-[12px] leading-relaxed">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className={`font-semibold uppercase tracking-wider text-[10px] ${isWorking ? 'text-accent' : 'text-ink-2'}`}>
+                      {agentTitle}
+                    </span>
+                    {isWorking ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    ) : (
+                      <span className="text-[9px] text-muted-light">selesai</span>
+                    )}
+                  </div>
+                  <div className="text-muted">
+                    {parsed.thinking && (
+                      <div className="my-1.5 px-3 py-2 bg-surface-soft/80 border border-hairline/60 rounded-xl text-[11px] italic text-muted-light whitespace-pre-line leading-relaxed shadow-sm">
+                        {parsed.thinking}
+                      </div>
+                    )}
+                    <p className="text-[11.5px] font-normal leading-relaxed text-muted-light">
+                      {parsed.content}
+                    </p>
+                    {log.hired && log.hired.length > 0 && (
+                      <div className="mt-2 pl-3 border-l-2 border-hairline/60 space-y-1">
+                        <p className="text-[9px] text-muted-light uppercase tracking-wider mb-1 font-medium">Ditugaskan kepada</p>
+                        {log.hired.map((agent: string) => (
+                          <div key={agent} className="flex items-center gap-2">
+                            <span className="w-1 h-1 rounded-full bg-muted-light/60 flex-shrink-0" />
+                            <span className="text-[10px] font-semibold text-ink-2 uppercase tracking-wide">{agent}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -350,6 +430,7 @@ export default function App() {
     setCurrentAgentOnDuty(null);
     setActiveAgents([]);
 
+
     try {
       const res = await fetch(`http://localhost:8000/api/projects/sessions/${session.id}/messages`);
       const data = await res.json();
@@ -369,7 +450,6 @@ export default function App() {
     setCurrentAgentOnDuty(null);
     setActivePortal('chat');
   };
-
 
   const handleHire = async () => {
     if (!brief.trim()) return;
@@ -524,7 +604,7 @@ export default function App() {
                 <span className="text-accent font-light">B2B</span>
               </h1>
               <p className="text-[14px] text-muted leading-relaxed max-w-lg font-normal border-l-2 border-accent/40 pl-4">
-                Sistem multi-agent terintegrasi untuk otomatisasi kalkulasi volume material proyek, sinkronisasi stok gudang real-time, dan kurasi spesifikasi arsitektural bagi mitra profesional.
+                Sistem staf terintegrasi untuk otomatisasi kalkulasi volume material proyek, sinkronisasi stok gudang real-time, dan kurasi spesifikasi arsitektural bagi mitra profesional.
               </p>
             </div>
 
@@ -850,17 +930,36 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-4 ml-auto">
-            {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) — Disembunyikan saat sidebar terbuka */}
-            {!isRightSidebarOpen && (
+          <div className="flex items-center gap-2.5 ml-auto">
+            {/* Tombol Keranjang Belanja B2B (Buka Tab Baru) */}
+            {messages.some(m => m.role === 'system' && m.products && m.products.length > 0) && (
               <button
-                onClick={() => setIsRightSidebarOpen(true)}
-                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group"
-                title="Buka Log Proses MAS"
+                onClick={() => window.open(`/?portal=order&session_id=${currentSessionId}&user_role=${currentUser?.role}`, '_blank')}
+                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-accent hover:border-accent group relative cursor-pointer"
+                title="Buka Keranjang Pengadaan B2B (Tab Baru)"
               >
-                <UserCog className="w-5 h-5 transition-transform group-hover:scale-110 text-accent" />
+                <ShoppingBag className="w-4.5 h-4.5 text-accent transition-transform group-hover:scale-110" />
+                <span className="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-sm font-sans">
+                  {(() => {
+                    const latestSys = messages.filter(m => m.role === 'system').reverse()[0];
+                    return latestSys?.products?.length || 0;
+                  })()}
+                </span>
               </button>
             )}
+
+            {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) */}
+            <button
+              onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+              className={`w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm ${
+                isRightSidebarOpen 
+                  ? 'bg-accent/10 border-accent/40 text-accent' 
+                  : 'bg-white border-hairline text-muted hover:text-ink hover:border-accent'
+              } group cursor-pointer`}
+              title={isRightSidebarOpen ? "Tutup Log Proses MAS" : "Buka Log Proses MAS"}
+            >
+              <UserCog className="w-5 h-5 transition-transform group-hover:scale-110" />
+            </button>
           </div>
         </header>
 
@@ -939,11 +1038,11 @@ export default function App() {
 
                                 {/* Title Kapital bergaya Span */}
                                 <span className="text-[11.5px] uppercase tracking-[0.15em] text-muted font-normal">
-                                  SISTEM MULTI-AGENT SEDANG BEROPERASI
+                                  STAF KANTOR SEDANG BEROPERASI
                                 </span>
                               </div>
 
-                              {/* Sisi Kanan: Badge Agen Aktif */}
+                              {/* Sisi Kanan: Badge Staf Aktif */}
                               <div className="flex items-center gap-2 bg-accent-soft/40 border border-accent-border/20 px-3 py-1 rounded-full shadow-sm flex-shrink-0">
                                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                                 <span className="text-[10.5px] font-semibold text-accent uppercase tracking-wider">
@@ -955,9 +1054,9 @@ export default function App() {
                             {/* Deskripsi Detail Operasi (Tanpa Card, Mengalir Bersih) */}
                             <p className="text-[14px] text-muted-light leading-relaxed pl-8">
                               {currentAgentOnDuty ? (
-                                <>Agen <strong className="font-medium text-ink-2">{currentAgentOnDuty}</strong> sedang memproses perhitungan kebutuhan material, mencocokkan stok pergudangan QHomeMart, serta melakukan kalkulasi volume proyek...</>
+                                <>Staf <strong className="font-medium text-ink-2">{currentAgentOnDuty}</strong> sedang memproses perhitungan kebutuhan material, mencocokkan stok pergudangan QHomeMart, serta melakukan kalkulasi volume proyek...</>
                               ) : (
-                                <>Kepala Analis <strong className="font-medium text-ink-2">Chief Supervisor</strong> sedang mempersiapkan pembagian tugas estimasi material dan mengoordinasikan agen spesialis...</>
+                                <>Manajer <strong className="font-medium text-ink-2">Chief Supervisor</strong> sedang mempersiapkan pembagian tugas estimasi material dan mengoordinasikan staf spesialis...</>
                               )}
                             </p>
                           </div>
@@ -967,6 +1066,7 @@ export default function App() {
 
                         {msg.status === 'completed' && (
                           <div className="space-y-8 pt-2 animate-scale-in">
+                            <CollapsibleAgentLogs logs={msg.logs} />
                             {msg.narrative ? (() => {
                               const parsed = parseThinking(String(msg.narrative));
                               return (
@@ -995,154 +1095,7 @@ export default function App() {
                             )}
 
 
-                            {/* Premium Quote/Proposal Card — 100% Flat Editorial Style */}
-                            {msg.products && msg.products.length > 0 && (() => {
-                              const availableProds = msg.products.filter((p: any) => p.price > 0 && p.total > 0 && p.name !== "Menunggu Konfirmasi" && !p.name.toLowerCase().includes("konfirmasi"));
-                              const unavailableProds = msg.products.filter((p: any) => p.price === 0 || p.total === 0 || p.name === "Menunggu Konfirmasi" || p.name.toLowerCase().includes("konfirmasi"));
-                              return (
-                                <div className="w-full pt-8 border-t border-hairline mt-8 space-y-6">
 
-                                  {/* Section Title — Flat Editorial Heading */}
-                                  <div className="flex justify-between items-end pb-3">
-                                    <div>
-                                      <span className="text-[10px] font-extrabold tracking-[0.25em] uppercase text-accent mb-1.5 block">Kolaborasi Pengadaan</span>
-                                      <h4 className="font-black text-[22px] text-ink tracking-tight">
-                                        Daftar Material Rekomendasi
-                                      </h4>
-                                      <p className="text-[12.5px] text-muted-light mt-0.5">Spesifikasi material terpilih yang disesuaikan khusus untuk proyek Anda</p>
-                                    </div>
-                                    <span className="hidden sm:inline-block text-[10px] font-bold tracking-widest uppercase text-accent bg-accent-soft px-4 py-1.5 rounded-full border border-accent-border/20 shadow-sm">
-                                      Koleksi Terpilih
-                                    </span>
-                                  </div>
-
-                                  {/* Recommended Items — Gorgeous Standalone Cards or Horizontal Carousel */}
-                                  {(() => {
-                                    if (availableProds.length === 0) {
-                                      return (
-                                        <div className="p-8 text-center bg-white border border-hairline rounded-[20px] text-muted text-[13.5px] italic shadow-sm w-full">
-                                          Semua material terpilih memerlukan verifikasi ketersediaan khusus dari asisten desain kami.
-                                        </div>
-                                      );
-                                    }
-
-                                    const isCarousel = availableProds.length > 3;
-
-                                    return (
-                                      <div className={isCarousel ? "flex gap-5 overflow-x-auto pb-4 scrollbar-warm w-full snap-x snap-mandatory" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5"}>
-                                        {availableProds.map((prod: any, pIdx: number) => {
-                                          const isSub = prod.qty.toLowerCase().includes("substitusi");
-                                          const productImg = getProductImage(prod.name);
-                                          return (
-                                            <div
-                                              key={pIdx}
-                                              className={`bg-white border border-hairline rounded-[22px] overflow-hidden hover:border-accent/40 hover:shadow-md transition-all duration-300 flex flex-col group animate-fade-in ${isCarousel ? "w-[280px] shrink-0 snap-start" : ""}`}
-                                            >
-                                              {/* Top Image Section */}
-                                              <div className="h-40 w-full bg-surface-soft overflow-hidden relative shrink-0">
-                                                <img
-                                                  src={productImg}
-                                                  alt={prod.name}
-                                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                                                  <span className="text-[9px] font-mono font-bold bg-ink/75 backdrop-blur-[2px] text-white px-2 py-0.5 rounded-md select-none">
-                                                    {prod.sku || 'QHM-MAT'}
-                                                  </span>
-                                                  {isSub && (
-                                                    <span className="text-[8.5px] font-bold bg-amber-500/90 text-white px-2 py-0.5 rounded-md uppercase tracking-wider select-none shadow-sm">
-                                                      Substitusi
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-
-                                              {/* Bottom Body Section */}
-                                              <div className="p-5 flex-1 flex flex-col justify-between">
-                                                <div className="space-y-1">
-                                                  <h5 className="font-bold text-[14.5px] text-ink leading-tight group-hover:text-accent transition-colors line-clamp-2" title={prod.name}>
-                                                    {prod.name}
-                                                  </h5>
-                                                  <p className="text-[12px] text-muted-light font-medium">
-                                                    {formatQty(prod.qty)}
-                                                  </p>
-                                                </div>
-
-                                                <div className="pt-4 border-t border-hairline mt-4 flex items-center justify-end">
-                                                  <p className="font-extrabold text-[15.5px] text-ink">
-                                                    Rp {prod.total.toLocaleString('id-ID')}
-                                                  </p>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    );
-                                  })()}
-
-                                  {/* Bagian 2: Catatan Teknis & Ketersediaan */}
-                                  {unavailableProds.length > 0 && (
-                                    <div className="w-full p-6 bg-amber-50/20 border border-amber-200/40 rounded-[22px] space-y-3.5 shadow-sm">
-                                      <div className="text-[13.5px] text-ink-2 leading-relaxed">
-                                        <span className="font-bold text-ink block mb-1">Catatan Teknis &amp; Ketersediaan</span>
-                                        Untuk menjaga akurasi spesifikasi proyek Anda, terdapat <strong className="text-accent font-bold">{unavailableProds.length} item</strong> yang saat ini memerlukan konfirmasi ketersediaan stok atau penyesuaian oleh tim teknis kami:
-                                      </div>
-
-                                      <div className="divide-y divide-amber-200/20">
-                                        {unavailableProds.map((prod: any, upIdx: number) => {
-                                          const isHabis = prod.name.toLowerCase().includes("habis");
-                                          const cleanName = prod.name.replace(/\[.*?\]\s*/g, '');
-                                          return (
-                                            <div key={upIdx} className="flex justify-between items-center py-3 text-[13px] first:pt-0 last:pb-0">
-                                              <span className="text-ink font-medium">
-                                                {cleanName}
-                                              </span>
-                                              <span className={`text-[9.5px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shrink-0 border ${isHabis
-                                                  ? 'bg-amber-50 text-amber-600 border-amber-200/40'
-                                                  : 'bg-accent-soft/50 text-accent border-accent-border/20'
-                                                }`}>
-                                                {isHabis ? 'Konfirmasi Alternatif Setara' : 'Konfirmasi Tim Lapangan'}
-                                              </span>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Bagian 3: Ringkasan Investasi & Tindakan — 100% Flat Editorial Row */}
-                                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 pt-6 border-t border-hairline">
-                                    <div>
-                                      <p className="text-[12px] text-muted-light font-bold uppercase tracking-wider">TOTAL ESTIMASI INVESTASI</p>
-                                      <p className="text-3xl font-black text-ink mt-0.5">
-                                        Rp {availableProds.reduce((acc: number, curr: any) => acc + (curr.total || 0), 0).toLocaleString('id-ID')}
-                                      </p>
-                                    </div>
-
-                                    <div className="flex gap-2.5 w-full sm:w-auto justify-end">
-                                      {currentUser?.role === 'admin' ? (
-                                        <button
-                                          onClick={() => setActivePortal('admin')}
-                                          className="flex-1 sm:flex-none bg-accent hover:bg-accent/90 text-white px-8 py-3 rounded-full text-[13px] font-bold tracking-widest active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none uppercase shadow-sm cursor-pointer"
-                                        >
-                                          PORTAL EVALUASI ADMIN
-                                        </button>
-                                      ) : (
-                                        <button
-                                          onClick={() => setActivePortal('order')}
-                                          className="flex-1 sm:flex-none bg-ink hover:opacity-90 text-white px-8 py-3 rounded-full text-[13px] font-bold tracking-widest active:scale-[0.97] transition-all text-center whitespace-nowrap focus:outline-none uppercase shadow-sm cursor-pointer"
-                                        >
-                                          CHECKOUT B2B
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-
-
-                                </div>
-                              );
-                            })()}
                           </div>
                         )}
                       </div>
@@ -1206,27 +1159,28 @@ export default function App() {
       </div>
 
       {/* Right Sidebar — Blueprint Timeline */}
-      <div className={`bg-canvas border-l border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isRightSidebarOpen ? 'w-[320px]' : 'w-0 overflow-hidden border-none'}`}>
+      <div className={`bg-canvas border-l border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isRightSidebarOpen ? 'w-[360px]' : 'w-0 overflow-hidden border-none'}`}>
 
         {/* Sidebar Header — Ultra Minimalis */}
-        <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[320px]">
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[360px]">
           <div className="flex items-center gap-3">
-            <UserCog className="w-4 h-4 text-ink" />
+            <UserCog className="w-4 h-4 text-accent" />
             <span className="text-[11px] font-semibold text-muted-light tracking-[0.18em] uppercase">
-              Proses Analisis
+              Aktivitas Staf Kantor
             </span>
           </div>
-          <button onClick={() => setIsRightSidebarOpen(false)} className="p-1 text-muted-light hover:text-ink transition-colors">
+          <button onClick={() => setIsRightSidebarOpen(false)} className="p-1 text-muted-light hover:text-ink transition-colors cursor-pointer">
             <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
           </button>
         </div>
         <div className="mx-6 h-px bg-hairline" />
 
         {/* Timeline Content */}
-        <div className="flex-1 overflow-y-auto min-w-[320px] scrollbar-warm">
+        <div className="flex-1 overflow-y-auto min-w-[360px] scrollbar-warm">
           {messages.length === 0 || !messages.find(m => m.role === 'system') ? (
-            <div className="h-full flex flex-col items-center justify-center text-center px-8 opacity-30">
-              <p className="text-[12px] text-muted leading-relaxed">Sistem menunggu permintaan analisis dari Anda.</p>
+            <div className="h-full flex flex-col items-center justify-center text-center px-8 py-24 opacity-40">
+              <Brain className="w-8 h-8 text-muted-light animate-pulse mb-3" />
+              <p className="text-[12px] text-muted leading-relaxed">Staf kantor sedang siaga. Masukkan brief di sebelah kiri untuk melihat log aktivitas kerja.</p>
             </div>
           ) : (
             <div className="px-6 py-5">
@@ -1255,10 +1209,10 @@ export default function App() {
                             {agentTitle}
                           </span>
                           {isSpinnerActive ? (
-                            <span className="flex items-center gap-1 text-accent flex-shrink-0 pt-1.5" title="Aktif">
-                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-wave-1" />
-                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-wave-2" />
-                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-wave-3" />
+                            <span className="flex items-center gap-1 text-accent flex-shrink-0 pt-1.5 animate-pulse" title="Aktif">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                             </span>
                           ) : (
                             <span className="text-[10px] text-muted-light flex-shrink-0 pt-0.5">selesai</span>
