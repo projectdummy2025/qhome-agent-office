@@ -13,6 +13,9 @@ class ChatSession(Base):
     title = Column(String, nullable=False, default="Chat Baru")
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    # Ringkasan riwayat percakapan untuk long-term memory agent
+    summary = Column(Text, nullable=True)
+    
     # Relasi 1-to-many: Satu sesi memiliki banyak pesan
     messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
 

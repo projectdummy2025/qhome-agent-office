@@ -12,6 +12,7 @@ class AgentState(TypedDict):
     hired_agents: List[str]
     reports: List[dict]
     final_proposal: str
+    history_summary: str
 
 
 from backend.core.config import settings
@@ -75,6 +76,8 @@ def chief_supervisor(state: AgentState):
     brief = state.get("brief", "")
     reports = state.get("reports", [])
 
+    history_summary = state.get("history_summary", "")
+
     # Deteksi jika ini adalah revisi (ada report sebelumnya)
     if reports:
         existing_materials = []
@@ -88,6 +91,7 @@ def chief_supervisor(state: AgentState):
         materials_summary = "\n".join(existing_materials)
         prompt = (
             f"Klien mengajukan instruksi perubahan/revisi: '{brief}'.\n\n"
+            f"Konteks Sesi Sebelumnya:\n{history_summary if history_summary else 'Tidak ada.'}\n\n"
             f"Rencana belanja saat ini:\n{materials_summary}\n\n"
             "Analisislah instruksi baru ini. Tentukan agen spesialis mana saja yang perlu dipanggil kembali "
             "untuk merevisi rancangan di atas (tile, wood, stone, paint, researcher).\n"
@@ -95,7 +99,11 @@ def chief_supervisor(state: AgentState):
             "Jawab dengan format list python, contoh: ['tile']"
         )
     else:
-        prompt = f"Berdasarkan brief ini: '{brief}', agen apa saja yang dibutuhkan? (Pilih dari: tile, wood, stone, paint, researcher). Jawab dengan format list python, contoh: ['tile', 'wood']."
+        prompt = (
+            f"Konteks Sesi Sebelumnya:\n{history_summary if history_summary else 'Percakapan baru.'}\n\n"
+            f"Berdasarkan brief terbaru klien ini: '{brief}', agen apa saja yang dibutuhkan? "
+            "(Pilih dari: tile, wood, stone, paint, researcher). Jawab dengan format list python, contoh: ['tile', 'wood']."
+        )
 
     response = _llm_invoke_with_retry(supervisor_llm, prompt)
 
@@ -135,10 +143,13 @@ def tile_estimator(state: AgentState):
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
 
+        history_summary = state.get("history_summary", "")
         prompt = (
-            f"Anda adalah Tile Estimator. Klien meminta: '{brief}'. "
+            f"Anda adalah Tile Estimator.\n"
+            f"Konteks Sesi Sebelumnya: {history_summary if history_summary else 'Tidak ada.'}\n\n"
+            f"Klien meminta instruksi terbaru: '{brief}'.\n"
             f"Anda memilih produk: {meta['name']} ({desc}). Coverage per dus: {meta['coverage']} m2. "
-            "Ekstrak luas area lantai (m2) dari brief klien. Jika tidak ada ukuran luas di brief, asumsikan luas area 10 m2. "
+            "Ekstrak luas area lantai (m2) dari instruksi atau konteks sebelumnya. Jika tidak ada, asumsikan luas area 10 m2. "
             "Analisis juga pola pemasangan apakah standard (wastage 5%) or diagonal/vintage (wastage 10%). "
             'Format output HANYA JSON: {"reasoning": "1 kalimat alasan estetis profesional pemilihan produk", "area_m2": float, "pattern": "standard" atau "vintage"}'
         )
@@ -219,10 +230,13 @@ def wood_specialist(state: AgentState):
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
 
+        history_summary = state.get("history_summary", "")
         prompt = (
-            f"Anda adalah Wood Specialist. Klien meminta: '{brief}'. "
+            f"Anda adalah Wood Specialist.\n"
+            f"Konteks Sesi Sebelumnya: {history_summary if history_summary else 'Tidak ada.'}\n\n"
+            f"Klien meminta instruksi terbaru: '{brief}'.\n"
             f"Anda memilih produk: {meta['name']} ({desc}). Coverage per lembar: {meta['coverage']} m2. "
-            "Ekstrak luas area dinding/panel (m2) dari brief klien. Jika tidak ada ukuran luas, asumsikan luas area 15 m2. "
+            "Ekstrak luas area dinding/panel (m2) dari instruksi atau konteks sebelumnya. Jika tidak ada, asumsikan luas area 15 m2. "
             'Format output HANYA JSON: {"reasoning": "1 kalimat alasan profesional pemilihan panel kayu", "area_m2": float}'
         )
         response = _llm_invoke_with_retry(groq_specialist, prompt)
@@ -295,10 +309,13 @@ def paint_consultant(state: AgentState):
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
 
+        history_summary = state.get("history_summary", "")
         prompt = (
-            f"Anda adalah Paint Consultant. Klien meminta: '{brief}'. "
+            f"Anda adalah Paint Consultant.\n"
+            f"Konteks Sesi Sebelumnya: {history_summary if history_summary else 'Tidak ada.'}\n\n"
+            f"Klien meminta instruksi terbaru: '{brief}'.\n"
             f"Anda memilih produk: {meta['name']} ({desc}). Coverage per pail: {meta['coverage']} m2. "
-            "Ekstrak luas area dinding pengecatan (m2) dari brief klien. Jika brief menyebutkan ukuran kamar (misal 3x4 meter dengan tinggi 3 meter), "
+            "Ekstrak luas area dinding pengecatan (m2) dari instruksi atau konteks sebelumnya. Jika menyebutkan ukuran kamar (misal 3x4 meter dengan tinggi 3 meter), "
             "hitung luas keliling dikali tinggi (2*(3+4)*3 = 42 m2). Jika tidak ada spesifikasi ukuran, asumsikan luas dinding 12 m2. "
             'Format output HANYA JSON: {"reasoning": "1 kalimat alasan pemilihan warna cat", "area_m2": float}'
         )
@@ -372,10 +389,13 @@ def stone_specialist(state: AgentState):
         meta = res["metadatas"][0][0]
         desc = res["documents"][0][0]
 
+        history_summary = state.get("history_summary", "")
         prompt = (
-            f"Anda adalah Stone Veneer Specialist. Klien meminta: '{brief}'. "
+            f"Anda adalah Stone Veneer Specialist.\n"
+            f"Konteks Sesi Sebelumnya: {history_summary if history_summary else 'Tidak ada.'}\n\n"
+            f"Klien meminta instruksi terbaru: '{brief}'.\n"
             f"Anda memilih produk: {meta['name']} ({desc}). Coverage per m2: {meta['coverage']} m2/unit. "
-            "Ekstrak luas area dinding batu (m2) dari brief klien. Jika tidak ada ukuran luas, asumsikan luas area 15 m2. "
+            "Ekstrak luas area dinding batu (m2) dari instruksi atau konteks sebelumnya. Jika tidak ada, asumsikan luas area 15 m2. "
             'Format output HANYA JSON: {"reasoning": "1-2 kalimat analisis profesional termasuk saran bonding agent dan persiapan dinding", "area_m2": float}'
         )
         response = _llm_invoke_with_retry(gemini_specialist, prompt)
@@ -445,8 +465,12 @@ def market_researcher(state: AgentState):
     brief = state.get("brief", "")
 
     try:
+        history_summary = state.get("history_summary", "")
         # Generate search query based on brief
-        query_prompt = f"Berdasarkan brief: '{brief}', buat 1 kalimat query pencarian Google yang paling relevan untuk mencari tren atau ide desain interior terkait. Berikan HANYA teks query-nya."
+        query_prompt = (
+            f"Konteks Sesi Sebelumnya: {history_summary if history_summary else 'Tidak ada.'}\n\n"
+            f"Berdasarkan instruksi klien: '{brief}', buat 1 kalimat query pencarian Google yang paling relevan untuk mencari tren atau ide desain interior terkait. Berikan HANYA teks query-nya."
+        )
         query_response = _llm_invoke_with_retry(gemini_specialist, query_prompt)
         search_query = query_response.content.strip()
 
@@ -712,8 +736,11 @@ def synthesizer(state: AgentState):
         agent_reports_text += f"\n- Laporan {r['agent']}: {clean_report_content}"
 
     brief = state.get("brief", "")
+    history_summary = state.get("history_summary", "")
     prompt = (
-        f"Anda adalah Chief Supervisor di Kalkulator RAB QHomeMart. Klien memiliki permintaan material berikut:\n'{brief}'\n\n"
+        f"Anda adalah Chief Supervisor di Kalkulator RAB QHomeMart.\n"
+        f"Konteks Percakapan Sebelumnya: {history_summary if history_summary else 'Tidak ada.'}\n\n"
+        f"Klien memiliki permintaan/instruksi terbaru berikut:\n'{brief}'\n\n"
         f"Modul spesialis telah memberikan rekomendasi berikut:{agent_reports_text}\n\n"
         "Buatlah 2-3 paragraf narasi profesional bergaya Asisten Belanja Teknis Supermarket Bahan Bangunan QHomeMart "
         "(tanpa sapaan salam, langsung to the point) yang merangkum estimasi kebutuhan material ini, kesesuaian teknisnya, "

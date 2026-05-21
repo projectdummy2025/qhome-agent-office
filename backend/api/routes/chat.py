@@ -88,12 +88,18 @@ async def analyze_project(request: Request, db: Session = Depends(get_db)):
     user_id = data.get("user_id", "default-user")
 
     # 1. Pastikan ChatSession ada, jika belum buat baru
+    history_summary = ""
     if not session_id:
         session_id = str(uuid.uuid4())
         title = _generate_session_title(brief)
         new_session = ChatSession(id=session_id, title=title, user_id=user_id)
         db.add(new_session)
         db.commit()
+    else:
+        # Ambil summary sebelumnya jika session sudah ada
+        existing_session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+        if existing_session and existing_session.summary:
+            history_summary = existing_session.summary
 
     # 2. Simpan pesan (prompt) User ke Database
     user_msg = ChatMessage(
@@ -106,7 +112,7 @@ async def analyze_project(request: Request, db: Session = Depends(get_db)):
     active_streams[session_id] = {"status": "processing", "logs": []}
 
     # Jalankan simulasi agen di latar belakang
-    asyncio.create_task(run_agent_simulation(brief, session_id))
+    asyncio.create_task(run_agent_simulation(brief, session_id, history_summary))
 
     return {"status": "started", "session_id": session_id}
 
@@ -567,3 +573,72 @@ def update_session_products(
     msg.agent_logs = logs
     db.commit()
     return {"status": "success", "products": payload.products}
+
+
+class ConfirmPaymentPayload(BaseModel):
+    session_id: str
+    order_id: str
+    client_name: str
+    total_invoice: float
+    items_count: int
+
+
+@router.post("/orders/{order_id}/confirm-payment")
+def confirm_payment(order_id: str, payload: ConfirmPaymentPayload, db: Session = Depends(get_db)):
+    """Dipanggil setelah user mengkonfirmasi pembayaran QRIS.
+    Menyuntikkan dua pesan baru ke sesi chat:
+    - role=user : konfirmasi dari klien
+    - role=system : balasan otomatis agen bahwa pembayaran diterima & kargo diaktifkan.
+    """
+    from backend.models.schema import ChatMessage as DBMessage, ChatRole
+    import json as _json
+    from datetime import datetime
+
+    confirmation_user_text = (
+        f"Saya sudah menyelesaikan pembayaran QRIS untuk pesanan {order_id} "
+        f"senilai Rp {payload.total_invoice:,.0f}. Mohon aktifkan kargo pengiriman."
+    )
+
+    agent_narrative = (
+        f"**Pembayaran QRIS Diterima — Kargo Diaktifkan**\n\n"
+        f"Terima kasih banyak, **{payload.client_name}**! 🙏 Kami sangat mengapresiasi kepercayaan dan kerja sama Anda dalam transaksi B2B ini.\n\n"
+        f"Sistem kami telah berhasil memverifikasi pembayaran QRIS untuk pesanan **{order_id}** dengan rincian berikut:\n\n"
+        f"- **Total Pembayaran:** Rp {payload.total_invoice:,.0f}\n"
+        f"- **Jumlah Item:** {payload.items_count} jenis material bangunan\n"
+        f"- **Status Pengiriman:** Kargo diaktifkan & dijadwalkan untuk dispatch segera\n\n"
+        f"Tim logistik di pergudangan pusat QHomeMart telah menerima instruksi otomatis ini dan sedang mempersiapkan armada untuk pengiriman langsung ke lokasi proyek Anda. Anda dapat mengunduh Nota Pembelian & Dokumen Kargo resmi berformat PDF kapan saja melalui portal pesanan.\n\n"
+        f"Jika ada hal lain yang perlu disesuaikan atau ada tambahan material, jangan ragu untuk memberi tahu saya. Senang bisa membantu Anda mewujudkan proyek terbaik Anda! 😊"
+    )
+
+    # Pesan user — konfirmasi pembayaran
+    user_msg = DBMessage(
+        id=str(uuid.uuid4()),
+        session_id=payload.session_id,
+        role=ChatRole.user,
+        content=confirmation_user_text,
+        created_at=datetime.utcnow(),
+    )
+    db.add(user_msg)
+
+    # Pesan system — balasan agen konfirmasi kargo
+    system_logs = [
+        {
+            "event": "completed",
+            "title": "Chief Supervisor",
+            "message": "Pembayaran QRIS dikonfirmasi. Dispatch kargo diaktifkan.",
+            "narrative": agent_narrative,
+            "products": [],
+        }
+    ]
+    system_msg = DBMessage(
+        id=str(uuid.uuid4()),
+        session_id=payload.session_id,
+        role=ChatRole.system,
+        content=agent_narrative,
+        agent_logs=_json.dumps(system_logs),
+        created_at=datetime.utcnow(),
+    )
+    db.add(system_msg)
+    db.commit()
+
+    return {"status": "confirmed", "order_id": order_id, "session_id": payload.session_id}
