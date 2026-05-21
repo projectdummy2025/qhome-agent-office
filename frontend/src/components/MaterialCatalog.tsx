@@ -42,17 +42,9 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   const [selectedCat, setSelectedCat] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
-  // Map internal database categories to the official QHomeMart categories
+  // Keep category names aligned with the database taxonomy: just normalize to lower-case
   const mapCategory = (cat: string): string => {
-    const c = cat.toLowerCase();
-    if (c === 'tile') return 'floor';
-    if (c === 'wood') return 'furniture';
-    if (c === 'stone' || c === 'paint') return 'building material';
-    if (c === 'support') return 'tools & machinery';
-    if (c === 'appliance') return 'appliance & household';
-    if (c === 'sanitary') return 'sanitary & plumbing';
-    if (c === 'electrical') return 'electrical & lighting';
-    return cat;
+    return (cat || '').toLowerCase();
   };
 
   const fetchProducts = async () => {

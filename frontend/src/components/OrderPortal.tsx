@@ -88,6 +88,47 @@ export default function OrderPortal({
   const [notes, setNotes] = useState<string>('');
   const [isDoubleVerificationOpen, setIsDoubleVerificationOpen] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [isPaymentConfirmed, setIsPaymentConfirmed] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  // Dipanggil saat user klik "Konfirmasi Sudah Bayar".
+  // Mengirim sinyal ke backend → agent menulis balasan di chat → portal ditutup otomatis.
+  const handleConfirmPayment = async () => {
+    if (!orderId || !currentSessionId) return;
+    setIsConfirming(true);
+    try {
+      await fetch(`http://localhost:8000/api/projects/orders/${orderId}/confirm-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: currentSessionId,
+          order_id: orderId,
+          client_name: currentUser?.name || 'Klien B2B',
+          total_invoice: totalInvoice,
+          items_count: products.length,
+        }),
+      });
+      setIsPaymentConfirmed(true);
+
+      // Kirim sinyal ke tab obrolan utama menggunakan BroadcastChannel
+      try {
+        const channel = new BroadcastChannel('qhome_payment_channel');
+        channel.postMessage({ event: 'payment_confirmed', sessionId: currentSessionId });
+        channel.close();
+      } catch (broadcastErr) {
+        console.error('Failed to broadcast payment signal:', broadcastErr);
+      }
+
+      // Tutup portal dan kembali ke chat setelah 1.5 detik agar animasi terasa smooth
+      setTimeout(() => {
+        onPlaceOrder({ order_id: orderId, paid: true });
+        onBack();
+      }, 1500);
+    } catch (err) {
+      console.error('Payment confirmation failed:', err);
+      setIsConfirming(false);
+    }
+  };
 
   const activeTruck = TRUCKS.find(t => t.id === selectedTruck) || TRUCKS[0];
   const distance = currentUser?.distanceKm ?? 0;
@@ -144,7 +185,6 @@ export default function OrderPortal({
         const data = await res.json();
         setOrderId(data.order_id);
         setCartStep('success');
-        onPlaceOrder(payload);
       } else {
         // Read body (if any) to help diagnose server-side validation or errors
         let textBody = '';
@@ -729,7 +769,7 @@ export default function OrderPortal({
                     </button>
                     
                     <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-light font-medium">
-                      <span>🔒 Secured QHomeMart ERP Sync Gateway</span>
+                      <span>Secured QHomeMart ERP Sync Gateway</span>
                     </div>
                   </div>
                 </div>
@@ -913,36 +953,57 @@ export default function OrderPortal({
                         <li>Masukkan PIN transaksi Anda untuk menyelesaikan pembayaran kargo logistik.</li>
                       </ol>
 
-                      <div className="bg-emerald-50/80 border border-emerald-100 rounded-xl p-4 mt-3">
-                        <p className="text-[11.5px] text-emerald-800 leading-relaxed text-center font-bold">
-                          Verifikasi pembayaran berjalan otomatis dalam 2-3 menit. Status pesanan di database logistik terintegrasi akan diperbarui secara real-time.
-                        </p>
+                      <div className={`rounded-xl p-4 mt-3 text-center transition-all ${isPaymentConfirmed ? 'bg-emerald-50 border border-emerald-200' : 'bg-surface-soft border border-hairline'}`}>
+                        {isPaymentConfirmed ? (
+                          <p className="text-[13px] text-emerald-700 font-extrabold">
+                            Pembayaran dikonfirmasi. Mengalihkan ke chat...
+                          </p>
+                        ) : (
+                          <>
+                            <p className="text-[11px] text-muted mb-3 leading-relaxed">
+                              Setelah scan dan transfer berhasil, klik tombol di bawah untuk mengaktifkan kargo dan mendapatkan konfirmasi dari agen.
+                            </p>
+                            <button
+                              onClick={handleConfirmPayment}
+                              disabled={isConfirming}
+                              className="w-full py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[12.5px] font-extrabold tracking-wider uppercase transition-all disabled:opacity-60 cursor-pointer focus:outline-none flex items-center justify-center gap-2"
+                            >
+                              {isConfirming ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20"/></svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                              )}
+                              {isConfirming ? 'Memproses...' : 'Konfirmasi Sudah Bayar'}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Final Footer Actions */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 border-t border-hairline pt-8">
-                  <button 
-                    onClick={onBack}
-                    className="px-8 py-3 bg-neutral-900 hover:bg-neutral-800 text-white rounded-full text-[11px] font-bold tracking-widest active:scale-[0.97] transition-all cursor-pointer uppercase focus:outline-none"
-                  >
-                    Kembali ke Obrolan Utama
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (window.opener) {
-                        window.close();
-                      } else {
-                        onBack();
-                      }
-                    }}
-                    className="px-8 py-3 border border-hairline/80 hover:bg-neutral-50 text-muted hover:text-ink rounded-full text-[11px] font-bold tracking-widest active:scale-[0.97] transition-all cursor-pointer uppercase focus:outline-none"
-                  >
-                    Tutup Halaman Ini
-                  </button>
-                </div>
+                {!isPaymentConfirmed && (
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 border-t border-hairline pt-8">
+                    <button 
+                      onClick={onBack}
+                      className="px-8 py-3 bg-neutral-900 hover:bg-neutral-800 text-white rounded-full text-[11px] font-bold tracking-widest active:scale-[0.97] transition-all cursor-pointer uppercase focus:outline-none"
+                    >
+                      Kembali ke Obrolan Utama
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.opener) {
+                          window.close();
+                        } else {
+                          onBack();
+                        }
+                      }}
+                      className="px-8 py-3 border border-hairline/80 hover:bg-neutral-50 text-muted hover:text-ink rounded-full text-[11px] font-bold tracking-widest active:scale-[0.97] transition-all cursor-pointer uppercase focus:outline-none"
+                    >
+                      Tutup Halaman Ini
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
