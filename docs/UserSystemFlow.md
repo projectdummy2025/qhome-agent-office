@@ -11,72 +11,152 @@
 
 ---
 
-Dokumen ini memetakan skenario interaksi end-to-end (dari awal hingga akhir) antara Pelanggan (User) dan Ekosistem Multi-Agent Qhomemart.
+Dokumen ini memetakan skenario interaksi end-to-end (dari awal hingga akhir) antara Pelanggan Profesional B2B (User) dan Ekosistem Multi-Agent Qhomemart dalam skema **B2B Consultation & Procurement Hub**.
 
 ---
 
-## 1. Skenario Uji Coba (The Brief)
-**Profil User**: Bapak Budi, ingin merenovasi ruang tamunya agar terlihat mewah namun ramah anak.
-**Input Teks (Brief)**: *"Halo, saya ingin merenovasi ruang tamu ukuran 5x4 meter. Saya ingin lantainya pakai granit marmer putih biar mewah. Dinding area TV mau dipasang panel kayu bergaris biar elegan. Sisa dindingnya tolong dicat warna terang yang gampang dibersihkan kalau dicoret anak saya."*
+## 1. Profil & Metadata Persona B2B
+
+Sistem menyediakan skenario penanganan logistik cerdas berdasarkan jarak fisik dari kantor pusat (**QHome HQ**) ke lokasi pengiriman masing-masing persona:
+
+1. **Ibu Amalia (Senior Architect & Designer)**
+   * **Lokasi Pengiriman**: Sleman
+   * **Jarak Tempuh**: **8 Km**
+   * **Fokus**: Estetika premium, panel WPC, granit mewah, dan keselarasan desain ruang.
+
+2. **Bapak Joko (General Contractor & Engineer)**
+   * **Lokasi Pengiriman**: Bantul
+   * **Jarak Tempuh**: **15 Km**
+   * **Fokus**: Volume material struktural besar, semen, keramik kokoh, dan optimalisasi bujet proyek.
+
+3. **Ibu Santi (Retail & Procurement Partner)**
+   * **Lokasi Pengiriman**: Kulon Progo
+   * **Jarak Tempuh**: **35 Km**
+   * **Fokus**: Pembelian volume grosir berkala, logistik berjadwal, dan keakuratan daftar belanja.
+
+4. **Bapak Rudi (Lead System Administrator)**
+   * **Fokus**: Otentikasi pengawasan sistem, penyesuaian stok gudang kritis (*Out-of-Stock*), dan otorisasi transaksi.
 
 ---
 
-## 2. User Flow (Kacamata Pelanggan)
+## 2. User Flow (Kacamata Pelanggan B2B)
 
-1. **Input**: User membuka *Web Dashboard* Qhomemart (React). User mengetik brief di atas pada kolom chat/teks yang tersedia.
-2. **Submit**: User menekan tombol **"Konsultasi Sekarang"**.
-3. **Live Canvas (Observasi)**:
-   * Di layar, User melihat animasi *Dashboard Digital Office*.
-   * Avatar **Chief Supervisor** menyala hijau bertuliskan: *"Menganalisis kebutuhan proyek Bapak Budi..."*
-   * Tiba-tiba, 3 avatar karyawan menyala secara bergiliran: **Tile Estimator**, **Wood Specialist**, dan **Paint Consultant**. (Avatar *Stone Specialist* tetap abu-abu/mati karena Budi tidak meminta batu alam).
-   * Di panel samping (*Terminal Stream*), User bisa membaca proses pemikiran mereka secara *real-time* (Misal: *"Tile Estimator sedang mencari granit marmer putih di katalog..."*).
-4. **Finalisasi**: Setelah sekitar 5-8 detik, layar berganti menampilkan **Grand Proposal Renovasi**.
-   * Menampilkan gambar produk (Granit White Carara, WPC Fluted Panel, Dulux Easy Clean).
-   * Menampilkan rincian kuantitas pasti (Jumlah Dus, Jumlah Lembar, Jumlah Galon) beserta harga total.
-   * Tombol CTA: *"Download PDF"* atau *"Beli Material via Qhomemart"*.
+Sistem menampilkan dashboard **Split-Screen Premium** yang terbagi menjadi dua panel aktif utama:
+
+```
++---------------------------------------------------------+
+|                  QHomeMart Digital Office               |
++--------------------------+------------------------------+
+|                          |                              |
+|   Panel Diskusi Chat     |   Halaman Khusus B2B Cart    |
+|        (Tengah)          |           (Kanan)            |
+|                          |                              |
+|  * Murni obrolan alami   |  * Daftar Material Terkurasi |
+|  * Bebas tabel panjang   |  * Peringatan Stok Kritis    |
+|  * Diskusi alternatif    |  * Kurir & Jadwal Logistik   |
+|                          |  * Ringkasan Tagihan B2B     |
+|                          |                              |
++--------------------------+------------------------------+
+```
+
+### Langkah 1: Input Brief & Konsultasi
+1. User (misal: **Ibu Amalia**) masuk ke dashboard, memilih persona, dan memasukkan spesifikasi kebutuhan proyek konstruksinya.
+2. **Brief Kebutuhan (Contoh)**: *"Saya ingin merenovasi teras dan ruang tamu dengan marmer putih mewah di Sleman. Dinding area TV tolong dipasang panel kayu bergaris fluted, dan sisa dindingnya dicat warna terang ramah anak."*
+3. User menekan tombol **"Konsultasi Sekarang"**.
+
+### Langkah 2: Observasi Live Canvas & Terminal Stream (Agent Activity)
+Sistem mulai mengkalkulasi di latar belakang. User disuguhkan dengan nuansa simulasi digital office yang hidup:
+1. **Live Office Canvas**: Di layar, avatar **Chief Supervisor** menyala hijau menandakan koordinasi awal dimulai. Avatar agen spesialis (**Tile Estimator**, **Wood Specialist**, dan **Paint Consultant**) menyala secara bergantian sesuai giliran tugas mereka.
+2. **Terminal Stream Logs (Aktifitas Agen)**: Pada panel log di dalam chat, user dapat membaca proses berpikir internal (*chain-of-thought*) agen secara *real-time*:
+   * *"Tile Estimator sedang mencari granit marmer putih di katalog..."*
+   * *"Wood Specialist sedang memverifikasi cakupan panel kayu bergaris..."*
+   * *"Paint Consultant sedang memilih opsi cat ramah anak anti noda..."*
+
+### Langkah 3: Sinkronisasi Asinkron Real-Time & Curation
+Setelah kalkulasi selesai:
+1. **Chat Diskusi (Tengah)**: Menyajikan gelembung dialog alami dari para agen ahli yang menjelaskan rancangan estetika dan pertimbangan sipil secara naratif (tanpa diganggu tabel belanja panjang).
+2. **B2B Procurement Cart (Kanan)**: Menyajikan daftar material terkurasi, volume mutlak, harga satuan, dan total subtotal secara instan dan sinkron.
+
+### Langkah 4: Penanganan Interaktif Stok Kritis (Out-of-Stock / OOS)
+1. Jika terdeteksi produk yang kehabisan stok atau kuantitasnya kurang:
+   * Tombol checkout di Keranjang Belanja B2B **dikunci otomatis**.
+   * Banner peringatan menyala merah: *"Butuh Konfirmasi Admin"*.
+2. User mengklik tombol **"Intervensi Admin"**:
+   * Sistem melakukan transisi mulus ke portal persona **Bapak Rudi (Admin)**.
+   * Admin membuka **Portal Admin**, menambahkan pasokan stok material kritis bersangkutan, lalu mengklik setujui (*Approve*).
+3. User kembali ke chat: keranjang otomatis ter-sinkronisasi ulang, tanda peringatan hilang, dan tombol checkout kini **terbuka**.
+
+### Langkah 5: Pemilihan Armada Kurir & Penjadwalan Dinamis
+User menekan tombol "Lanjutkan ke Pengiriman" untuk masuk ke **Step 2 (Logistics)** pada panel kanan:
+1. **Pemilihan Armada**: User memilih jenis truk pengiriman kargo yang cocok. Biaya kirim otomatis terhitung secara real-time berdasarkan formula logistik jarak persona Sleman (**8 Km**):
+   * **Colt Diesel Double (CDD)**: Tarif Dasar Rp 400.000 + (Jarak × Rp 15.000/Km)
+   * **Truk Fuso Box**: Tarif Dasar Rp 900.000 + (Jarak × Rp 25.000/Km)
+   * **Tronton Wingbox**: Tarif Dasar Rp 1.800.000 + (Jarak × Rp 40.000/Km)
+2. **Penjadwalan & Catatan**: User menentukan tanggal kirim proyek dan menyertakan catatan logistik (akses jalan, pintu carport, dll).
+
+### Langkah 6: Double Verification Modal (Sweet Popup)
+1. User mengklik **"Lanjutkan Verifikasi"**.
+2. **Popup Verifikasi Ganda** yang sangat premium muncul memblokir layar dengan efek blur. User wajib mencentang dua kotak verifikasi interaktif:
+   * [ ] *"Saya memverifikasi spesifikasi arsitektural dan volume material yang tercantum..."*
+   * [ ] *"Saya menyetujui jadwal pengiriman kargo dan biaya logistik B2B..."*
+3. Tombol **"PROSES TRANSAKSI RESMI B2B"** menyala aktif setelah kedua kotak tercentang. User mengklik tombol untuk menyelesaikan transaksi.
+
+### Langkah 7: Success Payment & Nota PDF QRIS
+1. Pesanan dikirim secara aman ke database pergudangan.
+2. Panel kanan beralih ke **Step 3 (Success)**:
+   * Menampilkan ID Tagihan resmi (misal: `ORD-5D7E8F1A`).
+   * Menampilkan **Simulated QRIS Stand** interaktif bergaya GPN Standard Indonesia lengkap dengan matrix piksel dinamis sebagai metode pembayaran B2B.
+   * Menyediakan tombol **"Unduh PDF Nota Belanja Resmi"** yang memicu backend memproduksi dokumen nota komersial resmi dengan grafis vektor stand QR Code.
 
 ---
 
 ## 3. System Flow (Di Balik Layar / Under the Hood)
 
-Bagaimana FastAPI, LangGraph, Groq, dan Gemini bekerja mengorkestrasi skenario di atas:
+Bagaimana FastAPI, LangGraph, Groq, dan Gemini bekerja mengorkestrasi ekosistem multi-agent:
 
 ### Fase 1: Ingestion & Routing (Supervisor)
-1. **API Call**: React mengirim `POST /api/analyze` berisi brief Budi ke FastAPI.
+1. React mengirimkan `POST /api/projects/analyze` berisi brief proyek ke FastAPI.
 2. **Supervisor LLM (Gemini 3 Flash)** membaca teks.
    * *Intent Extraction*: Area = 20 m² (5x4). Material = Granit Marmer, Panel Kayu Bergaris, Cat mudah dibersihkan.
    * *Dynamic Routing*: Memutuskan untuk men-*hire* (menjalankan *edge* LangGraph menuju) 3 agen: Tile, Wood, Paint.
 3. FastAPI memancarkan sinyal **SSE (Server-Sent Events)** ke React: `{"event": "routing", "hired": ["tile", "wood", "paint"]}`.
 
-### Fase 2: Eksekusi Spesialis (Secara Waterfall/Sekuensial)
+### Fase 2: Eksekusi Spesialis Sekuensial (Waterfall)
 *(Karena limitasi 6K TPM Groq, Supervisor mendelegasikan tugas satu per satu)*
 
-**A. Giliran Tile Estimator (Gemini 2.5 Flash)**
+#### A. Giliran Tile Estimator (Gemini 2.5 Flash)
 * **RAG Search**: Memanggil MCP `search_vector_catalog("granit marmer putih")`. ChromaDB membalas dengan `TLE-001 (White Carara)`.
 * **Kalkulasi**: Memanggil MCP `calculate_tile_needs(area=20, sku="TLE-001")`. 
   * *Sistem Backend (rules.py)* menghitung: Butuh 15 Dus Granit + Margin wastage 5% + 4 Sak Semen MU-480 + 3 Kg Nat AM Putih.
 * **Laporan**: Menulis narasi argumen estetika dan menyerahkan *JSON payload* biaya ke memori LangGraph.
 
-**B. Giliran Wood Specialist (Qwen 32B via Groq)**
+#### B. Giliran Wood Specialist (Qwen 32B via Groq)
 * **RAG Search**: Memanggil MCP `search_vector_catalog("panel kayu bergaris fluted")`. ChromaDB membalas dengan `WPC-001 (Fluted Teak Wood)`.
 * **Kalkulasi**: Memanggil MCP `calculate_wood_needs(area=5, sku="WPC-001")` (Asumsi dinding TV = 5m²).
   * *Sistem Backend* menghitung: Butuh 12 Lembar WPC + 2 Tube Sealant Dextone.
 * **Laporan**: Menyerahkan draf narasi via Groq dengan kecepatan kilat ke memori LangGraph.
 
-**C. Giliran Paint Consultant (Qwen 32B via Groq)**
+#### C. Giliran Paint Consultant (Qwen 32B via Groq)
 * **RAG Search**: Memanggil MCP `search_vector_catalog("cat terang mudah dibersihkan ramah anak")`. ChromaDB merekomendasikan `PNT-003 (Dulux Easy Clean)`.
 * **Kalkulasi**: Memanggil MCP `calculate_paint_needs(area=45, sku="PNT-003")` (Asumsi sisa dinding).
   * *Sistem Backend* menghitung: Butuh 1 Pail (25kg) dengan asumsi 2 lapis (*double coat*).
 * **Laporan**: Diserahkan ke memori LangGraph.
 
-### Fase 3: Quality Control & Sintesis
+### Fase 3: Quality Control & Sintesis (Supervisor)
 1. **Supervisor (Gemini 3 Flash)** hidup kembali.
 2. Membaca ketiga laporan yang ada di *State Graph*.
-3. **Pengecekan Logika**: Supervisor memastikan bahwa *Tile Estimator* tidak lupa memasukkan semen, dan *Paint Consultant* sudah memperhitungkan 2 lapis pengecatan.
-4. **Sintesis JSON**: Supervisor menggabungkan ketiga laporan menjadi satu *Grand JSON Object* yang sangat terstruktur.
+3. **Pengecekan Logika & Konsistensi**: Supervisor memastikan bahwa *Tile Estimator* tidak lupa memasukkan semen pelapis, *Wood Specialist* mengikutsertakan sealant pengisi celah, dan *Paint Consultant* sudah memperhitungkan 2 lapis pengecatan ramah anak.
+4. **Sintesis JSON**: Supervisor menggabungkan ketiga laporan menjadi satu *Grand JSON Object* yang sangat terstruktur, memicu event completed, dan menutup SSE Streamer.
 
-### Fase 4: Response & Rendering
-1. FastAPI menerima hasil akhir graf LangGraph.
-2. FastAPI mengembalikan HTTP *Response* berupa JSON lengkap ke Frontend (React).
-3. React mem- *parsing* JSON tersebut dan menggambar komponen kartu produk (beserta harga dan kuantitas mutlak) ke layar pelanggan.
-4. Sesi selesai. Seluruh interaksi (Audit Log) disimpan ke dalam **SQLite** (`agent_communications` table) untuk *history tracking*.
+### Fase 4: Sinkronisasi Transaksi & API Pemesanan (3NF Database)
+Saat pengguna menyetujui verifikasi ganda dan memproses transaksi resmi, frontend menembak API:
+* **HTTP POST `/api/projects/orders`**
+* **Database Pipeline (schema.py)**: Menulis relasi transaksi ke dalam tabel `Order` dan `OrderItem` yang ternormalisasi (3NF) guna menjaga integritas inventaris.
+
+### Fase 5: Roda Nota Belanja & Vector QRIS Drawing
+Saat tombol "Unduh PDF" ditekan:
+1. React memicu endpoint GET `/api/projects/{session_id}/generate-pdf`.
+2. Backend [pdf_service.py](file:///home/ahmad/projects/qhomemart-mas-agent/backend/services/pdf_service.py) mendeteksi adanya data `Order` resmi untuk sesi tersebut.
+3. Sistem secara otomatis menyusun layout PDF bertema **Nota Belanja Resmi B2B**, mencakup rincian jarak logistik, armada pengiriman, jadwal pengantaran, catatan akses, subtotal, dan pajak.
+4. Di bagian bawah PDF, modul ReportLab shapes digunakan untuk menggambar representasi stand QRIS (grafik vektor) yang tajam untuk instruksi pembayaran profesional.
+5. Lembar PDF disajikan kembali ke klien secara asinkron sebagai berkas unduhan instan.
