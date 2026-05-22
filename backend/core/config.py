@@ -1,10 +1,15 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    # Pydantic otomatis akan mencari variabel ini di file .env
-    GEMINI_API_KEY: str = ""
-    GROQ_API_KEY: str = ""
+    SUMOPOD_API_KEY: str
+    SUMOPOD_API_BASE: str
+    SUPERVISOR_MODEL: str
+    SUBAGENT_MODEL: str
+    
+    # API Key untuk Tools MCP (Internet Research)
     TAVILY_API_KEY: str = ""
+
+
     
     # Nilai default (fallback) jika tidak ada di .env
     DATABASE_URL: str = "postgresql://postgres:postgrespassword@localhost:5432/qhome_db"

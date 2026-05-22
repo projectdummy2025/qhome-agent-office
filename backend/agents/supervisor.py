@@ -3,8 +3,7 @@ import time
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List
 from langchain_core.messages import HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
+from openai import OpenAI
 
 
 class AgentState(TypedDict):
@@ -17,19 +16,46 @@ class AgentState(TypedDict):
 
 from backend.core.config import settings
 
-# Define models based on AgentRoster.md
-# gemini-2.5-flash: lebih stabil untuk free tier, fallback jika 2.0-flash kena 429
-supervisor_llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    google_api_key=settings.GEMINI_API_KEY,
+class SumoPodLLM:
+    def __init__(self, api_key: str, base_url: str, model: str):
+        self.client = OpenAI(
+            api_key=api_key or "dummy_key",
+            base_url=base_url or "https://ai.sumopod.com/v1"
+        )
+        self.model = model
+
+    def invoke(self, prompt: str):
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+        )
+        
+        class LLMResponse:
+            def __init__(self, content):
+                self.content = content
+                
+        return LLMResponse(response.choices[0].message.content)
+
+
+# Define models based on settings
+supervisor_llm = SumoPodLLM(
+    api_key=settings.SUMOPOD_API_KEY,
+    base_url=settings.SUMOPOD_API_BASE,
+    model=settings.SUPERVISOR_MODEL,
 )
 
-# Specialists
-gemini_specialist = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    google_api_key=settings.GEMINI_API_KEY,
+# Specialists / Subagents
+gemini_specialist = SumoPodLLM(
+    api_key=settings.SUMOPOD_API_KEY,
+    base_url=settings.SUMOPOD_API_BASE,
+    model=settings.SUBAGENT_MODEL,
 )
-groq_specialist = ChatGroq(model_name="qwen/qwen3-32b", api_key=settings.GROQ_API_KEY)
+groq_specialist = SumoPodLLM(
+    api_key=settings.SUMOPOD_API_KEY,
+    base_url=settings.SUMOPOD_API_BASE,
+    model=settings.SUBAGENT_MODEL,
+)
 
 
 def _llm_invoke_with_retry(llm, prompt: str, max_retries: int = 3):
