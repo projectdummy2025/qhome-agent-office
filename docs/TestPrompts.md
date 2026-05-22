@@ -53,7 +53,7 @@ graph TD
 * **Lokasi Pengiriman**: Bantul (15 Km dari HQ)
 
 ### Prompt Tahap 1: Memancing Stok Kritis (Salin & Tempel)
-> "Siang mas/mbak, saya Joko, kontraktor di Bantul. Kami sedang butuh cepat ubin lantai granit premium dan beberapa panel kayu dekoratif untuk area dinding proyek kami. Klien kami minta motif khusus yang tidak pasaran, seperti granit polished hitam motif obsidian atau panel kayu impor premium. Tolong dicarikan opsi yang ready ya, soalnya proyek kami harus buru-buru selesai minggu depan."
+> "Siang mas/mbak, saya Joko. Kami butuh ubin lantai granit premium dan panel kayu dekoratif untuk proyek aula besar. Klien minta motif granit polished hitam obsidian atau panel kayu impor premium. Karena ini aula utama, luas lantainya sekitar 150 meter persegi, dan luas dinding untuk panel kayunya sekitar 120 meter persegi. Tolong dicarikan opsi yang ready untuk dikirim besok pagi."
 
 ### Alur Uji Coba (Sinyal ke Admin):
 1. **Analisis Agen Inventaris (Market Analyst)**:
