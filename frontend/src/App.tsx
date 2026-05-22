@@ -134,6 +134,16 @@ export default function App() {
   const [currentAgentOnDuty, setCurrentAgentOnDuty] = useState<string | null>(null); // Konsep petugas aktif saat ini
   const [isModalOpen, setIsModalOpen] = useState(false); // State untuk pengeditan prompt skala besar dalam popup modal
 
+  // Shopping cart: selalu hidup, independen dari agent
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const addToCart = (product: any) => {
+    setCartItems(prev => [...prev, product]);
+  };
+
+  const removeFromCart = (idx: number) => {
+    setCartItems(prev => prev.filter((_, i) => i !== idx));
+  };
+
   // Dapatkan salam dan petunjuk dynamic berdasarkan persona aktif
   const getPersonaGreeting = () => {
     switch (currentUser?.role) {
@@ -567,6 +577,7 @@ export default function App() {
       return (
         <MaterialCatalog
           onBack={() => setLandingTab('simulation')}
+          onSelectProduct={(p) => { addToCart(p); setActivePortal('order'); }}
         />
       );
     }
@@ -714,6 +725,7 @@ export default function App() {
     return (
       <MaterialCatalog
         onBack={() => setActivePortal('chat')}
+        onSelectProduct={(p) => { addToCart(p); setActivePortal('order'); }}
       />
     );
   }
@@ -762,7 +774,14 @@ export default function App() {
       <OrderPortal
         currentUser={currentUser}
         currentSessionId={currentSessionId}
-        products={products}
+        products={cartItems.length > 0 ? cartItems.map((p: any) => ({
+          sku: p.sku,
+          name: p.name,
+          price: p.base_price || p.price || 0,
+          qty: 1,
+          total: (p.base_price || p.price || 0) * 1,
+          category: p.category
+        })) : products}
         brief={userBrief}
         onBack={() => setActivePortal('chat')}
         onPlaceOrder={async (_orderDetails) => {
@@ -979,30 +998,22 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2.5 ml-auto">
-            {/* Tombol Keranjang Belanja B2B (Buka Tab Baru) */}
-            {(() => {
-              const isPaymentConfirmed = messages.some(
-                m => m.role === 'system' && m.content && (
-                  m.content.includes("Pembayaran QRIS Diterima") ||
-                  m.content.includes("Kargo Diaktifkan")
-                )
-              );
-              return messages.some(m => m.role === 'system' && m.products && m.products.length > 0) && !isPaymentConfirmed && (
-                <button
-                  onClick={() => window.open(`/?portal=order&session_id=${currentSessionId}&user_role=${currentUser?.role}`, '_blank')}
-                  className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-accent hover:border-accent group relative cursor-pointer"
-                  title="Buka Keranjang Pengadaan B2B (Tab Baru)"
-                >
-                  <ShoppingBag className="w-4.5 h-4.5 text-accent transition-transform group-hover:scale-110" />
-                  <span className="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-sm font-sans">
-                    {(() => {
-                      const latestSys = messages.filter(m => m.role === 'system').reverse()[0];
-                      return latestSys?.products?.length || 0;
-                    })()}
-                  </span>
-                </button>
-              );
-            })()}
+            {/* Tombol Keranjang Belanja B2B - selalu tampil di header */}
+            <button
+              onClick={() => setActivePortal('order')}
+              className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-accent hover:border-accent group relative cursor-pointer"
+              title="Buka Keranjang Pengadaan B2B"
+            >
+              <ShoppingBag className="w-4.5 h-4.5 text-accent transition-transform group-hover:scale-110" />
+              {(() => {
+                const latestSys = messages.filter(m => m.role === 'system').reverse()[0];
+                const sysCount = latestSys?.products?.length || 0;
+                const displayCount = cartItems.length > 0 ? cartItems.length : sysCount;
+                return displayCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-sm font-sans">{displayCount}</span>
+                ) : null;
+              })()}
+            </button>
 
             {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) */}
             <button
@@ -1308,6 +1319,8 @@ export default function App() {
           )}
         </div>
       </div>
+      {/* Floating persistent Cart button removed — header icon is permanent */}
+
       {/* Floating Hover Card (B2B Tooltip) */}
       {hoveredSession && (
         <div
