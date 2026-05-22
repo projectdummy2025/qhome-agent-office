@@ -271,8 +271,8 @@ def generate_estimation_pdf(
         story.append(logistics_table)
         story.append(Spacer(1, 8))
 
-    # ── Brief Klien ───────────────────────────────────────────────────────
-    story.append(Paragraph("RINGKASAN PERMINTAAN KLIEN", style_section))
+    # ── Ringkasan Proyek ─────────────────────────────────────────────────────
+    story.append(Paragraph("RINGKASAN PROYEK", style_section))
     brief_box = Table(
         [[Paragraph(brief, style_body)]],
         colWidths=["100%"],

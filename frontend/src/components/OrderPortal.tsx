@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { 
   Calendar, 
   Package, 
@@ -90,11 +90,15 @@ export default function OrderPortal({
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isPaymentConfirmed, setIsPaymentConfirmed] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const invoiceRef = useRef<HTMLDivElement | null>(null);
 
   // Dipanggil saat user klik "Konfirmasi Sudah Bayar".
   // Mengirim sinyal ke backend → agent menulis balasan di chat → portal ditutup otomatis.
   const handleConfirmPayment = async () => {
-    if (!orderId || !currentSessionId) return;
+    if (!orderId || !currentSessionId) {
+      alert("ID Pesanan atau ID Sesi tidak ditemukan. Harap pastikan pesanan Anda telah berhasil dikirim ke database terlebih dahulu.");
+      return;
+    }
     setIsConfirming(true);
     try {
       await fetch(`http://localhost:8000/api/projects/orders/${orderId}/confirm-payment`, {
@@ -126,6 +130,7 @@ export default function OrderPortal({
       }, 1500);
     } catch (err) {
       console.error('Payment confirmation failed:', err);
+      alert("Gagal melakukan konfirmasi pembayaran. Silakan periksa koneksi internet Anda atau coba lagi.");
       setIsConfirming(false);
     }
   };
@@ -203,136 +208,11 @@ export default function OrderPortal({
   };
 
   const handleDownloadInvoice = () => {
-    const invoiceNum = orderId || `INV-QHM-B2B-${currentSessionId?.substring(0, 8).toUpperCase() || 'PROJ'}`;
-    const dateStr = deliveryDate 
-      ? new Date(deliveryDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-      : '-';
-
-    const itemsHtml = products.map(p => `
-      <tr>
-        <td style="padding: 12px 15px; border-bottom: 1px solid #f3f4f6; font-size: 13px; text-align: left;">
-          <div style="font-weight: 700; color: #111827;">${p.name}</div>
-          <div style="font-size: 11px; color: #6b7280; font-family: monospace; margin-top: 2px;">SKU: ${p.sku}</div>
-        </td>
-        <td style="padding: 12px 15px; border-bottom: 1px solid #f3f4f6; font-size: 13px; text-align: center; font-weight: 600; color: #374151;">${p.qty} Unit</td>
-        <td style="padding: 12px 15px; border-bottom: 1px solid #f3f4f6; font-size: 13px; text-align: right; color: #374151;">Rp ${p.price.toLocaleString('id-ID')}</td>
-        <td style="padding: 12px 15px; border-bottom: 1px solid #f3f4f6; font-size: 13px; text-align: right; font-weight: 700; color: #111827;">Rp ${p.total.toLocaleString('id-ID')}</td>
-      </tr>
-    `).join('');
-
-    const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${invoiceNum} - Nota Pengadaan B2B QHomeMart</title>
-  <style>
-    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #1f2937; line-height: 1.5; background-color: #f9fafb; margin: 0; }
-    .invoice-box { max-width: 850px; margin: auto; border: 1px solid #e5e7eb; padding: 45px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.02), 0 8px 10px -6px rgba(0,0,0,0.02); background-color: #ffffff; position: relative; }
-    .stripe { height: 8px; background: #e11d48; position: absolute; top: 0; left: 0; right: 0; border-top-left-radius: 24px; border-top-right-radius: 24px; }
-    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-top: 15px; padding-bottom: 25px; margin-bottom: 30px; }
-    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #111827; }
-    .meta-grid { display: grid; grid-template-cols: 1fr 1fr; gap: 30px; margin-bottom: 35px; }
-    .meta-item h3 { margin: 0 0 6px 0; font-size: 10px; text-transform: uppercase; color: #9ca3af; letter-spacing: 1.5px; font-weight: 800; }
-    .meta-item p { margin: 0; font-size: 13.5px; color: #4b5563; }
-    .meta-item strong { color: #111827; font-weight: 700; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 35px; border: 1px solid #f3f4f6; border-radius: 12px; overflow: hidden; }
-    th { text-align: left; background-color: #f9fafb; border-bottom: 2px solid #e5e7eb; padding: 14px 15px; font-size: 11px; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; font-weight: 800; }
-    .totals { margin-left: auto; width: 340px; margin-top: 30px; border-top: 2px solid #f3f4f6; padding-top: 20px; }
-    .totals-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13.5px; color: #4b5563; }
-    .grand-total { font-size: 20px; font-weight: 900; color: #e11d48; margin-top: 15px; border-top: 2px solid #111827; padding-top: 15px; display: flex; justify-content: space-between; }
-    .footer { text-align: center; margin-top: 60px; font-size: 11px; color: #9ca3af; border-top: 1px solid #f3f4f6; padding-top: 25px; }
-    .badge { display: inline-block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #047857; background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 4px 12px; border-radius: 99px; margin-bottom: 8px; }
-    @media print {
-      body { background-color: #ffffff; padding: 0; }
-      .invoice-box { border: none; box-shadow: none; padding: 0; }
+    if (!currentSessionId) {
+      alert("ID Sesi tidak ditemukan. Tidak dapat mengunduh PDF.");
+      return;
     }
-  </style>
-</head>
-<body>
-  <div class="invoice-box">
-    <div class="stripe"></div>
-    <div class="header">
-      <div>
-        <h1>QHomeMart B2B</h1>
-        <p style="margin: 3px 0 0 0; font-size: 11.5px; color: #6b7280; letter-spacing: 0.5px;">PT QHomeMart Indonesia · Procurement &amp; Logistics Portal</p>
-      </div>
-      <div style="text-align: right;">
-        <span class="badge">MENUNGGU VERIFIKASI QRIS</span>
-        <p style="margin: 0; font-family: monospace; font-size: 12px; font-weight: bold; color: #374151;">${invoiceNum}</p>
-      </div>
-    </div>
-    
-    <div class="meta-grid">
-      <div class="meta-item">
-        <h3>DITERBITKAN UNTUK</h3>
-        <p><strong>${currentUser?.name || 'Mitra Korporat'}</strong></p>
-        <p>${currentUser?.roleDisplay || 'B2B Partner'}</p>
-        <p style="font-size: 12.5px; color: #4b5563; margin-top: 4px;">Kota Wilayah: <strong>${currentUser?.city || 'Sleman'}</strong> (Jarak: ${distance} Km)</p>
-      </div>
-      <div class="meta-item" style="text-align: right;">
-        <h3>JADWAL & LOGISTIK</h3>
-        <p>Armada Pengiriman: <strong>${activeTruck.name}</strong></p>
-        <p>Jadwal Delivery: <strong>${dateStr}</strong></p>
-        ${notes ? `<p style="font-size: 12.5px; color: #4b5563; margin-top: 4px; font-style: italic;">Catatan: "${notes}"</p>` : ''}
-      </div>
-    </div>
-    
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 45%; text-align: left;">Rincian Item Material</th>
-          <th style="width: 15%; text-align: center;">Jumlah</th>
-          <th style="width: 20%; text-align: right;">Harga Satuan</th>
-          <th style="width: 20%; text-align: right;">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${itemsHtml}
-      </tbody>
-    </table>
-    
-    <div class="totals">
-      <div class="totals-row">
-        <span>Subtotal Material</span>
-        <span style="font-weight: 700; color: #111827;">Rp ${materialsTotal.toLocaleString('id-ID')}</span>
-      </div>
-      <div class="totals-row">
-        <span>Kargo (${activeTruck.name})</span>
-        <span style="font-weight: 700; color: #111827;">Rp ${shippingCost.toLocaleString('id-ID')}</span>
-      </div>
-      <div class="totals-row">
-        <span>Biaya Penanganan B2B</span>
-        <span style="font-weight: 700; color: #111827;">Rp ${adminFee.toLocaleString('id-ID')}</span>
-      </div>
-      <div class="totals-row">
-        <span>PPN (11% Terhitung B2B)</span>
-        <span style="font-weight: 700; color: #111827;">Rp ${ppn.toLocaleString('id-ID')}</span>
-      </div>
-      <div class="grand-total">
-        <span>TOTAL INVOICE</span>
-        <span>Rp ${totalInvoice.toLocaleString('id-ID')}</span>
-      </div>
-    </div>
-    
-    <div class="footer">
-      <p style="margin: 0; font-weight: 700; color: #111827;">QHomeMart Enterprise Multi-Agent System &copy; 2026</p>
-      <p style="margin: 5px 0 0 0;">Digital Office B2B Platform · Dokumen resmi berlandaskan hukum transaksi digital</p>
-    </div>
-  </div>
-</body>
-</html>
-    `;
-
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${invoiceNum}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    window.open(`http://localhost:8000/api/projects/${currentSessionId}/generate-pdf`, '_blank');
   };
 
   // Mencari produk yang masih memiliki status stok habis/terbatas atau harga 0
@@ -802,7 +682,7 @@ export default function OrderPortal({
                   {/* Left Column: Official Invoice Printable Block (span 7) */}
                   <div className="lg:col-span-7 bg-white border border-hairline rounded-[24px] shadow-sm overflow-hidden flex flex-col">
                     <div className="h-[6px] w-full bg-neutral-900" />
-                    <div className="p-8 space-y-6">
+                    <div ref={invoiceRef} className="p-8 space-y-6">
                       
                       {/* Invoice Header */}
                       <div className="flex justify-between items-start border-b border-hairline pb-5">
@@ -888,16 +768,15 @@ export default function OrderPortal({
                         </div>
                       </div>
 
-                      {/* Action Button: PDF Nota Download */}
-                      <div className="pt-4 border-t border-hairline/60 flex items-center justify-end">
-                        <button
-                          onClick={handleDownloadInvoice}
-                          className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-full text-[11px] font-bold tracking-wider uppercase cursor-pointer transition-all flex items-center gap-1.5 focus:outline-none"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          Download PDF Nota Resmi
-                        </button>
-                      </div>
+                    </div>
+                    <div className="p-8 border-t border-hairline/60 flex items-center justify-end">
+                      <button
+                        onClick={handleDownloadInvoice}
+                        className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-full text-[11px] font-bold tracking-wider uppercase cursor-pointer transition-all flex items-center gap-1.5 focus:outline-none"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Download PDF Nota Resmi
+                      </button>
                     </div>
                   </div>
 

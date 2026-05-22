@@ -21,6 +21,7 @@ import {
 import AdminPortal from './components/AdminPortal';
 import OrderPortal from './components/OrderPortal';
 import MaterialCatalog from './components/MaterialCatalog';
+import OrderHistory from './components/OrderHistory';
 
 
 // Komponen Helper untuk membungkus teks panjang dengan tombol Selengkapnya / Lebih Sedikit
@@ -121,7 +122,7 @@ const PERSONAS = [
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [activePortal, setActivePortal] = useState<'chat' | 'admin' | 'order' | 'catalog'>('chat');
+  const [activePortal, setActivePortal] = useState<'chat' | 'admin' | 'order' | 'catalog' | 'history'>('chat');
   const [landingTab, setLandingTab] = useState<'simulation' | 'catalog'>('simulation');
   const [brief, setBrief] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
@@ -138,10 +139,6 @@ export default function App() {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const addToCart = (product: any) => {
     setCartItems(prev => [...prev, product]);
-  };
-
-  const removeFromCart = (idx: number) => {
-    setCartItems(prev => prev.filter((_, i) => i !== idx));
   };
 
   // Dapatkan salam dan petunjuk dynamic berdasarkan persona aktif
@@ -721,6 +718,18 @@ export default function App() {
     );
   }
 
+  if (currentUser && activePortal === 'history') {
+    return (
+      <OrderHistory
+        chatHistory={chatHistory}
+        onBack={() => setActivePortal('chat')}
+        onDownloadPdf={(sessionId: string) => {
+          window.open(`http://localhost:8000/api/projects/${sessionId}/generate-pdf`, '_blank');
+        }}
+      />
+    );
+  }
+
   if (currentUser && activePortal === 'catalog') {
     return (
       <MaterialCatalog
@@ -731,8 +740,8 @@ export default function App() {
   }
 
   if (currentUser && activePortal === 'admin') {
-    const systemMsg = messages.filter(m => m.role === 'system').reverse()[0];
-    const products = systemMsg?.products || [];
+    const systemMsgsWithProducts = messages.filter(m => m.role === 'system' && m.products && m.products.length > 0);
+    const products = systemMsgsWithProducts.length > 0 ? systemMsgsWithProducts[systemMsgsWithProducts.length - 1].products : [];
     const userBrief = messages.filter(m => m.role === 'user')[0]?.content || "";
 
     return (
@@ -766,8 +775,8 @@ export default function App() {
   }
 
   if (currentUser && activePortal === 'order') {
-    const systemMsg = messages.filter(m => m.role === 'system').reverse()[0];
-    const products = systemMsg?.products || [];
+    const systemMsgsWithProducts = messages.filter(m => m.role === 'system' && m.products && m.products.length > 0);
+    const products = systemMsgsWithProducts.length > 0 ? systemMsgsWithProducts[systemMsgsWithProducts.length - 1].products : [];
     const userBrief = messages.filter(m => m.role === 'user')[0]?.content || "";
 
     return (
@@ -998,6 +1007,17 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2.5 ml-auto">
+            {/* Tombol Riwayat Pesanan */}
+            <button
+              onClick={() => setActivePortal('history')}
+              className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-accent hover:border-accent group relative cursor-pointer"
+              title="Riwayat Pesanan & Estimasi"
+            >
+              <svg className="w-4.5 h-4.5 text-accent transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+
             {/* Tombol Keranjang Belanja B2B - selalu tampil di header */}
             <button
               onClick={() => setActivePortal('order')}
@@ -1014,6 +1034,7 @@ export default function App() {
                 ) : null;
               })()}
             </button>
+
 
             {/* Tombol Toggle Sidebar Kanan (Operator Log MAS) */}
             <button

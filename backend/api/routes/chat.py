@@ -80,6 +80,35 @@ def _generate_session_title(brief: str) -> str:
         return "Estimasi " + " ".join(words[:3])
 
 
+def _generate_project_summary(brief: str, narrative: str) -> str:
+    """Generate direct project summary from available brief and final narrative."""
+    if not brief:
+        return ""
+
+    try:
+        from backend.agents.supervisor import gemini_specialist, _llm_invoke_with_retry
+
+        prompt = (
+            "Anda adalah asisten AI yang membuat ringkasan proyek profesional QHome-MAS dari data proyek. "
+            "Buat ringkasan proyek singkat dan jelas (1-3 kalimat) dalam bahasa Indonesia, tanpa salam, "
+            "berdasarkan input berikut:\n\n"
+            f"Brief atau permintaan: {brief}\n\n"
+            f"Narasi akhir agen: {narrative or 'Tidak ada narasi akhir yang tersedia.'}\n\n"
+            "Output hanya ringkasan proyek, tanpa penjelasan tambahan."
+        )
+        response = _llm_invoke_with_retry(gemini_specialist, prompt)
+        project_summary = str(response.content).strip()
+        import re
+        project_summary = re.sub(r"<think>[\s\S]*?</think>", "", project_summary, flags=re.IGNORECASE).strip()
+        project_summary = re.sub(r"<think>|</think>", "", project_summary, flags=re.IGNORECASE).strip()
+        if project_summary:
+            return project_summary
+    except Exception:
+        pass
+
+    return brief
+
+
 @router.post("/analyze")
 async def analyze_project(request: Request, db: Session = Depends(get_db)):
     data = await request.json()
@@ -252,6 +281,9 @@ def generate_pdf(session_id: str, db: Session = Depends(get_db)):
     disclaimer = ""
     generated_at = None
 
+    session_record = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    session_summary = session_record.summary if session_record else None
+
     for msg in messages:
         if msg.role == ChatRole.user and not brief:
             brief = msg.content or ""
@@ -276,6 +308,16 @@ def generate_pdf(session_id: str, db: Session = Depends(get_db)):
                 products = completed_log.get("products", products)
                 disclaimer = completed_log.get("disclaimer", "")
                 generated_at = completed_log.get("generated_at")
+
+    if session_summary:
+        brief = session_summary
+    elif brief and narrative:
+        project_summary = _generate_project_summary(brief, narrative)
+        if project_summary and project_summary != brief:
+            brief = project_summary
+            if session_record:
+                session_record.summary = project_summary
+                db.commit()
 
     if not brief:
         return {"error": "Sesi tidak ditemukan atau belum selesai diproses."}
