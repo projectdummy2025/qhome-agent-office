@@ -46,49 +46,46 @@ graph TD
 
 ---
 
-## 2. Skenario Deteksi & Penyelamatan Stok Kritis (OOS Flow)
-**Fokus Pengujian**: Logika penguncian checkout ketika stok material di bawah batas minimum (< 20 unit) atau kosong, disusul transisi intervensi administratif.
+## 2. Skenario Penyelamatan Stok & Komunikasi ke Admin Portal (OOS Flow)
+**Fokus Pengujian**: Menguji jalur "Sinyal Admin" di mana agen *Market Analyst* (Inventory) mendeteksi kekurangan stok di database, melabeli produk dengan tag khusus, yang secara otomatis ditangkap oleh sistem frontend untuk membuka akses ke **AdminPortal.tsx**.
 
 * **Persona**: Bapak Joko (General Contractor & Engineer)
 * **Lokasi Pengiriman**: Bantul (15 Km dari HQ)
 
-### Prompt Konsultasi (Salin & Tempel)
+### Prompt Tahap 1: Memancing Stok Kritis (Salin & Tempel)
 > "Siang mas/mbak, saya Joko, kontraktor di Bantul. Kami sedang butuh cepat ubin lantai granit premium dan beberapa panel kayu dekoratif untuk area dinding proyek kami. Klien kami minta motif khusus yang tidak pasaran, seperti granit polished hitam motif obsidian atau panel kayu impor premium. Tolong dicarikan opsi yang ready ya, soalnya proyek kami harus buru-buru selesai minggu depan."
 
-### Tips Pengujian Teknis:
-* *Sebelum mengirim prompt*, Anda bisa menurunkan kuantitas stok salah satu produk lantai atau kayu di database SQL menjadi di bawah 20 atau 0 (misalnya melalui DB tools pada tabel `products`).
-* *Atau*, sistem secara otomatis memetakan permintaan produk langka/impor ke penanganan fallback gudang yang menghasilkan status stok habis (`OOS-TILE`/`OOS-WOOD`).
+### Alur Uji Coba (Sinyal ke Admin):
+1. **Analisis Agen Inventaris (Market Analyst)**:
+   * Setelah agen spesialis memilih ubin/kayu, *Market Analyst* akan mengecek database Gudang.
+   * Jika stok `< 20` atau `0`, agen akan memberikan sinyal ke frontend dengan menyisipkan tag `[STOK TERBATAS]` atau `[STOK HABIS]` pada nama produk, serta memunculkan alternatif dengan tag `(Substitusi)`.
+2. **Respons B2B Cart**:
+   * Keranjang B2B akan membaca tag *string* tersebut dan memunculkan *banner* merah peringatan bahwa Checkout dikunci.
+   * Muncul tombol **"Intervensi Admin"**.
 
-### Alur Uji Coba & Verifikasi:
-1. **Deteksi Keranjang Terkunci**:
-   * Selesai konsultasi, B2B Cart menampilkan banner merah menyala: **"Butuh Konfirmasi Admin"**.
-   * Tombol checkout berwarna abu-abu (terkunci).
-   * Produk bermasalah ditandai `[STOK TERBATAS]` atau `[STOK HABIS]` dengan harga Rp 0.
-   * Sistem menyarankan alternatif sejenis yang stoknya melimpah di bawahnya dengan tanda `(Substitusi)`.
-2. **Intervensi Administratif**:
-   * Klik tombol **"Intervensi Admin"** di cart. Layar akan beralih ke portal **Bapak Rudi (Admin Control Panel)**.
-   * **Pilihan Solusi A (Restok)**: Klik tombol **"Restock"** pada item kritis (+50 unit ditambahkan ke database SQL). Rekomendasi alternatif otomatis hilang karena stok utama telah aman.
-   * **Pilihan Solusi B (Setujui Substitusi)**: Klik **"Setujui Substitusi"**. Produk utama yang kosong dihapus, diganti produk alternatif dengan harga normal.
-3. **Kembali Ke Chat**:
-   * Klik **"Kembali Ke Chat"**. Cart tersinkronisasi ulang di latar belakang, status peringatan hilang, harga diperbarui, dan tombol checkout kini **terbuka**.
+### Prompt Tahap 2: Memicu Intervensi Admin (Opsional)
+> "Aku butuh yang ini, tolong bilang ke admin untuk restock segera ya."
+*(Catatan: Langkah ini menguji respons LLM dalam mengakomodasi instruksi administratif, namun Anda tetap bisa langsung masuk ke portal Admin).*
+
+### Alur Uji Coba (Eksekusi Admin):
+1. Klik **"Intervensi Admin"** di cart. Layar beralih ke portal Bapak Rudi (**AdminPortal.tsx**).
+2. **Panel Permintaan Restok**: Admin melihat item dengan tag `[STOK HABIS]`. Admin dapat memasukkan angka dan klik **Restock**. Sistem akan menembak API POST ke database dan me-*refresh* stok.
+3. Klik **Kembali Ke Chat** di sudut kanan atas.
 
 ---
 
-## 3. Skenario Revisi Desain Dinamis & Long-Term Memory
-**Fokus Pengujian**: Verifikasi memori jangka panjang sesi (`session.summary`) di database. Agen hanya melakukan kalkulasi ulang pada aspek yang direvisi tanpa mengulangi seluruh proses konsultasi awal.
+## 3. Skenario Stateful RAG & Memori Jangka Panjang (Paska-Restok)
+**Fokus Pengujian**: Menguji fitur *Stateful RAG* (via fungsi `_should_reuse_product`). Agen harus mengingat produk persis dari sesi sebelumnya dan mendeteksi bahwa stok kini sudah penuh, tanpa melakukan pencarian acak ke ChromaDB lagi.
 
-* **Persona**: Ibu Amalia (Senior Architect)
-* **Status Sesi**: Lanjutan dari obrolan Skenario 1 (sesi chat yang sama).
+* **Status Sesi**: Lanjutan dari obrolan Skenario 2 (sesi chat yang sama).
 
-### Prompt Revisi (Salin & Tempel)
-> "Halo, melanjutkan diskusi kemarin mengenai ruang keluarga di Sleman. Klien saya ada revisi sedikit. Untuk backdrop TV seluas 15 meter persegi, panel kayunya diganti saja dengan tipe panel WPC warna jati yang lebih gelap biar kelihatan lebih tegas. Terus untuk aksen pilar batu alam veneer yang 10 meter persegi kemarin dibatalkan saja ya, diganti cat biasa sewarna dengan dinding utama. Untuk granit lantai dan riset tren pasar kemarin sudah oke, tidak ada perubahan. Tolong dihitung ulang kebutuhan dan biayanya ya. Terima kasih banyak."
+### Prompt Cek Stok Paska-Admin (Salin & Tempel)
+> "Tadi kata admin sudah direstock. Coba tolong dicek lagi apakah stoknya sudah aman dan hitung ulang total biayanya."
 
 ### Alur Uji Coba & Verifikasi:
-1. **Delegasi Terarah (Hanya Agen Terkait)**:
-   * Perhatikan Live Office Canvas: Hanya **Wood Specialist** dan **Paint Consultant** yang aktif melakukan kalkulasi ulang. Agen **Tile Estimator** dan **Market Analyst** tetap pasif karena tidak ada revisi pada sektor mereka.
-2. **Kesesuaian Konteks (Long-Term Memory)**:
-   * Tim spesialis mengingat bahwa proyek berlokasi di **Sleman** dan tetap mempertahankan detail granit lantai Carrara dari chat sebelumnya meskipun tidak disebutkan ulang secara lengkap di brief revisi.
-   * **B2B Cart** memperbarui item: volume panel kayu disesuaikan ke warna Jati, item batu alam veneer dihapus, kuota kaleng cat bertambah, dan subtotal diperbarui secara instan.
+1. **Bypass ChromaDB**: Agen spesialis membaca indikator `restock` / `hitung ulang` dari prompt. Sistem akan **mem-bypass** pencarian vektor ChromaDB dan me-*reuse* spesifikasi produk lama.
+2. **Market Analyst Memeriksa Ulang**: Karena stok di database SQLite baru saja ditambah oleh Admin, *Market Analyst* kini melihat stok berlimpah dan membuang tag `[STOK HABIS]`.
+3. **Cart Otomatis Terbuka**: B2B Cart menerima *state* produk yang bersih (tanpa peringatan stok), dan tombol Checkout otomatis menyala kembali. Skenario berhasil!
 
 ---
 

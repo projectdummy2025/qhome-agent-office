@@ -99,7 +99,10 @@ def _llm_invoke_with_retry(llm, prompt: str, max_retries: int = 3):
 
 def chief_supervisor(state: AgentState):
     """Menganalisis brief dan menghire agen"""
-    brief = state.get("brief", "")
+    brief = state.get("brief", "").strip()
+    if not brief:
+        return {"hired_agents": []}
+        
     reports = state.get("reports", [])
 
     history_summary = state.get("history_summary", "")
@@ -154,20 +157,107 @@ from backend.core.database import get_chroma_collection
 import json
 
 
+def _should_reuse_product(brief: str, agent_type: str, state: AgentState) -> dict:
+    """
+    Logika untuk menentukan apakah harus menggunakan ulang produk dari sesi sebelumnya
+    atau melakukan pencarian baru di ChromaDB.
+    
+    Args:
+        brief: Instruksi terbaru dari user
+        agent_type: Tipe agen ("Tile Estimator", "Wood Specialist", "Stone Veneer Specialist", "Paint Consultant")
+        state: AgentState dengan reports dari sesi sebelumnya
+    
+    Returns:
+        dict dengan:
+          - should_reuse: bool, True jika harus reuse produk sebelumnya
+          - product: dict dengan metadata produk (sku, name, price, coverage) jika reuse
+    """
+    reports = state.get("reports", [])
+    
+    # Cari produk dari agen yang sama di reports sebelumnya
+    previous_product = None
+    for r in reports:
+        if r.get("agent") == agent_type and "product" in r:
+            prod = r["product"]
+            # Pastikan bukan produk "out of stock" atau "menunggu konfirmasi"
+            if prod.get("name") and "[STOK" not in prod.get("name", "") and "Menunggu" not in prod.get("name", ""):
+                previous_product = prod
+                break
+    
+    # Jika tidak ada produk sebelumnya, lakukan pencarian baru
+    if not previous_product:
+        return {"should_reuse": False, "product": None}
+    
+    # Keyword yang menunjukkan user meminta penggantian/alternatif produk
+    change_indicators = [
+        "ganti", "alternatif", "lain", "selain", "beda", "ubah", "tukar",
+        "replace", "different", "alternative", "other", "change",
+        "tidak mau", "jangan", "don't want", "switch", "ubahlah"
+    ]
+    
+    brief_lower = brief.lower()
+    
+    # Jika brief mengandung indikasi penggantian, lakukan pencarian baru
+    for indicator in change_indicators:
+        if indicator in brief_lower:
+            return {"should_reuse": False, "product": None}
+    
+    # Jika user hanya bertanya tentang stok, kalkulasi ulang, atau revisi jumlah
+    # (tanpa menunjukkan penggantian produk), reuse produk sebelumnya
+    reuse_indicators = [
+        "stok", "berapa stok", "stock", "harga", "price", "jumlah", "total",
+        "berapa banyak", "quantity", "qty", "restock", "tambah", "kurangi",
+        "revisi", "ulang kalkulasi", "recalculate", "brapa", "bayar", "cost",
+        "rupiah", "rp", "nominal"
+    ]
+    
+    for reuse_indicator in reuse_indicators:
+        if reuse_indicator in brief_lower:
+            return {
+                "should_reuse": True,
+                "product": {
+                    "sku": previous_product.get("sku"),
+                    "name": previous_product.get("name"),
+                    "price": previous_product.get("price"),
+                    "coverage": previous_product.get("coverage", 0),
+                }
+            }
+    
+    # Default: jika tidak ada indikasi jelas, reuse produk sebelumnya untuk menjaga konteks
+    return {
+        "should_reuse": True,
+        "product": {
+            "sku": previous_product.get("sku"),
+            "name": previous_product.get("name"),
+            "price": previous_product.get("price"),
+            "coverage": previous_product.get("coverage", 0),
+        }
+    }
+
+
 def tile_estimator(state: AgentState):
     """Tile Estimator"""
     if "tile" not in state.get("hired_agents", []):
         return state
     brief = state.get("brief", "")
     try:
-        col = get_chroma_collection()
-        # Query catalog for the new taxonomy: floor
-        res = col.query(query_texts=[brief], n_results=1, where={"category": "floor"})
-        if not res["metadatas"] or len(res["metadatas"][0]) == 0:
-            raise Exception("No product found")
+        # Cek apakah harus reuse produk sebelumnya atau mencari baru
+        reuse_result = _should_reuse_product(brief, "Tile Estimator", state)
+        
+        if reuse_result["should_reuse"] and reuse_result["product"]:
+            # Gunakan produk dari sesi sebelumnya
+            meta = reuse_result["product"]
+            desc = f"Produk reused dari sesi sebelumnya: {meta['name']}"
+        else:
+            # Lakukan pencarian baru di ChromaDB
+            col = get_chroma_collection()
+            # Query catalog for the new taxonomy: floor
+            res = col.query(query_texts=[brief], n_results=1, where={"category": "floor"})
+            if not res["metadatas"] or len(res["metadatas"][0]) == 0:
+                raise Exception("No product found")
 
-        meta = res["metadatas"][0][0]
-        desc = res["documents"][0][0]
+            meta = res["metadatas"][0][0]
+            desc = res["documents"][0][0]
 
         history_summary = state.get("history_summary", "")
         prompt = (
@@ -219,6 +309,7 @@ def tile_estimator(state: AgentState):
             "sku": meta["sku"],
             "name": meta["name"],
             "price": meta["price"],
+            "coverage": meta["coverage"],
             "qty": f"{qty} {unit} (Est)",
             "total": meta["price"] * qty,
         }
@@ -245,16 +336,25 @@ def wood_specialist(state: AgentState):
         return state
     brief = state.get("brief", "")
     try:
-        col = get_chroma_collection()
-        # Wood-related panels now map to 'furniture' in the new taxonomy
-        res = col.query(
-            query_texts=[brief], n_results=1, where={"category": "furniture"}
-        )
-        if not res["metadatas"] or len(res["metadatas"][0]) == 0:
-            raise Exception("No product found")
+        # Cek apakah harus reuse produk sebelumnya atau mencari baru
+        reuse_result = _should_reuse_product(brief, "Wood Specialist", state)
+        
+        if reuse_result["should_reuse"] and reuse_result["product"]:
+            # Gunakan produk dari sesi sebelumnya
+            meta = reuse_result["product"]
+            desc = f"Produk reused dari sesi sebelumnya: {meta['name']}"
+        else:
+            # Lakukan pencarian baru di ChromaDB
+            col = get_chroma_collection()
+            # Wood-related panels now map to 'furniture' in the new taxonomy
+            res = col.query(
+                query_texts=[brief], n_results=1, where={"category": "furniture"}
+            )
+            if not res["metadatas"] or len(res["metadatas"][0]) == 0:
+                raise Exception("No product found")
 
-        meta = res["metadatas"][0][0]
-        desc = res["documents"][0][0]
+            meta = res["metadatas"][0][0]
+            desc = res["documents"][0][0]
 
         history_summary = state.get("history_summary", "")
         prompt = (
@@ -296,6 +396,7 @@ def wood_specialist(state: AgentState):
             "sku": meta["sku"],
             "name": meta["name"],
             "price": meta["price"],
+            "coverage": meta["coverage"],
             "qty": f"{qty} {unit} (Est)",
             "total": meta["price"] * qty,
         }
@@ -324,16 +425,25 @@ def paint_consultant(state: AgentState):
         return state
     brief = state.get("brief", "")
     try:
-        col = get_chroma_collection()
-        # Paint and general finishing materials map to 'building material'
-        res = col.query(
-            query_texts=[brief], n_results=1, where={"category": "building material"}
-        )
-        if not res["metadatas"] or len(res["metadatas"][0]) == 0:
-            raise Exception("No product found")
+        # Cek apakah harus reuse produk sebelumnya atau mencari baru
+        reuse_result = _should_reuse_product(brief, "Paint Consultant", state)
+        
+        if reuse_result["should_reuse"] and reuse_result["product"]:
+            # Gunakan produk dari sesi sebelumnya
+            meta = reuse_result["product"]
+            desc = f"Produk reused dari sesi sebelumnya: {meta['name']}"
+        else:
+            # Lakukan pencarian baru di ChromaDB
+            col = get_chroma_collection()
+            # Paint and general finishing materials map to 'building material'
+            res = col.query(
+                query_texts=[brief], n_results=1, where={"category": "building material"}
+            )
+            if not res["metadatas"] or len(res["metadatas"][0]) == 0:
+                raise Exception("No product found")
 
-        meta = res["metadatas"][0][0]
-        desc = res["documents"][0][0]
+            meta = res["metadatas"][0][0]
+            desc = res["documents"][0][0]
 
         history_summary = state.get("history_summary", "")
         prompt = (
@@ -376,6 +486,7 @@ def paint_consultant(state: AgentState):
             "sku": meta["sku"],
             "name": meta["name"],
             "price": meta["price"],
+            "coverage": meta["coverage"],
             "qty": f"{qty} {unit} (Est)",
             "total": meta["price"] * qty,
         }
@@ -404,16 +515,25 @@ def stone_specialist(state: AgentState):
         return state
     brief = state.get("brief", "")
     try:
-        col = get_chroma_collection()
-        # Stone products also categorized under 'building material'
-        res = col.query(
-            query_texts=[brief], n_results=1, where={"category": "building material"}
-        )
-        if not res["metadatas"] or len(res["metadatas"][0]) == 0:
-            raise Exception("No stone product found")
+        # Cek apakah harus reuse produk sebelumnya atau mencari baru
+        reuse_result = _should_reuse_product(brief, "Stone Veneer Specialist", state)
+        
+        if reuse_result["should_reuse"] and reuse_result["product"]:
+            # Gunakan produk dari sesi sebelumnya
+            meta = reuse_result["product"]
+            desc = f"Produk reused dari sesi sebelumnya: {meta['name']}"
+        else:
+            # Lakukan pencarian baru di ChromaDB
+            col = get_chroma_collection()
+            # Stone products also categorized under 'building material'
+            res = col.query(
+                query_texts=[brief], n_results=1, where={"category": "building material"}
+            )
+            if not res["metadatas"] or len(res["metadatas"][0]) == 0:
+                raise Exception("No stone product found")
 
-        meta = res["metadatas"][0][0]
-        desc = res["documents"][0][0]
+            meta = res["metadatas"][0][0]
+            desc = res["documents"][0][0]
 
         history_summary = state.get("history_summary", "")
         prompt = (
@@ -456,6 +576,7 @@ def stone_specialist(state: AgentState):
             "sku": meta["sku"],
             "name": meta["name"],
             "price": meta["price"],
+            "coverage": meta["coverage"],
             "qty": f"{qty} {unit} (Est)",
             "total": meta["price"] * qty,
         }
@@ -596,25 +717,34 @@ def inventory_administrator(state: AgentState):
                     if db_product:
                         qty_val = db_product.stock_qty
 
-                        if qty_val >= 20:
+                        # Parse qty asli (misalnya "10 Dus (Est)" -> 10)
+                        qty_str = prod.get("qty", "10")
+                        try:
+                            qty_nums = re.findall(r"\d+", str(qty_str))
+                            qty_int = int(qty_nums[0]) if qty_nums else 10
+                        except Exception:
+                            qty_int = 10
+
+                        # Stok aman JIKA stok >= 20 DAN stok >= jumlah yang diminta
+                        if qty_val >= 20 and qty_val >= qty_int:
                             # Stok Aman
-                            status = f"TERSEDIA — Stok {qty_val} unit di gudang."
+                            status = f"TERSEDIA — Stok {qty_val} unit di gudang mencukupi kebutuhan ({qty_int})."
                             stock_report_lines.append(
                                 f"- {db_product.name} (SKU: {db_product.sku}): {status}"
                             )
                         else:
-                            # Stok Terbatas / Habis
+                            # Stok Terbatas / Habis (Bisa karena stok < 20, atau karena stok < permintaan)
                             if qty_val > 0:
-                                status = f"TERBATAS — Hanya tersisa {qty_val} unit."
+                                status = f"TERBATAS — Hanya tersisa {qty_val} unit (Kebutuhan: {qty_int})."
                             else:
-                                status = "HABIS — Stok kosong."
+                                status = f"HABIS — Stok kosong (Kebutuhan: {qty_int})."
 
-                            # Cari alternatif dinamis (kategori sama, stok >= 20, SKU berbeda)
+                            # Cari alternatif dinamis (kategori sama, stok >= qty_int, SKU berbeda)
                             alt = (
                                 db.query(ProductModel)
                                 .filter(
                                     ProductModel.category == db_product.category,
-                                    ProductModel.stock_qty >= 20,
+                                    ProductModel.stock_qty >= qty_int,
                                     ProductModel.sku != db_product.sku,
                                 )
                                 .first()
@@ -623,19 +753,9 @@ def inventory_administrator(state: AgentState):
                             if alt:
                                 status += f" Disarankan alternatif: {alt.name} (SKU: {alt.sku}, Stok: {alt.stock_qty})."
 
-                                # Parse qty asli (misalnya "10 Dus (Est)" -> 10)
-                                qty_str = prod.get("qty", "10")
-                                try:
-                                    qty_nums = re.findall(r"\d+", qty_str)
-                                    qty_int = int(qty_nums[0]) if qty_nums else 10
-                                except Exception:
-                                    qty_int = 10
-
                                 # Tandai produk asli agar masuk ke "unavailable"
                                 prod["sku"] = db_product.sku
                                 prod["name"] = f"[STOK TERBATAS] {prod_name}"
-                                prod["price"] = 0
-                                prod["total"] = 0
 
                                 # Tambahkan produk alternatif ke daftar belanja utama
                                 qty_suffix = "Unit"
@@ -656,8 +776,6 @@ def inventory_administrator(state: AgentState):
                                 status += " Tidak ada produk alternatif sejenis yang mencukupi saat ini."
                                 prod["sku"] = db_product.sku
                                 prod["name"] = f"[STOK HABIS] {prod_name}"
-                                prod["price"] = 0
-                                prod["total"] = 0
 
                             stock_report_lines.append(
                                 f"- {db_product.name} (SKU: {db_product.sku}): {status}"

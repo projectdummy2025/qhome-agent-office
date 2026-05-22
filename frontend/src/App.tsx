@@ -263,12 +263,12 @@ export default function App() {
     const sessionIdParam = params.get('session_id');
     const userRoleParam = params.get('user_role');
 
-    if (portalParam === 'order' && sessionIdParam && userRoleParam) {
+    if ((portalParam === 'order' || portalParam === 'admin') && sessionIdParam && userRoleParam) {
       const matchedPersona = PERSONAS.find(p => p.role === userRoleParam);
       if (matchedPersona) {
         setCurrentUser(matchedPersona);
         setCurrentSessionId(sessionIdParam);
-        setActivePortal('order');
+        setActivePortal(portalParam as 'order' | 'admin');
         
         // Ambil riwayat pesan untuk mengekstrak daftar material
         fetch(`http://localhost:8000/api/projects/sessions/${sessionIdParam}/messages`)
@@ -414,7 +414,7 @@ export default function App() {
 
   const fetchHistory = async () => {
     try {
-      const url = currentUser
+      const url = (currentUser && currentUser.role !== 'admin')
         ? `http://localhost:8000/api/projects/sessions?user_id=${currentUser.role}`
         : "http://localhost:8000/api/projects/sessions";
       const res = await fetch(url);

@@ -416,8 +416,10 @@ export default function AdminPortal({
                 restockProducts.map(p => {
                   const masterItem = masterProducts.find(mp => mp.sku === p.sku);
                   const currentStock = masterItem ? masterItem.stock_qty : 0;
+                  const reqQty = parseQtyNumber(p.qty);
+                  const shortfall = Math.max(0, reqQty - currentStock);
                   const isCritical = currentStock === 0;
-                  const inputVal = addedQtys[p.sku] || 50;
+                  const inputVal = addedQtys[p.sku] || (shortfall > 0 ? shortfall : 50);
 
                   return (
                     <div 
@@ -451,6 +453,20 @@ export default function AdminPortal({
                           <span className="text-[12.5px] font-bold text-ink flex items-center gap-1">
                             <Warehouse className="w-3.5 h-3.5 text-muted-light" />
                             {currentStock} {getQtyUnit(p.qty)}
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-0.5">
+                          <span className="text-[9.5px] text-muted-light uppercase tracking-wider block">Kebutuhan RAB</span>
+                          <span className="text-[12.5px] font-bold text-ink">
+                            {reqQty} {getQtyUnit(p.qty)}
+                          </span>
+                        </div>
+
+                        <div className="space-y-0.5">
+                          <span className="text-[9.5px] text-red-500 uppercase tracking-wider block">Selisih (Kurang)</span>
+                          <span className="text-[12.5px] font-bold text-red-600">
+                            {shortfall} {getQtyUnit(p.qty)}
                           </span>
                         </div>
 

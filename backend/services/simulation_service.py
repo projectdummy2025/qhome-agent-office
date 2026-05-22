@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from datetime import datetime, timezone
 from backend.core.database import SessionLocal
-from backend.models.schema import ChatMessage, ChatRole, EstimationKPI
+from backend.models.schema import ChatMessage, ChatRole, EstimationKPI, ChatSession
 
 # State In-Memory sementara untuk SSE Streaming (karena HTTP bersifat stateless)
 active_streams = {}

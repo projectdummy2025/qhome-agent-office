@@ -148,9 +148,9 @@ export default function OrderPortal({
   // Mengalihkan ke admin Bapak Rudi untuk replenish inventori stok katalog
   const switchToAdminRudi = () => {
     if (currentSessionId) {
-      window.location.href = `/?portal=order&session_id=${currentSessionId}&user_role=admin`;
+      window.location.href = `/?portal=admin&session_id=${currentSessionId}&user_role=admin`;
     } else {
-      window.location.href = `/?portal=order&user_role=admin`;
+      window.location.href = `/?portal=admin&user_role=admin`;
     }
   };
 
