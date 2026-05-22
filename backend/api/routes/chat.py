@@ -98,8 +98,16 @@ async def analyze_project(request: Request, db: Session = Depends(get_db)):
     else:
         # Ambil summary sebelumnya jika session sudah ada
         existing_session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
-        if existing_session and existing_session.summary:
-            history_summary = existing_session.summary
+        if existing_session:
+            if existing_session.summary:
+                history_summary = existing_session.summary
+        else:
+            # Jika session_id dikirim oleh frontend tapi tidak ditemukan di DB (misal karena DB di-reset),
+            # buat session baru dengan ID tersebut agar tidak memicu ForeignKeyViolation
+            title = _generate_session_title(brief)
+            new_session = ChatSession(id=session_id, title=title, user_id=user_id)
+            db.add(new_session)
+            db.commit()
 
     # 2. Simpan pesan (prompt) User ke Database
     user_msg = ChatMessage(
