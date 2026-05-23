@@ -116,44 +116,44 @@ User menekan tombol "Lanjutkan ke Pengiriman" untuk masuk ke **Step 2 (Logistics
 
 ## 3. System Flow (Di Balik Layar / Under the Hood)
 
-Bagaimana FastAPI, LangGraph, Groq, dan Gemini bekerja mengorkestrasi ekosistem multi-agent:
+Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekosistem multi-agent:
 
 ### Fase 0: Long-Term Memory & Persistent Chat Context
 1. **Pengambilan Konteks (Database)**: Sebelum simulasi dijalankan, sistem mengambil riwayat sesi dari database (`ChatSession`). Jika ini adalah percakapan lanjutan, kolom `summary` (yang bertindak sebagai memori jangka panjang) dibaca dan disimpan sebagai variabel `history_summary`.
 2. **Injeksi Konteks ke Agen**: `history_summary` disuntikkan ke dalam *State Graph* LangGraph dan diteruskan ke seluruh agen spesialis (`Tile Estimator`, `Wood Specialist`, `Paint Consultant`, `Stone Specialist`, dll.) serta `Chief Supervisor` dan `Synthesizer`. Hal ini memastikan agen-agen dapat membedakan konteks baru dan mengingat riwayat percakapan revisi/estimasi sebelumnya.
-3. **Pembaruan Memori Otomatis**: Setelah simulasi selesai (`synthesizer` menyusun narasi akhir), asisten AI (menggunakan Gemini) akan merangkum seluruh percakapan terbaru beserta respons agen, lalu memperbarui kolom `summary` di database (`ChatSession.summary`) secara asinkron.
+3. **Pembaruan Memori Otomatis**: Setelah simulasi selesai (`synthesizer` menyusun narasi akhir), asisten AI (menggunakan SumoPod AI) akan merangkum seluruh percakapan terbaru beserta respons agen, lalu memperbarui kolom `summary` di database (`ChatSession.summary`) secara asinkron.
 
 ### Fase 1: Ingestion & Routing (Supervisor)
-1. React mengirimkan `POST /api/projects/analyze` berisi brief proyek ke FastAPI.
-2. **Supervisor LLM (Gemini 3 Flash)** membaca teks.
+1. React mengirimkan `POST /api/projects/analyze` brief proyek ke FastAPI.
+2. **Supervisor LLM (SumoPod AI Supervisor)** membaca teks.
    * *Intent Extraction*: Area = 20 m² (5x4). Material = Granit Marmer, Panel Kayu Bergaris, Cat mudah dibersihkan.
-   * *Dynamic Routing*: Memutuskan untuk men-*hire* (menjalankan *edge* LangGraph menuju) 3 agen: Tile, Wood, Paint.
+   * *Dynamic Routing*: Memutuskan untuk men-*hire* (menjalankan *edge* LangGraph menuju) 3 agen spesialis secara dinamis: Tile, Wood, Paint.
 3. FastAPI memancarkan sinyal **SSE (Server-Sent Events)** ke React: `{"event": "routing", "hired": ["tile", "wood", "paint"]}`.
 
 ### Fase 2: Eksekusi Spesialis Sekuensial (Waterfall)
-*(Karena limitasi 6K TPM Groq, Supervisor mendelegasikan tugas satu per satu)*
+*(Untuk mengoptimalkan pembagian rate limit, Supervisor mendelegasikan tugas satu per satu secara runut)*
 
-#### A. Giliran Tile Estimator (Gemini 2.5 Flash)
+#### A. Giliran Tile Estimator (SumoPod AI Sub-Agent)
 * **RAG Search**: Memanggil MCP `search_vector_catalog("granit marmer putih")`. ChromaDB membalas dengan `TLE-001 (White Carara)`.
 * **Kalkulasi**: Memanggil MCP `calculate_tile_needs(area=20, sku="TLE-001")`. 
   * *Sistem Backend (rules.py)* menghitung: Butuh 15 Dus Granit + Margin wastage 5% + 4 Sak Semen MU-480 + 3 Kg Nat AM Putih.
 * **Laporan**: Menulis narasi argumen estetika dan menyerahkan *JSON payload* biaya ke memori LangGraph.
 
-#### B. Giliran Wood Specialist (Qwen 32B via Groq)
+#### B. Giliran Wood Specialist (SumoPod AI Sub-Agent)
 * **RAG Search**: Memanggil MCP `search_vector_catalog("panel kayu bergaris fluted")`. ChromaDB membalas dengan `WPC-001 (Fluted Teak Wood)`.
 * **Kalkulasi**: Memanggil MCP `calculate_wood_needs(area=5, sku="WPC-001")` (Asumsi dinding TV = 5m²).
   * *Sistem Backend* menghitung: Butuh 12 Lembar WPC + 2 Tube Sealant Dextone.
-* **Laporan**: Menyerahkan draf narasi via Groq dengan kecepatan kilat ke memori LangGraph.
+* **Laporan**: Menyerahkan draf narasi ke memori LangGraph.
 
-#### C. Giliran Paint Consultant (Qwen 32B via Groq)
+#### C. Giliran Paint Consultant (SumoPod AI Sub-Agent)
 * **RAG Search**: Memanggil MCP `search_vector_catalog("cat terang mudah dibersihkan ramah anak")`. ChromaDB merekomendasikan `PNT-003 (Dulux Easy Clean)`.
 * **Kalkulasi**: Memanggil MCP `calculate_paint_needs(area=45, sku="PNT-003")` (Asumsi sisa dinding).
   * *Sistem Backend* menghitung: Butuh 1 Pail (25kg) dengan asumsi 2 lapis (*double coat*).
 * **Laporan**: Diserahkan ke memori LangGraph.
 
 ### Fase 3: Quality Control & Sintesis (Supervisor)
-1. **Supervisor (Gemini 3 Flash)** hidup kembali.
-2. Membaca ketiga laporan yang ada di *State Graph*.
+1. **Supervisor (SumoPod AI Supervisor)** diaktifkan kembali.
+2. Membaca ketiga laporan yang dikumpulkan spesialis di *State Graph*.
 3. **Pengecekan Logika & Konsistensi**: Supervisor memastikan bahwa *Tile Estimator* tidak lupa memasukkan semen pelapis, *Wood Specialist* mengikutsertakan sealant pengisi celah, dan *Paint Consultant* sudah memperhitungkan 2 lapis pengecatan ramah anak.
 4. **Sintesis JSON**: Supervisor menggabungkan ketiga laporan menjadi satu *Grand JSON Object* yang sangat terstruktur, memicu event completed, dan menutup SSE Streamer.
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminPortal from './components/AdminPortal';
+import { API_BASE_URL } from './config';
 import OrderPortal from './components/OrderPortal';
 import MaterialCatalog from './components/MaterialCatalog';
 import OrderHistory from './components/OrderHistory';
@@ -32,7 +33,7 @@ export default function App() {
         chatApi.setCurrentSessionId(sessionIdParam);
         setActivePortal(portalParam as 'order' | 'admin');
         
-        fetch(`http://localhost:8000/api/projects/sessions/${sessionIdParam}/messages`)
+        fetch(`${API_BASE_URL}/api/projects/sessions/${sessionIdParam}/messages`)
           .then(res => res.json())
           .then(data => {
             chatApi.setMessages(data);
@@ -50,7 +51,7 @@ export default function App() {
           const sid = event.data.sessionId;
           if (sid === chatApi.currentSessionId) {
             try {
-              const res = await fetch(`http://localhost:8000/api/projects/sessions/${sid}/messages`);
+              const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
               const data = await res.json();
               chatApi.setMessages(data);
             } catch (err) {
@@ -85,7 +86,7 @@ export default function App() {
         chatHistory={chatApi.chatHistory}
         onBack={() => setActivePortal('chat')}
         onDownloadPdf={(sessionId: string) => {
-          window.open(`http://localhost:8000/api/projects/${sessionId}/generate-pdf`, '_blank');
+          window.open(`${API_BASE_URL}/api/projects/${sessionId}/generate-pdf`, '_blank');
         }}
       />
     );
@@ -158,7 +159,7 @@ export default function App() {
           setActivePortal('chat');
           if (chatApi.currentSessionId) {
             try {
-              const res = await fetch(`http://localhost:8000/api/projects/sessions/${chatApi.currentSessionId}/messages`);
+              const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${chatApi.currentSessionId}/messages`);
               const data = await res.json();
               chatApi.setMessages(data);
             } catch (err) {

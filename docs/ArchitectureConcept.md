@@ -37,35 +37,31 @@ Pilar utama arsitektur ini meliputi:
 
 ---
 
-## 2. Strategi Routing LLM Dinamis (Berdasarkan Beban Kognitif)
+## 2. Strategi Penyediaan LLM Terpadu (SumoPod AI Gateway)
 
-Untuk memastikan keseimbangan antara **kecepatan (latency)**, **biaya**, dan **kualitas penalaran**, sistem tidak akan mengandalkan satu model LLM secara kaku. Kita akan menerapkan *Dynamic LLM Routing* di mana agen akan memilih "otak" yang sesuai dengan beratnya tugas:
+Untuk memastikan keseimbangan antara **kecepatan (latency)**, **biaya**, dan **kualitas penalaran**, sistem ini sepenuhnya mengintegrasikan **SumoPod AI Gateway** (OpenAI-compatible) sebagai penyedia LLM eksklusif. Hal ini memusatkan seluruh manajemen rate limit dan penyediaan token:
 
-### A. Heavy-Duty LLM (Tugas Kompleks & Orkestrasi)
+### A. High-Reasoning Model (Tugas Kompleks & Orkestrasi)
 * **Peran**: Digunakan oleh **Chief Supervisor** untuk menganalisis *brief* pelanggan yang ambigu, memutuskan strategi *hiring* karyawan, dan mengevaluasi logika dalam Laporan Analisis.
-* **Engine**: **Gemini 3 Flash Preview**
-* **Integrasi**: Native HTTP/cURL Request dengan header `x-goog-api-key: $GEMINI_API_KEY`.
+* **Model Config**: Ditentukan melalui variabel lingkungan `SUPERVISOR_MODEL` (default: `glm-5-turbo`).
 
-### B. Distributed Lightweight LLMs (Eksekusi Cepat & Load Balancing)
-* **Peran**: Digunakan oleh **Dynamic Employees** (misal: Tile Estimator, Paint Consultant) untuk menyusun draf laporan naratif dan memproses RAG.
-* **Strategi Load Balancing**: Untuk menghindari limitasi *Token Per Minute* (TPM) yang ketat pada Groq (Maks 6K TPM), beban agen karyawan akan disebar (*distributed*):
-  * **Engine 1**: **Qwen (qwen/qwen3-32b)** via Groq (untuk 2 agen spesialis).
-  * **Engine 2**: **Gemini 2.5 Flash** atau **Gemini 3 Flash Standard** (untuk 2 agen spesialis lainnya).
-* **Integrasi**: Native HTTP/cURL Request dengan header masing-masing sesuai dokumentasi API.
+### B. Lightweight & Fast Model (Eksekusi Cepat & Efisiensi)
+* **Peran**: Digunakan oleh **Dynamic Employees** (misal: Tile Estimator, Paint Consultant) untuk menyusun draf laporan naratif dan memproses RAG dengan cepat.
+* **Model Config**: Ditentukan melalui variabel lingkungan `SUBAGENT_MODEL` (default: `gpt-5-nano`).
 
-*Catatan: Seluruh kredensial akan dilindungi dan dikelola melalui konfigurasi Environment (`.env` memuat `$GEMINI_API_KEY` dan `$GROQ_API_KEY`).*
+*Catatan: Seluruh kredensial dikelola secara aman melalui konfigurasi Environment (`.env` memuat `SUMOPOD_API_KEY` dan `SUMOPOD_API_BASE`).*
 
 ---
 
-## 3. Analisis Kode Saat Ini & Rencana Refaktor
+## 3. Analisis Kode & Rencana Refaktor
 
 ### A. Yang Dipertahankan (Fondasi Baik)
-1. **Pemisahan Mesin Kalkulasi (Decoupled Math Engine)**: File `rules.py` akan dipertahankan dan ditransformasikan menjadi salah satu fungsi utama di dalam "Server Custom MCP" kita.
+1. **Pemisahan Mesin Kalkulasi (Decoupled Math Engine)**: File `rules.py` ditransformasikan menjadi salah satu fungsi utama di dalam "Server Custom MCP" kita.
 2. **Visualisasi Antarmuka**: UI *Live Canvas* dan *Interaction Log* sudah merepresentasikan konsep "Kantor Digital" dengan sangat baik.
 
 ### B. Yang Direfaktor (Untuk Mencapai Dinamisme)
 1. **Pemanggilan Agen yang Kaku**: Mengubah `asyncio.gather` statis di `supervisor.py` menjadi loop otonom di mana Supervisor yang memegang kendali untuk membangkitkan agen berdasarkan analisis natural *brief* pelanggan.
-2. **Katalog File Statis**: Akan dibuang dan diganti sepenuhnya dengan Database Relasional (SQL) dan Vektorial (Qdrant/Milvus) yang diakses melalui arsitektur MCP.
+2. **Katalog File Statis**: Diganti sepenuhnya dengan Database Relasional (SQL) dan Vektorial (ChromaDB) yang diakses melalui arsitektur MCP.
 
 ---
 
@@ -97,7 +93,7 @@ Menyimpan state proyek dan kebenaran mutlak harga (deterministik).
    * `id`, `project_id`, `sender_role`, `receiver_role`
    * `message` (Teks naratif "Laporan Analisis" atau "Revisi dari Supervisor").
 
-### B. Vector Database (Pinecone / Qdrant)
+### B. Vector Database (ChromaDB)
 Menyimpan *embeddings* teks untuk pencarian kognitif melalui MCP.
 
 1. **Collection `catalog_knowledge`**

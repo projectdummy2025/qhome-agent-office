@@ -42,7 +42,7 @@ qhomemart-mas-agent/
 │   ├── requirements.txt      # Dependensi library Python backend
 │   │
 │   ├── core/                 # Konfigurasi utama
-│   │   ├── config.py         # Pengaturan Environment ($GEMINI_API_KEY, dll)
+│   │   ├── config.py         # Pengaturan Environment ($SUMOPOD_API_KEY, dll)
 │   │   └── database.py       # Inisialisasi PostgreSQL & ChromaDB
 │   │
 │   ├── agents/               # Modul Orkestrasi AI

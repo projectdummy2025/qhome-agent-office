@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { 
   CheckCircle2,
   UserCog, 
@@ -60,7 +61,7 @@ export default function AdminPortal({
   const persistToDb = async (updatedProducts: Product[]) => {
     if (!currentSessionId) return;
     try {
-      await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/products`, {
+      await fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/products`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ products: updatedProducts })
@@ -78,7 +79,7 @@ export default function AdminPortal({
     
     if (remainingRestock.length === 0) {
       try {
-        await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/restock-complete`, {
+        await fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/restock-complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ products: currentProducts })
@@ -99,7 +100,7 @@ export default function AdminPortal({
 
   const fetchMasterProducts = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/projects/products");
+      const res = await fetch(`${API_BASE_URL}/api/projects/products`);
       if (res.ok) {
         const data = await res.json();
         setMasterProducts(data);
@@ -112,7 +113,7 @@ export default function AdminPortal({
   const fetchSessionProducts = async () => {
     if (!currentSessionId) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/messages`);
+      const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/messages`);
       if (res.ok) {
         const messages = await res.json();
         const systemMsgsWithProducts = messages.filter((m: any) => m.role === 'system' && m.products && m.products.length > 0);
@@ -158,7 +159,7 @@ export default function AdminPortal({
     const qtyToAdd = addedQtys[sku] || 50;
     setRestockLoading(prev => ({ ...prev, [sku]: true }));
     try {
-      const res = await fetch(`http://localhost:8000/api/projects/products/${sku}/restock`, {
+      const res = await fetch(`${API_BASE_URL}/api/projects/products/${sku}/restock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ added_qty: qtyToAdd })

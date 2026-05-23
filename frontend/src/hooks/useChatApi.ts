@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 
 export function useChatApi(currentUser: any) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -12,8 +13,8 @@ export function useChatApi(currentUser: any) {
   const fetchHistory = async () => {
     try {
       const url = (currentUser && currentUser.role !== 'admin')
-        ? `http://localhost:8000/api/projects/sessions?user_id=${currentUser.role}`
-        : "http://localhost:8000/api/projects/sessions";
+        ? `${API_BASE_URL}/api/projects/sessions?user_id=${currentUser.role}`
+        : `${API_BASE_URL}/api/projects/sessions`;
       const res = await fetch(url);
       const data = await res.json();
       setChatHistory(data);
@@ -33,7 +34,7 @@ export function useChatApi(currentUser: any) {
     setActiveAgents([]);
 
     try {
-      const res = await fetch(`http://localhost:8000/api/projects/sessions/${session.id}/messages`);
+      const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${session.id}/messages`);
       const data = await res.json();
       setMessages(data);
 
@@ -59,7 +60,7 @@ export function useChatApi(currentUser: any) {
     setActiveAgents([]);
 
     try {
-      const res = await fetch("http://localhost:8000/api/projects/analyze", {
+      const res = await fetch(`${API_BASE_URL}/api/projects/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -72,7 +73,7 @@ export function useChatApi(currentUser: any) {
       setCurrentSessionId(dataInfo.session_id);
       fetchHistory();
 
-      const sse = new EventSource(`http://localhost:8000/api/projects/${dataInfo.session_id}/stream`);
+      const sse = new EventSource(`${API_BASE_URL}/api/projects/${dataInfo.session_id}/stream`);
 
       setMessages(prev => {
         const newIdx = prev.length;

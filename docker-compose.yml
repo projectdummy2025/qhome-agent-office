@@ -13,6 +13,18 @@ services:
       - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data:z
+    networks:
+      - qhome-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d qhome_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1024M
 
   chromadb:
     image: docker.io/chromadb/chroma:latest
@@ -22,3 +34,73 @@ services:
       - "8080:8000"
     volumes:
       - ./chroma_data:/chroma/chroma:z
+    networks:
+      - qhome-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1536M
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: qhome_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/qhome_db"
+      CHROMA_HOST: "chromadb"
+      CHROMA_PORT: "8000"
+      SEED_ON_STARTUP: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    networks:
+      - qhome-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/projects/sessions')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 1536M
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: qhome_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - qhome-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+networks:
+  qhome-network:
+    name: qhome-network
+    driver: bridge
+

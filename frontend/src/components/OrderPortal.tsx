@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { ArrowLeft, Check, ShieldAlert, Info, ShoppingBag } from 'lucide-react';
 import OrderCart from './order/OrderCart';
 import OrderShipping from './order/OrderShipping';
@@ -91,7 +92,7 @@ export default function OrderPortal({
 
   useEffect(() => {
     if (currentSessionId) {
-      fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/messages`)
+      fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/messages`)
         .then(res => res.json())
         .then(data => {
           const hasRestock = data.some((m: any) => m.content && m.content.includes("Persetujuan sudah diterima"));
@@ -120,7 +121,7 @@ export default function OrderPortal({
     }
     setIsConfirming(true);
     try {
-      await fetch(`http://localhost:8000/api/projects/orders/${orderId}/confirm-payment`, {
+      await fetch(`${API_BASE_URL}/api/projects/orders/${orderId}/confirm-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -195,7 +196,7 @@ export default function OrderPortal({
     };
 
     try {
-      const res = await fetch("http://localhost:8000/api/projects/orders", {
+      const res = await fetch(`${API_BASE_URL}/api/projects/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -219,13 +220,13 @@ export default function OrderPortal({
       alert("ID Sesi tidak ditemukan. Tidak dapat mengunduh PDF.");
       return;
     }
-    window.open(`http://localhost:8000/api/projects/${currentSessionId}/generate-pdf`, '_blank');
+    window.open(`${API_BASE_URL}/api/projects/${currentSessionId}/generate-pdf`, '_blank');
   };
 
   const sendRestockRequestToAdmin = async (items: Product[], approvedItems: Product[]) => {
     if (!currentSessionId) return;
     try {
-      await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/request-restock`, {
+      await fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/request-restock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +255,7 @@ export default function OrderPortal({
   const syncApprovedItemsToSession = async (items: Product[]) => {
     if (!currentSessionId) return;
     try {
-      await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/products`, {
+      await fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/products`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ products: items })

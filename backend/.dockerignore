@@ -1,0 +1,17 @@
+**/__pycache__
+**/.pytest_cache
+**/.venv
+**/venv
+**/.git
+**/.env
+**/.env.example
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.db
+**/*.log
+pgdata/
+chroma_data/
+frontend/
+node_modules/
+dist/

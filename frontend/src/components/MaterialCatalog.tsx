@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { 
   Search, 
   Package, 
@@ -50,7 +51,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/projects/products");
+      const res = await fetch(`${API_BASE_URL}/api/projects/products`);
       const data = await res.json();
       const mappedData = data.map((p: any) => ({
         ...p,

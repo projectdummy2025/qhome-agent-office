@@ -36,24 +36,24 @@ Proyek ini menggunakan *stack* mutakhir yang memisahkan beban kerja antara *back
 
 ---
 
-## Strategi "Dynamic LLM Routing"
+## Integrasi Tunggal SumoPod AI Gateway
 
-Untuk mengakali batasan *Rate Limit* pada penyedia layanan API pihak ketiga, serta menyeimbangkan biaya dan *reasoning quality*, sistem ini menggunakan **Distribusi LLM Otomatis**:
+Sistem ini sepenuhnya ditenagai oleh **SumoPod AI Gateway** (OpenAI-compatible) sebagai penyedia LLM tunggal dan eksklusif untuk menyederhanakan konfigurasi enterprise, menyatukan kuota rate limit, dan mempermudah deployment:
 
-* **Gemini 3 Flash Preview**: Berperan sebagai **Chief Supervisor**, karena kemampuannya dalam memahami instruksi kompleks, memutuskan *hiring*, dan melakukan *Quality Control* tingkat tinggi.
-* **Groq LPU (Qwen 3 - 32B)**: Berperan sebagai agen pelaksana spesialis (Wood, Paint). Berkat infrastruktur *ultra-low latency* Groq, *drafting* laporan sangat instan.
-* **Gemini 2.5 Flash**: Berperan sebagai spesialis lainnya (Tile, Stone, Market Research) untuk mendistribusikan limitasi token Groq (terbatas 6K TPM) dan mengeksekusi pencarian web panjang.
+*   **Chief Supervisor (`SUPERVISOR_MODEL`)**: Berjalan menggunakan model high-reasoning (default: `glm-5-turbo`) untuk memahami brief proyek yang rumit, melakukan dekomposisi tugas, mempekerjakan sub-agent spesialis secara dinamis, dan melakukan evaluasi Quality Control laporan final B2B.
+*   **Sub-Agents Spesialis (`SUBAGENT_MODEL`)**: Seluruh agen spesialis (Tile, Wood, Stone, Paint, Market Research) berjalan menggunakan model pelaksana berlatensi rendah (default: `gpt-5-nano`) demi kecepatan generasi estimasi yang instan.
 
 ---
 
 ## Tim Karyawan (Agent Roster)
 
-1. **Chief Project Supervisor (Manajer)**: Menganalisis niat pelanggan (*buyer's intent*) dan HANYA memanggil agen yang relevan. (*Gemini 3 Flash*)
-2. **Ceramic & Tile Estimator**: Menghitung kebutuhan ubin, *wastage*, dan sak perekat ubin. (*Gemini 2.5 Flash*)
-3. **Wood Cladding Specialist**: Merekomendasikan panel kayu asli serta proteksi lapisan anti-rayap/UV. (*Groq Qwen 32B*)
-4. **Stone Veneer Specialist**: Mengkalkulasi pilar batu alam, *heavy-duty bonding*, dan instruksi persiapan dinding. (*Gemini 2.5 Flash*)
-5. **Color & Coating Consultant**: Ahli harmoni warna, mengkalkulasi galon cat interior menggunakan teknik *double-coat*. (*Groq Qwen 32B*)
-6. **Market Research Analyst**: Agen pencari fakta internet (didukung oleh **Tavily Search API**) untuk mencari referensi gaya arsitektur terkini dari luar. (*Gemini 2.5 Flash*)
+Seluruh peran agen digital berikut dirutekan dan dieksekusi secara terpadu melalui model SumoPod AI:
+1.  **Chief Project Supervisor (Manajer)**: Menganalisis niat pelanggan (*buyer's intent*) dan mendelegasikan tugas ke spesialis relevan. (*SumoPod Supervisor*)
+2.  **Ceramic & Tile Estimator**: Mengkalkulasi luas lantai proyek, kebutuhan ubin, rasio limbah ubin (*wastage*), dan sak perekat ubin. (*SumoPod Sub-Agent*)
+3.  **Wood Cladding Specialist**: Merekomendasikan panel kayu premium (WPC/Kayu Asli) serta takaran proteksi lapisan anti-rayap/UV. (*SumoPod Sub-Agent*)
+4.  **Stone Veneer Specialist**: Mengkalkulasi kebutuhan batu alam untuk pilar/dinding, perekat berat (*heavy-duty bonding*), dan persiapan plesteran. (*SumoPod Sub-Agent*)
+5.  **Color & Coating Consultant**: Ahli harmoni palet warna, mengkalkulasi kebutuhan kaleng cat interior/eksterior berbasis teknik *double-coat*. (*SumoPod Sub-Agent*)
+6.  **Market Research Analyst**: Agen penjelajah internet (menggunakan **Tavily Search API**) untuk menyajikan referensi arsitektur dan tren material terbaru. (*SumoPod Sub-Agent*)
 
 ---
 
@@ -84,19 +84,17 @@ Buka file `.env` dan lengkapi API Key berikut (menggunakan format endpoint *Open
 
 ---
 
-### Langkah 2: Menjalankan Database (Docker Compose)
-Putar kontainer database relasional dan database vektor (ChromaDB) di latar belakang:
+## PILIHAN A: Setup Lokal (Development Mode)
+
+Gunakan metode ini jika Anda ingin melakukan perubahan kode secara langsung dan *live debugging* pada mesin lokal Anda.
+
+### Langkah 2.A: Menjalankan Database Pendukung (Docker)
+Putar kontainer database PostgreSQL dan database vektor (ChromaDB) di latar belakang:
 ```bash
-docker compose up -d
-```
-Pastikan kontainer berjalan normal dengan mengecek status:
-```bash
-docker compose ps
+docker compose up -d postgres chromadb
 ```
 
----
-
-### Langkah 3: Setup & Seeding Backend (Python)
+### Langkah 3.A: Setup & Seeding Backend (Python)
 1. Buka folder root proyek dan buat virtual environment:
    ```bash
    python3 -m venv venv
@@ -110,36 +108,48 @@ docker compose ps
    ```bash
    python backend/seed.py
    ```
+4. Jalankan server API dengan menggunakan Uvicorn:
+   ```bash
+   uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+   ```
 
----
-
-### Langkah 4: Menjalankan Server Backend
-Jalankan server API FastAPI dengan menggunakan Uvicorn:
-```bash
-uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-```
-Server backend sekarang aktif di `http://127.0.0.1:8000`. Anda dapat mengakses dokumentasi interaktif Swagger API di `http://127.0.0.1:8000/docs`.
-
----
-
-### Langkah 5: Setup & Menjalankan Frontend (React)
-1. Buka direktori `frontend`:
+### Langkah 4.A: Setup & Menjalankan Frontend (React)
+1. Buka direktori `frontend` di terminal baru:
    ```bash
    cd frontend
    ```
-2. Instal seluruh dependensi Node.js:
+2. Instal seluruh dependensi Node.js dan jalankan dev server:
    ```bash
    npm install
-   ```
-3. Jalankan server pengembangan Vite:
-   ```bash
    npm run dev
    ```
-4. Buka peramban (browser) dan akses alamat `http://localhost:5173`.
+3. Akses aplikasi pada alamat `http://localhost:5173`.
+
+---
+
+## PILIHAN B: Setup Full-Container Docker (Production-Ready)
+
+Gunakan metode ini untuk meniru lingkungan production secara instan. Seluruh layanan (PostgreSQL, ChromaDB, Backend, dan Frontend Nginx) akan berjalan dalam kontainer terpisah yang sangat teroptimasi dan aman.
+
+### Langkah 2.B: Jalankan Semua Layanan dengan Satu Perintah
+Cukup jalankan perintah berikut di root folder proyek:
+```bash
+docker compose up --build -d
+```
+
+### Langkah 3.B: Verifikasi dan Akses
+1. Pastikan semua kontainer berjalan lancar dan statusnya sehat (*healthy*):
+   ```bash
+   docker compose ps
+   ```
+   *(Backend memiliki sistem cold-start otomatis yang akan menahan diri untuk aktif sampai PostgreSQL dan ChromaDB siap sepenuhnya, lalu melakukan seeding database otomatis lewat `seed.py` sebelum menghidupkan Uvicorn).*
+2. Buka browser Anda dan kunjungi port publik frontend pada alamat **`http://localhost:3000`**.
+3. Komunikasi API backend, streaming log simulasi real-time (Server-Sent Events), dan unduhan PDF akan berjalan otomatis di latar belakang melalui reverse proxy Nginx yang sangat efisien!
+
 ---
 
 ## Kebijakan Penanganan Batasan & Mitigasi Rate Limit
-Meningkatnya batasan kuota API Developer (Groq dibatasi maksimum **6.000 TPM**):
+Untuk mengoptimalkan kuota API Developer dan efisiensi konsumsi token:
 1. **Panggilan Sekuensial (Waterfall Flow)**: Agen spesialis dipanggil bergantian, bukan paralel penuh.
 2. **Ultra-Lean Prompting**: Mengurangi muatan teks yang dikirim ke model agar tetap hemat token.
 3. **Graceful Fallback**: Mengalihkan proses secara otomatis ke mesin kalkulator lokal sipil (`backend/mcp_tools/calculators.py`) atau model fallback jika terdeteksi galat `429 Too Many Requests`.
