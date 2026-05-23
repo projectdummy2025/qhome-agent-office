@@ -116,7 +116,7 @@ User menekan tombol "Lanjutkan ke Pengiriman" untuk masuk ke **Step 2 (Logistics
 
 ## 3. System Flow (Di Balik Layar / Under the Hood)
 
-Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekosistem multi-agent:
+Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekosistem multi-agent secara dinamis:
 
 ### Fase 0: Long-Term Memory & Persistent Chat Context
 1. **Pengambilan Konteks (Database)**: Sebelum simulasi dijalankan, sistem mengambil riwayat sesi dari database (`ChatSession`). Jika ini adalah percakapan lanjutan, kolom `summary` (yang bertindak sebagai memori jangka panjang) dibaca dan disimpan sebagai variabel `history_summary`.
@@ -127,11 +127,11 @@ Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekos
 1. React mengirimkan `POST /api/projects/analyze` brief proyek ke FastAPI.
 2. **Supervisor LLM (SumoPod AI Supervisor)** membaca teks.
    * *Intent Extraction*: Area = 20 m² (5x4). Material = Granit Marmer, Panel Kayu Bergaris, Cat mudah dibersihkan.
-   * *Dynamic Routing*: Memutuskan untuk men-*hire* (menjalankan *edge* LangGraph menuju) 3 agen spesialis secara dinamis: Tile, Wood, Paint.
-3. FastAPI memancarkan sinyal **SSE (Server-Sent Events)** ke React: `{"event": "routing", "hired": ["tile", "wood", "paint"]}`.
+   * *Dynamic Routing*: Memutuskan untuk men-*hire* (menaktifkan *node* LangGraph menuju) agen-agen spesialis secara dinamis berdasarkan isi brief: `tile`, `wood`, `stone`, `paint`, atau `researchere`.
+3. FastAPI memetakan alur kerja sekuensial dan menyimpannya di memori `active_streams[session_id]`. Sinyal **SSE (Server-Sent Events)** dipancarkan ke React untuk mengaktifkan avatar visual: `{"event": "routing", "hired": ["tile", "wood", "paint"]}`.
 
-### Fase 2: Eksekusi Spesialis Sekuensial (Waterfall)
-*(Untuk mengoptimalkan pembagian rate limit, Supervisor mendelegasikan tugas satu per satu secara runut)*
+### Fase 2: Eksekusi Spesialis Sekuensial (Waterfall) & Verifikasi Inventaris Gudang
+*(Untuk mengoptimalkan pembagian rate limit dan kelancaran token, eksekusi dilakukan secara bergiliran / sekuensial di dalam LangGraph)*
 
 #### A. Giliran Tile Estimator (SumoPod AI Sub-Agent)
 * **RAG Search**: Memanggil MCP `search_vector_catalog("granit marmer putih")`. ChromaDB membalas dengan `TLE-001 (White Carara)`.
@@ -151,29 +151,55 @@ Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekos
   * *Sistem Backend* menghitung: Butuh 1 Pail (25kg) dengan asumsi 2 lapis (*double coat*).
 * **Laporan**: Diserahkan ke memori LangGraph.
 
-### Fase 3: Quality Control & Sintesis (Supervisor)
-1. **Supervisor (SumoPod AI Supervisor)** diaktifkan kembali.
-2. Membaca ketiga laporan yang dikumpulkan spesialis di *State Graph*.
-3. **Pengecekan Logika & Konsistensi**: Supervisor memastikan bahwa *Tile Estimator* tidak lupa memasukkan semen pelapis, *Wood Specialist* mengikutsertakan sealant pengisi celah, dan *Paint Consultant* sudah memperhitungkan 2 lapis pengecatan ramah anak.
-4. **Sintesis JSON**: Supervisor menggabungkan ketiga laporan menjadi satu *Grand JSON Object* yang sangat terstruktur, memicu event completed, dan menutup SSE Streamer.
+#### D. Verifikasi Inventaris & Alternatif Substitusi (Inventory Administrator)
+* **Pengecekan database riil**: `Inventory Administrator` dijalankan secara otomatis di dalam graf untuk memeriksa ketersediaan stok fisik produk yang direkomendasikan spesialis pada tabel `products` di database PostgreSQL.
+* **Logika Pengecekan**:
+  * Jika stok produk tercukupi (`stock_qty >= 20` dan `>= qty_int`), status diset `TERSEDIA`.
+  * Jika stok produk kritis (`< 20`) atau kosong (`0`), status diset `TERBATAS` atau `HABIS`.
+  * **Pencarian Alternatif Otomatis**: Jika stok habis, sistem secara otonom mencari produk sejenis di kategori yang sama yang memiliki ketersediaan stok melimpah (`stock_qty >= qty_int`), menyematkannya sebagai produk substitusi di keranjang belanja, serta menyuntikkan tag `[STOK TERBATAS]` atau `[STOK HABIS]` ke dalam metadata produk untuk mengunci tombol *checkout* di frontend.
 
-### Fase 4: Sinkronisasi Transaksi & API Pemesanan (3NF Database)
+#### E. Riset Harga Pasar & Rekomendasi Restok Paralel (Restock Researcher)
+* **Identifikasi OOS**: Mendeteksi produk pendukung baru hasil internet riset (seperti semen pendukung, cairan coating, pengisi nat) atau produk berlabel `[STOK HABIS]` / SKU `"OOS-"`.
+* **Riset Internet Paralel**: Jika ada produk OOS, agen memicu **web search paralel menggunakan `ThreadPoolExecutor`** (maksimal 5 pekerja bersamaan) untuk mencari informasi harga riil pasar Indonesia menggunakan Tavily Search API.
+* **Ekstraksi Cerdas LLM**: Hasil pencarian web dikirim ke `gemini_specialist` dengan format prompt ekstraksi ketat guna menghasilkan JSON berisi: `recommended_brand`, `estimated_price_rp`, `specs`, dan `source_url`.
+* **Penyimpanan Rekomendasi B2B**: Menyimpan otomatis rekomendasi riset pasar tersebut ke dalam tabel `stock_recommendations` dengan status `pending` agar siap ditinjau dan di-restok secara instan oleh admin Bapak Rudi di Admin Portal.
+* **Update Draf Belanja**: Mengisi harga taksiran pasar ke dalam gelembung obrolan & keranjang dengan label `[Nama Produk] [Brand] (Estimasi Internet - Menunggu Validasi)`.
+
+### Fase 3: Quality Control & Sintesis Proposal (Supervisor)
+1. **Supervisor (SumoPod AI Supervisor)** diaktifkan kembali.
+2. Membaca seluruh laporan yang dikumpulkan spesialis di *State Graph*.
+3. **Pengecekan Logika & Konsistensi**: Supervisor memastikan bahwa *Tile Estimator* tidak lupa memasukkan semen pelapis, *Wood Specialist* mengikutsertakan sealant pengisi celah, dan *Paint Consultant* sudah memperhitungkan 2 lapis pengecatan ramah anak.
+4. **Sintesis JSON (Synthesizer)**: Supervisor menggabungkan seluruh laporan menjadi satu *Grand JSON Object* yang sangat terstruktur berisi narasi gabungan, daftar produk terpadu, dan disclaimer hukum sipil.
+5. **SSE Log Buffer & Delay Cleanup**: Seluruh log aktivitas disalurkan melalui EventSourceResponse `GET /api/projects/{session_id}/stream`. Setelah simulasi tuntas, sistem menahan pembersihan data streaming in-memory selama 10 detik (`cleanup_stream`) agar frontend React memiliki waktu yang cukup untuk membaca seluruh potongan SSE log secara sempurna.
+
+### Fase 4: Pelacakan KPI & Performa Sistem (KPI Tracker - P6)
+1. Saat simulasi dimulai, sistem mencatat waktu presisi `kpi_started_at` di memori.
+2. Begitu `synthesizer` selesai memproses proposal akhir, sistem mencatat waktu `kpi_completed_at` dan menghitung durasi pengerjaan (`lead_time_seconds = completed_at - started_at`).
+3. Sistem secara otomatis menyimpan catatan performa ke tabel `estimation_kpi` untuk memantau indikator keberhasilan:
+   * `lead_time_seconds`: Total waktu pengerjaan proposal (Target B2B: < 30 detik).
+   * `agent_count`: Jumlah agen yang terlibat dalam orkestrasi.
+   * `product_count`: Jumlah produk yang direkomendasikan.
+   * `brief_length`: Panjang teks input pelanggan (karakter).
+   * `pdf_generated`: Inisialisasi awal bernilai `0`.
+
+### Fase 5: Sinkronisasi Transaksi & API Pemesanan (3NF Database)
 Saat pengguna menyetujui verifikasi ganda dan memproses transaksi resmi, frontend menembak API:
 * **HTTP POST `/api/projects/orders`**
-* **Database Pipeline (schema.py)**: Menulis relasi transaksi ke dalam tabel `Order` dan `OrderItem` yang ternormalisasi (3NF) guna menjaga integritas inventaris pada **PostgreSQL**.
+* **Integritas Database (schema.py & chat_service.py)**: Menulis relasi transaksi ke dalam tabel `orders` dan `order_items` yang ternormalisasi (3NF).
+* **Mitigasi ForeignKeyViolation**: Sebelum menulis baris order, sistem secara otonom mendeteksi apakah `product_sku` hasil riset internet sudah terdaftar di master produk database. Jika belum, sistem menyuntikkan placeholder pendukung sementara (seperti `Semen Perekat Instan (Menunggu Konfirmasi)`) ke tabel `products` secara otomatis sebelum melakukan *flush* data transaksi order, guna menjamin integritas relasi tabel data pergudangan.
 
-### Fase 5: Roda Nota Belanja & Vector QRIS Drawing
+### Fase 6: Roda Nota Belanja & Vector QRIS Drawing
 Saat tombol "Unduh PDF" ditekan:
 1. React memicu endpoint GET `/api/projects/{session_id}/generate-pdf`.
-2. Backend [pdf_service.py](file:///home/ahmad/projects/qhomemart-mas-agent/backend/services/pdf_service.py) mendeteksi adanya data `Order` resmi untuk sesi tersebut.
+2. Backend [pdf_service.py](file:///home/ahmad/projects/qhomemart-mas-agent/backend/services/pdf_service.py) mendeteksi adanya data `orders` resmi untuk sesi tersebut.
 3. Sistem secara otomatis menyusun layout PDF bertema **Nota Belanja Resmi B2B**, mencakup rincian jarak logistik, armada pengiriman, jadwal pengantaran, catatan akses, subtotal, dan pajak.
-4. Di bagian bawah PDF, modul ReportLab shapes digunakan untuk menggambar representasi stand QRIS (grafik vektor) yang tajam untuk instruksi pembayaran profesional.
+4. **Drawing Barcode Vektor Terintegrasi**: Di bagian bawah PDF, modul ReportLab shapes digunakan untuk menggambar representasi stand QRIS (grafik vektor) yang tajam lengkap dengan corner square markers, penanda penyelarasan, dan simulated QR bits secara mandiri tanpa membebani library eksternal, menjamin performa tinggi dan keamanan dokumen.
 5. Lembar PDF disajikan kembali ke klien secara asinkron sebagai berkas unduhan instan.
 
-### Fase 6: Verifikasi Transaksi & Sinkronisasi Obrolan Lintas-Tab (BroadcastChannel)
+### Fase 7: Verifikasi Transaksi & Sinkronisasi Obrolan Lintas-Tab (BroadcastChannel)
 Ketika pengguna mengklik "Konfirmasi Sudah Bayar" pada halaman sukses QRIS:
 1. Frontend mengirimkan request `POST /api/projects/orders/{order_id}/confirm-payment` ke backend.
-2. **Penyuntikan Pesan Otomatis (backend/api/routes/chat.py)**:
+2. **Penyuntikan Pesan Otomatis (backend/api/routes/chat_routes.py)**:
    * Backend menyisipkan pesan baru bertindak sebagai pengguna (`role=user`) yang mengonfirmasi penyelesaian pembayaran QRIS.
    * Backend menyisipkan tanggapan otomatis dari agen (`role=system`) yang menyatakan pembayaran sukses diterima dan kargo logistik diaktifkan secara resmi.
    * Kedua pesan tersebut disimpan ke database SQL dengan UUID pesan (`id=str(uuid.uuid4())`) yang di-generate secara manual untuk menghindari pelanggaran not-null constraint.

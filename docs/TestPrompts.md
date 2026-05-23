@@ -47,7 +47,7 @@ graph TD
 ---
 
 ## 2. Skenario Penyelamatan Stok & Komunikasi ke Admin Portal (OOS Flow)
-**Fokus Pengujian**: Menguji jalur "Sinyal Admin" di mana agen *Market Analyst* (Inventory) mendeteksi kekurangan stok di database, melabeli produk dengan tag khusus, yang secara otomatis ditangkap oleh sistem frontend untuk membuka akses ke **AdminPortal.tsx**.
+**Fokus Pengujian**: Menguji jalur "Sinyal Admin" di mana agen *Inventory Administrator* mendeteksi kekurangan stok di database, melabeli produk dengan tag khusus, yang secara otomatis ditangkap oleh sistem frontend untuk membuka akses ke **AdminPortal.tsx**.
 
 * **Persona**: Bapak Joko (General Contractor & Engineer)
 * **Lokasi Pengiriman**: Bantul (15 Km dari HQ)
@@ -56,8 +56,8 @@ graph TD
 > "Siang mas/mbak, saya Joko. Kami butuh ubin lantai granit premium dan panel kayu dekoratif untuk proyek aula besar. Klien minta motif granit polished hitam obsidian atau panel kayu impor premium. Karena ini aula utama, luas lantainya sekitar 150 meter persegi, dan luas dinding untuk panel kayunya sekitar 120 meter persegi. Tolong dicarikan opsi yang ready untuk dikirim besok pagi."
 
 ### Alur Uji Coba (Sinyal ke Admin):
-1. **Analisis Agen Inventaris (Market Analyst)**:
-   * Setelah agen spesialis memilih ubin/kayu, *Market Analyst* akan mengecek database Gudang.
+1. **Analisis Ketersediaan Inventaris (Inventory Administrator)**:
+   * Setelah agen spesialis memilih ubin/kayu, *Inventory Administrator* akan mengecek database Gudang.
    * Jika stok `< 20` atau `0`, agen akan memberikan sinyal ke frontend dengan menyisipkan tag `[STOK TERBATAS]` atau `[STOK HABIS]` pada nama produk, serta memunculkan alternatif dengan tag `(Substitusi)`.
 2. **Respons B2B Cart**:
    * Keranjang B2B akan membaca tag *string* tersebut dan memunculkan *banner* merah peringatan bahwa Checkout dikunci.
@@ -84,7 +84,7 @@ graph TD
 
 ### Alur Uji Coba & Verifikasi:
 1. **Bypass ChromaDB**: Agen spesialis membaca indikator `restock` / `hitung ulang` dari prompt. Sistem akan **mem-bypass** pencarian vektor ChromaDB dan me-*reuse* spesifikasi produk lama.
-2. **Market Analyst Memeriksa Ulang**: Karena stok di database PostgreSQL baru saja ditambah oleh Admin, *Market Analyst* kini melihat stok berlimpah dan membuang tag `[STOK HABIS]`.
+2. **Inventory Administrator Memeriksa Ulang**: Karena stok di database PostgreSQL baru saja ditambah oleh Admin, *Inventory Administrator* kini melihat stok berlimpah dan membuang tag `[STOK HABIS]` / `[STOK TERBATAS]`.
 3. **Cart Otomatis Terbuka**: B2B Cart menerima *state* produk yang bersih (tanpa peringatan stok), dan tombol Checkout otomatis menyala kembali. Skenario berhasil!
 
 ---
