@@ -318,7 +318,7 @@ def restock_researcher(state: AgentState) -> dict:
     if not oos_products:
         return state
     
-    print(f"[Research Agent] Ditemukan {len(oos_products)} produk OOS. Memulai riset paralel...")
+
     
     # Step 3: Lakukan pencarian paralel
     research_results = _parallel_web_research(oos_products)
@@ -329,7 +329,7 @@ def restock_researcher(state: AgentState) -> dict:
         product_name = oos_prod["original_name"]
         search_result = research_results.get(product_name, "")
         
-        print(f"[Research Agent] Processing: {product_name}")
+
         processed = _process_product_with_llm(product_name, search_result)
         processed_data[product_name] = processed
     
@@ -339,27 +339,14 @@ def restock_researcher(state: AgentState) -> dict:
     # Step 6: Update reports dengan harga estimasi
     updated_reports = _update_reports_with_estimated_prices(reports, oos_products, processed_data)
     
-    # Step 7: Buat laporan terstruktur untuk Research Agent agar tampil lognya di UI
-    lines = [f"Riset pasar internet berhasil dilakukan untuk {len(oos_products)} produk pendukung:"]
-    for oos_prod in oos_products:
-        p_name = oos_prod["original_name"]
-        clean_name = p_name
-        for pfx in ["[STOK TERBATAS]", "[STOK HABIS]", "[STOK KURANG]", "(Menunggu Konfirmasi)", "Menunggu Konfirmasi", "()"]:
-            clean_name = clean_name.replace(pfx, "").strip()
-        clean_name = clean_name.replace("  ", " ").strip()
-        
-        data = processed_data.get(p_name, {})
-        brand = data.get("recommended_brand", "Merek standar")
-        price = float(data.get("estimated_price_rp", 50000))
-        lines.append(f"- {clean_name}: Merek {brand} dengan estimasi harga pasar Rp {price:,.0f}/unit.")
-    
+    # Step 7: Buat laporan terstruktur untuk Research Agent agar tampil lognya di UI (tanpa menampilkan rincian barang)
     research_report = {
         "agent": "Research Agent",
-        "content": "\n".join(lines)
+        "content": f"Riset pasar internet untuk {len(oos_products)} produk pendukung telah selesai dilakukan dan rekomendasi stok telah dikirimkan ke Admin Gudang."
     }
     updated_reports.append(research_report)
     
-    print(f"[Research Agent] Selesai: {len(oos_products)} rekomendasi tersimpan di database")
+
     
     return {
         "reports": updated_reports,
