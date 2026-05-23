@@ -22,7 +22,7 @@ Dokumen ini mendefinisikan tumpukan teknologi (*Tech Stack*) dan struktur direkt
 | **Backend API** | FastAPI (Python) | Performa sangat tinggi, mendukung *async/await* secara native (wajib untuk AI calls), dan dokumentasi Swagger UI bawaan. |
 | **Orkestrasi AI** | LangGraph (Python) | Konstruksi graf hierarkis (Supervisor $\rightarrow$ Worker) yang sangat *stateful* dan bisa dikontrol. |
 | **Frontend UI** | Vite + React (TS) | Reaktivitas tinggi untuk memantau status agen secara *real-time*. *Styling* menggunakan Vanilla CSS murni. |
-| **Database Relasional**| SQLite + SQLAlchemy | Persistensi data proyek (*Long-Term Memory*) tanpa perlu instalasi *server* database (bersifat file lokal). |
+| **Database Relasional**| PostgreSQL + SQLAlchemy | Persistensi data proyek (*Long-Term Memory*), transaksi pesanan, dan rekam jejak. Menggunakan tipe `JSONB` native. |
 | **Vector Database** | ChromaDB (Local) | *Embedded vector search* yang sangat cepat dan gratis untuk menyimpan konteks/katalog RAG tanpa latensi internet. |
 | **Komunikasi Live** | Server-Sent Events (SSE)| *Streaming* log agen dari backend ke frontend satu arah secara *real-time* (lebih ringan dibanding WebSockets). |
 
@@ -37,13 +37,13 @@ qhomemart-mas-agent/
 │
 ├── backend/                  # Domain khusus Backend (FastAPI & AI Agents)
 │   ├── main.py               # Entry point FastAPI
-│   ├── seed.py               # Script seeding database (SQLite & ChromaDB)
+│   ├── seed.py               # Script seeding database (PostgreSQL & ChromaDB)
 │   ├── seed_products.csv     # Data produk awal untuk disemai (seed)
 │   ├── requirements.txt      # Dependensi library Python backend
 │   │
 │   ├── core/                 # Konfigurasi utama
 │   │   ├── config.py         # Pengaturan Environment ($GEMINI_API_KEY, dll)
-│   │   └── database.py       # Inisialisasi SQLite & ChromaDB
+│   │   └── database.py       # Inisialisasi PostgreSQL & ChromaDB
 │   │
 │   ├── agents/               # Modul Orkestrasi AI
 │   │   └── supervisor.py     # Chief Supervisor & Node Spesialis (Tile, Wood, Paint, Stone, Researcher)

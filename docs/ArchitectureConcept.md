@@ -85,7 +85,7 @@ Untuk memastikan keseimbangan antara **kecepatan (latency)**, **biaya**, dan **k
 
 ## 5. Skema Database MVP (Sebagai Backend MCP)
 
-### A. Relational Database (PostgreSQL / SQLite)
+### A. Relational Database (PostgreSQL)
 Menyimpan state proyek dan kebenaran mutlak harga (deterministik).
 
 1. **`projects` (Sesi Konsultasi)**

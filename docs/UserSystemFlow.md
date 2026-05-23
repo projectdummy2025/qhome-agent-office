@@ -84,7 +84,9 @@ Setelah kalkulasi selesai:
 2. User mengklik tombol **"Intervensi Admin"**:
    * Sistem melakukan transisi mulus ke portal persona **Bapak Rudi (Admin)**.
    * Admin membuka **Portal Admin**, menambahkan pasokan stok material kritis bersangkutan, lalu mengklik setujui (*Approve*).
-3. User kembali ke chat: keranjang otomatis ter-sinkronisasi ulang, tanda peringatan hilang, dan tombol checkout kini **terbuka**.
+   * Setelah seluruh item berstatus habis stok terselesaikan, Admin Portal secara asinkron memanggil endpoint `POST /api/projects/sessions/{session_id}/restock-complete`.
+   * Sistem *backend* menyuntikkan pesan otomatis dari agen ke dalam obrolan, menginformasikan klien bahwa stok sudah diatasi.
+3. User kembali ke chat (atau layar otomatis *refresh* via *BroadcastChannel*): keranjang otomatis ter-sinkronisasi ulang, tanda peringatan hilang, dan tombol checkout kini **terbuka**.
 
 ### Langkah 5: Pemilihan Armada Kurir & Penjadwalan Dinamis
 User menekan tombol "Lanjutkan ke Pengiriman" untuk masuk ke **Step 2 (Logistics)** pada panel kanan:
@@ -158,7 +160,7 @@ Bagaimana FastAPI, LangGraph, Groq, dan Gemini bekerja mengorkestrasi ekosistem 
 ### Fase 4: Sinkronisasi Transaksi & API Pemesanan (3NF Database)
 Saat pengguna menyetujui verifikasi ganda dan memproses transaksi resmi, frontend menembak API:
 * **HTTP POST `/api/projects/orders`**
-* **Database Pipeline (schema.py)**: Menulis relasi transaksi ke dalam tabel `Order` dan `OrderItem` yang ternormalisasi (3NF) guna menjaga integritas inventaris.
+* **Database Pipeline (schema.py)**: Menulis relasi transaksi ke dalam tabel `Order` dan `OrderItem` yang ternormalisasi (3NF) guna menjaga integritas inventaris pada **PostgreSQL**.
 
 ### Fase 5: Roda Nota Belanja & Vector QRIS Drawing
 Saat tombol "Unduh PDF" ditekan:

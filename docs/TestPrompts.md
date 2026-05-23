@@ -84,7 +84,7 @@ graph TD
 
 ### Alur Uji Coba & Verifikasi:
 1. **Bypass ChromaDB**: Agen spesialis membaca indikator `restock` / `hitung ulang` dari prompt. Sistem akan **mem-bypass** pencarian vektor ChromaDB dan me-*reuse* spesifikasi produk lama.
-2. **Market Analyst Memeriksa Ulang**: Karena stok di database SQLite baru saja ditambah oleh Admin, *Market Analyst* kini melihat stok berlimpah dan membuang tag `[STOK HABIS]`.
+2. **Market Analyst Memeriksa Ulang**: Karena stok di database PostgreSQL baru saja ditambah oleh Admin, *Market Analyst* kini melihat stok berlimpah dan membuang tag `[STOK HABIS]`.
 3. **Cart Otomatis Terbuka**: B2B Cart menerima *state* produk yang bersih (tanpa peringatan stok), dan tombol Checkout otomatis menyala kembali. Skenario berhasil!
 
 ---

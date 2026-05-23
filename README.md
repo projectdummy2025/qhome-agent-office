@@ -1,6 +1,6 @@
-# QHome-MAS: Autonomous Agentic Office (B2B)
+# QHome-MAS: Autonomous B2B Sales & Project Agent
 
-QHome-MAS (Multi-Agent System) adalah sistem cerdas generasi terbaru untuk konsultasi material sipil dan desain interior Qhomemart. Sistem ini membuang pendekatan *chatbot* linier konvensional dan menggantinya dengan konsep **"Kantor Konsultasi Digital"**.
+QHome-MAS (Multi-Agent System) adalah sistem cerdas **MVP (Minimum Viable Product)** yang dirancang khusus sebagai **Sales & Project Agent** untuk konsultasi material sipil, desain interior, dan manajemen logistik B2B Qhomemart. Sistem ini membuang pendekatan *chatbot* linier konvensional dan menggantinya dengan konsep **"Kantor Konsultasi Digital"**.
 
 Di dalam kantor digital ini, agen-agen kecerdasan buatan beroperasi layaknya **karyawan manusia sesungguhnya**. Mereka memiliki hierarki, melakukan komunikasi berbasis *Laporan Analisis*, menggunakan alat bantu khusus melalui antarmuka *Model Context Protocol (MCP)*, dan direkrut (*hired*) secara dinamis berdasarkan cakupan proyek.
 
@@ -31,7 +31,7 @@ Proyek ini menggunakan *stack* mutakhir yang memisahkan beban kerja antara *back
 * **Styling**: Mematuhi aturan desain estetis tinggi menggunakan **Vanilla CSS murni** untuk menghadirkan efek *premium Glassmorphism* dan *Dark Mode*, tanpa bergantung pada Tailwind.
 
 ### 3. Database (Long-Term Memory & RAG)
-* **Relational DB**: **SQLite** menyimpan kepastian harga dasar produk dan riwayat interaksi (*audit logs*), mengeliminasi probabilitas agen salah menebak harga.
+* **Relational DB**: **PostgreSQL** menyimpan kepastian harga dasar produk, riwayat interaksi (*audit logs*), dan menggunakan tipe data **JSONB** asli untuk performa tinggi dalam menyimpan struktur pemikiran (*chain-of-thought*) agen. Mengeliminasi probabilitas agen salah menebak harga.
 * **Vector DB**: **ChromaDB** menyimpan *embeddings* dari pustaka material/SOP untuk pencarian semantik agen (RAG).
 
 ---
@@ -75,9 +75,11 @@ Salin file template `.env.example` menjadi `.env` di direktori utama:
 ```bash
 cp .env.example .env
 ```
-Buka file `.env` dan lengkapi API Key berikut:
-* `GEMINI_API_KEY`: Kunci akses API Gemini Anda.
-* `GROQ_API_KEY`: Kunci akses API Groq Anda.
+Buka file `.env` dan lengkapi API Key berikut (menggunakan format endpoint *OpenAI-Compatible* via SumoPod):
+* `SUMOPOD_API_KEY`: Kunci akses API utama Anda.
+* `SUMOPOD_API_BASE`: Endpoint base URL (contoh: https://ai.sumopod.com/v1).
+* `SUPERVISOR_MODEL`: Nama model untuk agen manajer (misal: glm-5-turbo).
+* `SUBAGENT_MODEL`: Nama model untuk agen spesialis (misal: gpt-5-nano).
 * `TAVILY_API_KEY`: Kunci akses pencarian web Tavily.
 
 ---
@@ -104,7 +106,7 @@ docker compose ps
    ```bash
    pip install -r backend/requirements.txt
    ```
-3. Lakukan **Seeding Katalog Produk** (menyemai 80+ item produk QHomeMart ke SQLite dan ChromaDB Vector Store):
+3. Lakukan **Seeding Katalog Produk** (menyemai 80+ item produk QHomeMart ke PostgreSQL dan ChromaDB Vector Store):
    ```bash
    python backend/seed.py
    ```
