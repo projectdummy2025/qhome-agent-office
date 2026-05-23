@@ -92,23 +92,32 @@ def wood_specialist(state: AgentState):
             f"{reasoning}. Untuk luas bidang kayu {area_m2} m2, diperlukan sebanyak {qty} lembar panel. "
             f"Diperlukan pula {calc['coating_cans_needed']} kaleng cairan coating pelindung UV agar warna kayu tahan lama."
         )
-        product_data = {
-            "sku": selected_product["sku"],
-            "name": selected_product["name"],
-            "price": selected_product["base_price"],
-            "coverage": selected_product["coverage_m2"],
-            "qty": f"{qty} {unit} (Est)",
-            "total": selected_product["base_price"] * qty,
-        }
+        product_data = [
+            {
+                "sku": selected_product["sku"],
+                "name": selected_product["name"],
+                "price": selected_product["base_price"],
+                "coverage": selected_product["coverage_m2"],
+                "qty": f"{qty} {unit} (Est)",
+                "total": selected_product["base_price"] * qty,
+            },
+            {
+                "sku": "OOS-COATING",
+                "name": "Cairan Coating Pelindung UV (Menunggu Konfirmasi)",
+                "price": 0,
+                "qty": f"{calc['coating_cans_needed']} Kaleng (Est)",
+                "total": 0,
+            }
+        ]
     except Exception as e:
         content = f"Maaf, saya tidak menemukan produk panel kayu yang sesuai di database. Detail {str(e)}"
-        product_data = {
+        product_data = [{
             "sku": "OOS-WOOD",
             "name": "Menunggu Konfirmasi",
             "price": 0,
             "qty": "0",
             "total": 0,
-        }
+        }]
 
     report = {"agent": "Wood Specialist", "content": content, "product": product_data}
     old_reports = [

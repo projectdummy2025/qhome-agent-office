@@ -11,6 +11,7 @@ class AgentState(TypedDict):
     reports: List[dict]
     final_proposal: str
     history_summary: str
+    session_id: str
 
 class SumoPodLLM:
     def __init__(self, api_key: str, base_url: str, model: str):

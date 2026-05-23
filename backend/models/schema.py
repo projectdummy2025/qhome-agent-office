@@ -109,3 +109,17 @@ class OrderItem(Base):
     order = relationship("Order", back_populates="items")
     product = relationship("Product")
 
+
+class StockRecommendation(Base):
+    """Tabel untuk menyimpan rekomendasi stok hasil riset internet Research Agent"""
+    __tablename__ = "stock_recommendations"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String, ForeignKey("chat_sessions.id"), nullable=True, index=True)
+    product_name = Column(String, nullable=False)
+    suggested_sku = Column(String, nullable=False)
+    estimated_price = Column(Float, nullable=True)
+    source_url = Column(Text, nullable=True)
+    specs = Column(Text, nullable=True)
+    status = Column(String, default="pending", nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+

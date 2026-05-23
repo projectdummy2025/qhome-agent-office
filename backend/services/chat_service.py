@@ -189,6 +189,39 @@ def save_order(db: Session, payload):
     db.add(new_order)
 
     for item in payload.items:
+        # PENTING: Cegah ForeignKeyViolation jika product_sku tidak ada di database (seperti OOS-CEMENT, OOS-GROUT, dll.)
+        prod_exists = db.query(DBProduct).filter(DBProduct.sku == item.product_sku).first()
+        if not prod_exists:
+            from backend.models.schema import StockRecommendation
+            rec = db.query(StockRecommendation).filter(
+                StockRecommendation.suggested_sku == item.product_sku
+            ).first()
+            
+            if rec:
+                placeholder_name = f"{rec.product_name} (Menunggu Konfirmasi)"
+            else:
+                placeholder_name = "Material Tambahan (Menunggu Konfirmasi)"
+                if "cement" in item.product_sku.lower():
+                    placeholder_name = "Semen Perekat Instan (Menunggu Konfirmasi)"
+                elif "grout" in item.product_sku.lower():
+                    placeholder_name = "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)"
+                elif "coating" in item.product_sku.lower():
+                    placeholder_name = "Cairan Coating Pelindung (Menunggu Konfirmasi)"
+                elif "primer" in item.product_sku.lower():
+                    placeholder_name = "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)"
+            
+            temp_prod = DBProduct(
+                sku=item.product_sku,
+                name=placeholder_name,
+                category="material_pendukung",
+                base_price=item.price,
+                coverage_m2=0.0,
+                desc="Produk rekomendasi otomatis hasil internet riset untuk pemesanan",
+                stock_qty=0
+            )
+            db.add(temp_prod)
+            db.flush()
+
         item_id = f"ORI-{uuid.uuid4().hex[:8].upper()}"
         new_item = DBOrderItem(
             id=item_id,

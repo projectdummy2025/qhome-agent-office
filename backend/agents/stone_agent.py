@@ -93,25 +93,41 @@ def stone_specialist(state: AgentState):
             f"Kalkulator merekomendasikan tambahan perekat khusus sebanyak {calc['bonding_agent_bags_needed']} sak heavy-duty bonding agent "
             f"dan {calc['grout_bags_needed']} sak joint filler pengisi nat batu."
         )
-        product_data = {
-            "sku": selected_product["sku"],
-            "name": selected_product["name"],
-            "price": selected_product["base_price"],
-            "coverage": selected_product["coverage_m2"],
-            "qty": f"{qty} {unit} (Est)",
-            "total": selected_product["base_price"] * qty,
-        }
+        product_data = [
+            {
+                "sku": selected_product["sku"],
+                "name": selected_product["name"],
+                "price": selected_product["base_price"],
+                "coverage": selected_product["coverage_m2"],
+                "qty": f"{qty} {unit} (Est)",
+                "total": selected_product["base_price"] * qty,
+            },
+            {
+                "sku": "OOS-CEMENT",
+                "name": "Heavy-Duty Bonding Agent (Menunggu Konfirmasi)",
+                "price": 0,
+                "qty": f"{calc['bonding_agent_bags_needed']} Sak (Est)",
+                "total": 0,
+            },
+            {
+                "sku": "OOS-GROUT",
+                "name": "Pengisi Nat Batu / Joint Filler (Menunggu Konfirmasi)",
+                "price": 0,
+                "qty": f"{calc['grout_bags_needed']} Sak (Est)",
+                "total": 0,
+            }
+        ]
     except Exception as e:
         content = (
             f"Maaf, produk Stone Veneer tidak ditemukan di katalog. Detail: {str(e)}"
         )
-        product_data = {
+        product_data = [{
             "sku": "OOS-STONE",
             "name": "Menunggu Konfirmasi",
             "price": 0,
             "qty": "0",
             "total": 0,
-        }
+        }]
 
     report = {
         "agent": "Stone Veneer Specialist",

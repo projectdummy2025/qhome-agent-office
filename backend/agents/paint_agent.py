@@ -92,23 +92,32 @@ def paint_consultant(state: AgentState):
             f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
             f"dibutuhkan {qty} pail cat utama dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar."
         )
-        product_data = {
-            "sku": selected_product["sku"],
-            "name": selected_product["name"],
-            "price": selected_product["base_price"],
-            "coverage": selected_product["coverage_m2"],
-            "qty": f"{qty} {unit} (Est)",
-            "total": selected_product["base_price"] * qty,
-        }
+        product_data = [
+            {
+                "sku": selected_product["sku"],
+                "name": selected_product["name"],
+                "price": selected_product["base_price"],
+                "coverage": selected_product["coverage_m2"],
+                "qty": f"{qty} {unit} (Est)",
+                "total": selected_product["base_price"] * qty,
+            },
+            {
+                "sku": "OOS-PRIMER",
+                "name": "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)",
+                "price": 0,
+                "qty": f"{calc['primer_pails_needed']} Pail (Est)",
+                "total": 0,
+            }
+        ]
     except Exception as e:
         content = f"Maaf, saya tidak menemukan cat interior yang spesifik sesuai permintaan. Detail {str(e)}"
-        product_data = {
+        product_data = [{
             "sku": "OOS-PAINT",
             "name": "Menunggu Konfirmasi",
             "price": 0,
             "qty": "0",
             "total": 0,
-        }
+        }]
 
     report = {"agent": "Paint Consultant", "content": content, "product": product_data}
     old_reports = [

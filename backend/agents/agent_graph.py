@@ -16,6 +16,7 @@ from backend.agents.tile_agent import tile_estimator
 from backend.agents.wood_agent import wood_specialist
 from backend.agents.paint_agent import paint_consultant
 from backend.agents.stone_agent import stone_specialist
+from backend.agents.research_agent import restock_researcher
 
 def chief_supervisor(state: AgentState):
     """Menganalisis brief, mendeteksi penghapusan/rejeksi barang, dan menentukan agen spesialis"""
@@ -183,83 +184,90 @@ def inventory_administrator(state: AgentState):
             r_copy = dict(r)
 
             if "product" in r_copy:
-                r_copy["product"] = dict(r_copy["product"])
-                prod = r_copy["product"]
-                prod_name = prod.get("name", "")
+                prods_data = r_copy["product"]
+                if not isinstance(prods_data, list):
+                    prods_data = [prods_data]
+                
+                updated_prods = []
+                for p_idx, prod_dict in enumerate(prods_data):
+                    prod = dict(prod_dict)
+                    prod_name = prod.get("name", "")
 
-                if prod_name and prod_name != "Menunggu Konfirmasi":
-                    db_product = (
-                        db.query(ProductModel)
-                        .filter(ProductModel.name.ilike(f"%{prod_name[:20]}%"))
-                        .first()
-                    )
-
-                    if db_product:
-                        qty_val = db_product.stock_qty
-                        qty_str = prod.get("qty", "10")
-                        try:
-                            qty_nums = re.findall(r"\d+", str(qty_str))
-                            qty_int = int(qty_nums[0]) if qty_nums else 10
-                        except Exception:
-                            qty_int = 10
-
-                        if qty_val >= 20 and qty_val >= qty_int:
-                            status = f"TERSEDIA — Stok {qty_val} unit di gudang mencukupi kebutuhan ({qty_int})."
-                            stock_report_lines.append(
-                                f"- {db_product.name} (SKU: {db_product.sku}): {status}"
-                            )
-                        else:
-                            if qty_val > 0:
-                                status = f"TERBATAS — Hanya tersisa {qty_val} unit (Kebutuhan: {qty_int})."
-                            else:
-                                status = f"HABIS — Stok kosong (Kebutuhan: {qty_int})."
-
-                            alt = (
-                                db.query(ProductModel)
-                                .filter(
-                                    ProductModel.category == db_product.category,
-                                    ProductModel.stock_qty >= qty_int,
-                                    ProductModel.sku != db_product.sku,
-                                )
-                                .first()
-                            )
-
-                            clean_prod_name = prod_name
-                            for pfx in ["[STOK HABIS]", "[STOK TERBATAS]", "[STOK KURANG]"]:
-                                clean_prod_name = clean_prod_name.replace(pfx, "").strip()
-
-                            if alt:
-                                status += f" Disarankan alternatif: {alt.name} (SKU: {alt.sku}, Stok: {alt.stock_qty})."
-                                prod["sku"] = db_product.sku
-                                prod["name"] = f"[STOK TERBATAS] {clean_prod_name}"
-
-                                qty_suffix = "Unit"
-                                for suff in ["Dus", "Lembar", "Pail", "m2"]:
-                                    if suff.lower() in qty_str.lower():
-                                        qty_suffix = suff
-                                        break
-
-                                alt_product = {
-                                    "sku": alt.sku,
-                                    "name": alt.name,
-                                    "price": alt.base_price,
-                                    "qty": f"{qty_int} {qty_suffix} (Substitusi)",
-                                    "total": alt.base_price * qty_int,
-                                }
-                                added_alternatives.append(alt_product)
-                            else:
-                                status += " Tidak ada produk alternatif sejenis yang mencukupi saat ini."
-                                prod["sku"] = db_product.sku
-                                prefix = "[STOK TERBATAS]" if qty_val > 0 else "[STOK HABIS]"
-                                prod["name"] = f"{prefix} {clean_prod_name}"
-
-                            stock_report_lines.append(
-                                f"- {db_product.name} (SKU: {db_product.sku}): {status}"
-                            )
-                    else:
-                        stock_report_lines.append(
-                            f"- {prod_name}: Produk ditemukan di katalog namun belum terdaftar di sistem gudang. Perlu konfirmasi manual."
+                    if prod_name and prod_name != "Menunggu Konfirmasi":
+                        db_product = (
+                            db.query(ProductModel)
+                            .filter(ProductModel.name.ilike(f"%{prod_name[:20]}%"))
+                            .first()
                         )
+
+                        if db_product:
+                            qty_val = db_product.stock_qty
+                            qty_str = prod.get("qty", "10")
+                            try:
+                                qty_nums = re.findall(r"\d+", str(qty_str))
+                                qty_int = int(qty_nums[0]) if qty_nums else 10
+                            except Exception:
+                                qty_int = 10
+
+                            if qty_val >= 20 and qty_val >= qty_int:
+                                status = f"TERSEDIA — Stok {qty_val} unit di gudang mencukupi kebutuhan ({qty_int})."
+                                stock_report_lines.append(
+                                    f"- {db_product.name} (SKU: {db_product.sku}): {status}"
+                                )
+                            else:
+                                if qty_val > 0:
+                                    status = f"TERBATAS — Hanya tersisa {qty_val} unit (Kebutuhan: {qty_int})."
+                                else:
+                                    status = f"HABIS — Stok kosong (Kebutuhan: {qty_int})."
+
+                                alt = (
+                                    db.query(ProductModel)
+                                    .filter(
+                                        ProductModel.category == db_product.category,
+                                        ProductModel.stock_qty >= qty_int,
+                                        ProductModel.sku != db_product.sku,
+                                    )
+                                    .first()
+                                )
+
+                                clean_prod_name = prod_name
+                                for pfx in ["[STOK HABIS]", "[STOK TERBATAS]", "[STOK KURANG]"]:
+                                    clean_prod_name = clean_prod_name.replace(pfx, "").strip()
+
+                                if alt:
+                                    status += f" Disarankan alternatif: {alt.name} (SKU: {alt.sku}, Stok: {alt.stock_qty})."
+                                    prod["sku"] = db_product.sku
+                                    prod["name"] = f"[STOK TERBATAS] {clean_prod_name}"
+
+                                    qty_suffix = "Unit"
+                                    for suff in ["Dus", "Lembar", "Pail", "m2", "Sak", "Bag"]:
+                                        if suff.lower() in qty_str.lower():
+                                            qty_suffix = suff
+                                            break
+
+                                    alt_product = {
+                                        "sku": alt.sku,
+                                        "name": alt.name,
+                                        "price": alt.base_price,
+                                        "qty": f"{qty_int} {qty_suffix} (Substitusi)",
+                                        "total": alt.base_price * qty_int,
+                                    }
+                                    added_alternatives.append(alt_product)
+                                else:
+                                    status += " Tidak ada produk alternatif sejenis yang mencukupi saat ini."
+                                    prod["sku"] = db_product.sku
+                                    prefix = "[STOK TERBATAS]" if qty_val > 0 else "[STOK HABIS]"
+                                    prod["name"] = f"{prefix} {clean_prod_name}"
+
+                                stock_report_lines.append(
+                                    f"- {db_product.name} (SKU: {db_product.sku}): {status}"
+                                )
+                        else:
+                            stock_report_lines.append(
+                                f"- {prod_name}: Produk ditemukan di katalog namun belum terdaftar di sistem gudang. Perlu konfirmasi manual."
+                            )
+                    updated_prods.append(prod)
+                r_copy["product"] = updated_prods
 
             new_reports.append(r_copy)
     finally:
@@ -337,7 +345,11 @@ def synthesizer(state: AgentState):
 
     for r in state.get("reports", []):
         if "product" in r:
-            products.append(r["product"])
+            prod_data = r["product"]
+            if isinstance(prod_data, list):
+                products.extend(prod_data)
+            else:
+                products.append(prod_data)
         clean_report_content = re.sub(
             r"<think>[\s\S]*?</think>", "", r["content"], flags=re.IGNORECASE
         ).strip()
@@ -397,6 +409,7 @@ workflow.add_node("stone", stone_specialist)
 workflow.add_node("paint", paint_consultant)
 workflow.add_node("researcher", market_researcher)
 workflow.add_node("inventory", inventory_administrator)
+workflow.add_node("restock_researcher", restock_researcher)
 workflow.add_node("synthesizer", synthesizer)
 
 workflow.set_entry_point("supervisor")
@@ -406,7 +419,8 @@ workflow.add_edge("wood", "stone")
 workflow.add_edge("stone", "paint")
 workflow.add_edge("paint", "researcher")
 workflow.add_edge("researcher", "inventory")
-workflow.add_edge("inventory", "synthesizer")
+workflow.add_edge("inventory", "restock_researcher")
+workflow.add_edge("restock_researcher", "synthesizer")
 workflow.add_edge("synthesizer", END)
 
 memory = MemorySaver()

@@ -101,23 +101,39 @@ def tile_estimator(state: AgentState):
             f"Kalkulator sipil merekomendasikan tambahan {calc['cement_sacks_needed']} sak semen perekat "
             f"dan {calc['grout_bags_needed']} bag semen nat pendukung."
         )
-        product_data = {
-            "sku": selected_product["sku"],
-            "name": selected_product["name"],
-            "price": selected_product["base_price"],
-            "coverage": selected_product["coverage_m2"],
-            "qty": f"{qty} {unit} (Est)",
-            "total": selected_product["base_price"] * qty,
-        }
+        product_data = [
+            {
+                "sku": selected_product["sku"],
+                "name": selected_product["name"],
+                "price": selected_product["base_price"],
+                "coverage": selected_product["coverage_m2"],
+                "qty": f"{qty} {unit} (Est)",
+                "total": selected_product["base_price"] * qty,
+            },
+            {
+                "sku": "OOS-CEMENT",
+                "name": "Semen Perekat Instan (Menunggu Konfirmasi)",
+                "price": 0,
+                "qty": f"{calc['cement_sacks_needed']} Sak (Est)",
+                "total": 0,
+            },
+            {
+                "sku": "OOS-GROUT",
+                "name": "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)",
+                "price": 0,
+                "qty": f"{calc['grout_bags_needed']} Bag (Est)",
+                "total": 0,
+            }
+        ]
     except Exception as e:
         content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"
-        product_data = {
+        product_data = [{
             "sku": "OOS-TILE",
             "name": "Menunggu Konfirmasi",
             "price": 0,
             "qty": "0",
             "total": 0,
-        }
+        }]
 
     report = {"agent": "Tile Estimator", "content": content, "product": product_data}
     old_reports = [
