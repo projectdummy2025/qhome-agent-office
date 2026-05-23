@@ -59,7 +59,6 @@ export default function AdminPortal({
   const [editPrice, setEditPrice] = useState<number>(0);
   const [editQty, setEditQty] = useState<number>(0);
   
-  // Auto-persist products to the database whenever any admin action mutates the list
   const persistToDb = async (updatedProducts: Product[]) => {
     if (!currentSessionId) return;
     try {
@@ -70,6 +69,31 @@ export default function AdminPortal({
       });
     } catch (err) {
       console.error('Auto-persist failed:', err);
+    }
+  };
+
+  const checkAndNotifyCompletion = async (currentProducts: Product[]) => {
+    if (!currentSessionId) return;
+    const remainingRestock = currentProducts.filter(p => 
+      p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0
+    );
+    
+    // Jika semua item restock telah teratasi
+    if (remainingRestock.length === 0) {
+      try {
+        await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/restock-complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ products: currentProducts })
+        });
+        
+        // Broadcast agar Order Portal user ter-refresh dan melihat pesannya
+        const channel = new BroadcastChannel('qhome_payment_channel');
+        channel.postMessage({ event: 'payment_confirmed', sessionId: currentSessionId });
+        channel.close();
+      } catch (err) {
+        console.error('Failed to notify restock completion:', err);
+      }
     }
   };
 
@@ -193,7 +217,8 @@ export default function AdminPortal({
 
         setProducts(finalProducts);
         onUpdateProducts(finalProducts);
-        persistToDb(finalProducts);
+        await persistToDb(finalProducts);
+        await checkAndNotifyCompletion(finalProducts);
 
         // Update local master stock list to reflect new database stock
         setMasterProducts(prev => prev.map(mp => 
@@ -243,7 +268,7 @@ export default function AdminPortal({
 
     setProducts(finalProducts);
     onUpdateProducts(finalProducts);
-    persistToDb(finalProducts);
+    persistToDb(finalProducts).then(() => checkAndNotifyCompletion(finalProducts));
   };
 
   // Inline table edits (Power-user feature)

@@ -648,8 +648,38 @@ def request_restock(session_id: str, payload: RestockRequestPayload, db: Session
     db.add(new_msg)
     db.commit()
     
-    # Log teknis mentah tetap dicetak silent di terminal backend
-    print(f"⚠️ [PERMINTAAN RESTOK SILENT] Sesi: {session_id} - Barang: {payload.items}")
+    # Hapus log terminal yang terlalu detail sesuai request
+    # print(f"⚠️ [PERMINTAAN RESTOK SILENT] Sesi: {session_id} - Barang: {payload.items}")
+    return {"status": "success"}
+
+class RestockCompletePayload(BaseModel):
+    products: list
+
+@router.post("/sessions/{session_id}/restock-complete")
+def restock_complete(session_id: str, payload: RestockCompletePayload, db: Session = Depends(get_db)):
+    """Mengirim pesan dari agen bahwa stok telah berhasil diperbarui oleh admin gudang."""
+    from backend.models.schema import ChatMessage as DBMessage, ChatRole
+    from datetime import datetime
+    import uuid
+
+    narrative = "Stok material telah berhasil diperbarui oleh Admin Gudang. Keranjang belanja Anda sekarang sudah siap, silakan lanjutkan proses checkout (konfirmasi pembayaran) di Order Portal."
+
+    new_msg = DBMessage(
+        id=str(uuid.uuid4()),
+        session_id=session_id,
+        role=ChatRole.system,
+        content=narrative,
+        created_at=datetime.utcnow(),
+        agent_logs=[{
+            "event": "completed",
+            "title": "Inventory Administrator",
+            "message": "Pembaruan stok selesai.",
+            "narrative": narrative,
+            "products": payload.products
+        }]
+    )
+    db.add(new_msg)
+    db.commit()
     return {"status": "success"}
 
 
