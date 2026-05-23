@@ -19,7 +19,7 @@ async def run_agent_simulation(brief: str, session_id: str, history_summary: str
     await asyncio.sleep(1.5)
     
     try:
-        from backend.agents.supervisor import app_graph
+        from backend.agents.agent_graph import app_graph
         
         config = {"configurable": {"thread_id": session_id}}
         async for output in app_graph.astream({"brief": brief, "history_summary": history_summary}, config=config, stream_mode="updates"):
@@ -115,7 +115,7 @@ async def run_agent_simulation(brief: str, session_id: str, history_summary: str
             
             # --- UPDATE SUMMARY ---
             try:
-                from backend.agents.supervisor import gemini_specialist, _llm_invoke_with_retry
+                from backend.agents.shared import gemini_specialist, _llm_invoke_with_retry
                 
                 # Kita ambil narasi terakhir yang di-generate synthesizer
                 last_narrative = ""

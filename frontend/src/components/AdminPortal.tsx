@@ -2,18 +2,16 @@ import { useState, useEffect } from 'react';
 import { 
   CheckCircle2,
   UserCog, 
-  Check,
   Edit2,
   Warehouse,
-  AlertTriangle,
-  TrendingUp,
-  ShoppingCart,
   Sparkles,
-  Plus,
-  RefreshCw,
+  ShoppingCart,
+  TrendingUp,
   AlertCircle,
-  Info
+  AlertTriangle
 } from 'lucide-react';
+import RestockPanel from './admin/RestockPanel';
+import SubstitutePanel from './admin/SubstitutePanel';
 
 interface Product {
   sku: string;
@@ -78,7 +76,6 @@ export default function AdminPortal({
       p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0
     );
     
-    // Jika semua item restock telah teratasi
     if (remainingRestock.length === 0) {
       try {
         await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/restock-complete`, {
@@ -87,7 +84,6 @@ export default function AdminPortal({
           body: JSON.stringify({ products: currentProducts })
         });
         
-        // Broadcast agar Order Portal user ter-refresh dan melihat pesannya
         const channel = new BroadcastChannel('qhome_payment_channel');
         channel.postMessage({ event: 'payment_confirmed', sessionId: currentSessionId });
         channel.close();
@@ -97,12 +93,10 @@ export default function AdminPortal({
     }
   };
 
-  // Tracks quantity additions per SKU in the restock panel
   const [addedQtys, setAddedQtys] = useState<Record<string, number>>({});
   const [restockLoading, setRestockLoading] = useState<Record<string, boolean>>({});
   const [restockSuccess, setRestockSuccess] = useState<Record<string, boolean>>({});
 
-  // Fetch master products on mount to know the exact database stock & base prices
   const fetchMasterProducts = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/projects/products");
@@ -137,14 +131,12 @@ export default function AdminPortal({
     fetchSessionProducts();
   }, [currentSessionId]);
 
-  // Sync initialProducts if they change externally
   useEffect(() => {
     if (initialProducts && initialProducts.length > 0) {
       setProducts(initialProducts);
     }
   }, [initialProducts]);
 
-  // Utility to parse quantity values and units
   const parseQtyNumber = (qtyStr: string | number): number => {
     if (typeof qtyStr === 'number') return qtyStr;
     const matches = qtyStr.match(/[\d.]+/);
@@ -162,7 +154,6 @@ export default function AdminPortal({
     return master ? master.category : '';
   };
 
-  // 1. TAMBAH STOK GUDANG ACTION (Panel A)
   const handleRestock = async (sku: string) => {
     const qtyToAdd = addedQtys[sku] || 50;
     setRestockLoading(prev => ({ ...prev, [sku]: true }));
@@ -174,13 +165,11 @@ export default function AdminPortal({
       });
       
       if (res.ok) {
-        // Successful restock in database. Now auto-replenish React state!
         const masterItem = masterProducts.find(mp => mp.sku === sku);
         const originalPrice = masterItem ? masterItem.base_price : 0;
         const originalName = masterItem ? masterItem.name : '';
         const category = masterItem ? masterItem.category : '';
 
-        // Update the products state
         const updatedProducts = products.map(p => {
           if (p.sku === sku) {
             const cleanName = p.name
@@ -189,7 +178,7 @@ export default function AdminPortal({
             
             const num = parseQtyNumber(p.qty);
             const unit = getQtyUnit(p.qty);
-            const finalPrice = originalPrice || p.price || 250000; // safety fallback
+            const finalPrice = originalPrice || p.price || 250000;
 
             return {
               ...p,
@@ -203,12 +192,10 @@ export default function AdminPortal({
           return p;
         });
 
-        // Automatically purge any alternative substitute product from the same category
         const finalProducts = updatedProducts.filter(p => {
           const isSub = p.qty.toString().includes('(Substitusi)') || p.name.includes('(Substitusi)') || p.name.includes('Substitusi');
           const itemCategory = getProductCategory(p.sku);
           
-          // Filter out if it's a substitute for the same category and has a different SKU
           if (isSub && itemCategory === category && p.sku !== sku) {
             return false;
           }
@@ -220,12 +207,10 @@ export default function AdminPortal({
         await persistToDb(finalProducts);
         await checkAndNotifyCompletion(finalProducts);
 
-        // Update local master stock list to reflect new database stock
         setMasterProducts(prev => prev.map(mp => 
           mp.sku === sku ? { ...mp, stock_qty: mp.stock_qty + qtyToAdd } : mp
         ));
 
-        // Show satisfying success animation
         setRestockSuccess(prev => ({ ...prev, [sku]: true }));
         setTimeout(() => {
           setRestockSuccess(prev => ({ ...prev, [sku]: false }));
@@ -238,7 +223,6 @@ export default function AdminPortal({
     }
   };
 
-  // 2. APPROVE SUBSTITUSI ACTION (Panel B)
   const handleApproveSubstitution = (sku: string) => {
     const category = getProductCategory(sku);
 
@@ -255,7 +239,6 @@ export default function AdminPortal({
       return p;
     });
 
-    // Remove the original OOS item of the same category
     const finalProducts = updated.filter(p => {
       const isOOS = p.name.startsWith('[STOK HABIS]') || p.name.startsWith('[STOK TERBATAS]') || p.price === 0;
       const itemCategory = getProductCategory(p.sku);
@@ -271,7 +254,6 @@ export default function AdminPortal({
     persistToDb(finalProducts).then(() => checkAndNotifyCompletion(finalProducts));
   };
 
-  // Inline table edits (Power-user feature)
   const handleStartEdit = (p: Product) => {
     setEditingSku(p.sku);
     setEditPrice(p.price);
@@ -297,9 +279,6 @@ export default function AdminPortal({
     setEditingSku(null);
   };
 
-
-
-  // Segregation of products into business categories
   const restockProducts = products.filter(p => 
     p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0
   );
@@ -312,8 +291,6 @@ export default function AdminPortal({
 
   return (
     <div className="flex flex-col min-h-screen bg-canvas font-sans text-ink">
-
-      {/* Corporate Minimalist Header */}
       <header className="w-full border-b border-hairline bg-canvas sticky top-0 z-50">
         <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -337,10 +314,7 @@ export default function AdminPortal({
         </div>
       </header>
 
-      {/* Main Container */}
       <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-8 space-y-8 animate-scale-in">
-        
-        {/* Project Header Info */}
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-hairline pb-6 gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
@@ -360,11 +334,8 @@ export default function AdminPortal({
               Logistik portal untuk membagi alur kerja Restock Permintaan Penambahan Barang dan Konfirmasi Ketersediaan Substitusi secara terpisah sebelum checkout.
             </p>
           </div>
-
-
         </div>
 
-        {/* Dynamic Client Brief Quote */}
         {brief && (
           <div className="bg-surface-soft border border-hairline rounded-2xl p-4.5 flex gap-3.5 items-start">
             <div className="w-9 h-9 rounded-xl bg-accent-soft border border-accent-border/40 text-accent flex items-center justify-center flex-shrink-0">
@@ -377,7 +348,6 @@ export default function AdminPortal({
           </div>
         )}
 
-        {/* Real-time KPI Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white border border-hairline rounded-2xl p-5 flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
@@ -424,237 +394,28 @@ export default function AdminPortal({
           </div>
         </div>
 
-        {/* DUAL BUSINESS LOGICS PANELS SECTION */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <RestockPanel
+            restockProducts={restockProducts}
+            masterProducts={masterProducts}
+            addedQtys={addedQtys}
+            setAddedQtys={setAddedQtys}
+            restockSuccess={restockSuccess}
+            restockLoading={restockLoading}
+            handleRestock={handleRestock}
+            getQtyUnit={getQtyUnit}
+            parseQtyNumber={parseQtyNumber}
+          />
           
-          {/* PANEL A: PERMINTAAN PENAMBAHAN STOK */}
-          <div className="bg-white border border-hairline rounded-3xl p-6.5 flex flex-col space-y-5">
-            <div className="border-b border-hairline pb-4 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4.5 h-4.5 text-accent animate-breathe" />
-                  <h2 className="text-[16px] font-extrabold text-ink tracking-tight">
-                    1. Permintaan Penambahan Stok
-                  </h2>
-                </div>
-                <p className="text-[11.5px] text-muted mt-1 leading-relaxed">
-                  Material proyek yang sedang kritis atau habis di gudang utama Sleman. Lakukan restock kuota logistik master.
-                </p>
-              </div>
-              <span className="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-accent/10 text-accent">
-                {restockProducts.length} Menunggu
-              </span>
-            </div>
-
-            <div className="flex-1 space-y-4 max-h-[480px] overflow-y-auto pr-1 scrollbar-warm">
-              {restockProducts.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-emerald-50/30 border border-dashed border-emerald-200/80 rounded-2xl">
-                  <div className="w-11 h-11 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center mb-3">
-                    <Check className="w-5.5 h-5.5" />
-                  </div>
-                  <span className="text-[13.5px] font-extrabold text-emerald-950">Aman Terkendali</span>
-                  <p className="text-[11.5px] text-emerald-800 mt-1 max-w-[280px]">
-                    Semua stok gudang untuk kebutuhan material sesi ini telah tercukupi (&gt; 20 unit).
-                  </p>
-                </div>
-              ) : (
-                restockProducts.map(p => {
-                  const masterItem = masterProducts.find(mp => mp.sku === p.sku);
-                  const currentStock = masterItem ? masterItem.stock_qty : 0;
-                  const reqQty = parseQtyNumber(p.qty);
-                  const shortfall = Math.max(0, reqQty - currentStock);
-                  const isCritical = currentStock === 0;
-                  const inputVal = addedQtys[p.sku] || (shortfall > 0 ? shortfall : 50);
-
-                  return (
-                    <div 
-                      key={p.sku} 
-                      className={`border rounded-2xl p-4.5 space-y-4.5 transition-all duration-300 ${
-                        restockSuccess[p.sku] 
-                          ? 'border-emerald-500 bg-emerald-50/10' 
-                          : 'border-hairline bg-surface-soft/40 hover:bg-white hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <span className="text-[13px] font-extrabold text-ink block leading-snug">
-                            {p.name.replace('[STOK HABIS] ', '').replace('[STOK TERBATAS] ', '')}
-                          </span>
-                          <span className="text-[10px] text-muted-light font-medium tracking-wider block">
-                            SKU: {p.sku} · Kategori: {masterItem?.category || 'Bahan Bangunan'}
-                          </span>
-                        </div>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider uppercase flex-shrink-0 ${
-                          isCritical ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                        }`}>
-                          {isCritical ? 'Habis (0)' : `Kritis (${currentStock})`}
-                        </span>
-                      </div>
-
-                      {/* Stock Info and Replenish Input row */}
-                      <div className="flex flex-wrap items-center justify-between gap-4 pt-3.5 border-t border-hairline/60">
-                        <div className="space-y-0.5">
-                          <span className="text-[9.5px] text-muted-light uppercase tracking-wider block">Stok Gudang Real</span>
-                          <span className="text-[12.5px] font-bold text-ink flex items-center gap-1">
-                            <Warehouse className="w-3.5 h-3.5 text-muted-light" />
-                            {currentStock} {getQtyUnit(p.qty)}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-0.5">
-                          <span className="text-[9.5px] text-muted-light uppercase tracking-wider block">Kebutuhan RAB</span>
-                          <span className="text-[12.5px] font-bold text-ink">
-                            {reqQty} {getQtyUnit(p.qty)}
-                          </span>
-                        </div>
-
-                        <div className="space-y-0.5">
-                          <span className="text-[9.5px] text-red-500 uppercase tracking-wider block">Selisih (Kurang)</span>
-                          <span className="text-[12.5px] font-bold text-red-600">
-                            {shortfall} {getQtyUnit(p.qty)}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center bg-white border border-hairline rounded-lg px-2 py-1 max-w-[120px]">
-                            <input 
-                              type="number" 
-                              min="1"
-                              value={inputVal}
-                              onChange={(e) => setAddedQtys(prev => ({ ...prev, [p.sku]: parseInt(e.target.value, 10) || 1 }))}
-                              className="w-full bg-transparent border-none outline-none text-[12.5px] text-center font-bold text-ink focus:ring-0 p-0"
-                            />
-                            <span className="text-[10px] text-muted-light font-bold ml-1">{getQtyUnit(p.qty)}</span>
-                          </div>
-
-                          <button 
-                            onClick={() => handleRestock(p.sku)}
-                            disabled={restockLoading[p.sku] || restockSuccess[p.sku]}
-                            className={`px-4.5 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-                              restockSuccess[p.sku]
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-ink text-white hover:bg-ink-2'
-                            } disabled:opacity-50`}
-                          >
-                            {restockLoading[p.sku] ? (
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            ) : restockSuccess[p.sku] ? (
-                              <Check className="w-3.5 h-3.5" />
-                            ) : (
-                              <Plus className="w-3.5 h-3.5" />
-                            )}
-                            {restockSuccess[p.sku] ? 'OK!' : 'Restock'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* PANEL B: KONFIRMASI KETERSEDIAAN & SUBSTITUSI */}
-          <div className="bg-white border border-hairline rounded-3xl p-6.5 flex flex-col space-y-5">
-            <div className="border-b border-hairline pb-4 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4.5 h-4.5 text-amber-500 animate-pulse" />
-                  <h2 className="text-[16px] font-extrabold text-ink tracking-tight">
-                    2. Konfirmasi &amp; Otorisasi Substitusi
-                  </h2>
-                </div>
-                <p className="text-[11.5px] text-muted mt-1 leading-relaxed">
-                  Usulan alternatif produk pengganti berspesifikasi setara yang memiliki ketersediaan melimpah. Setujui untuk dialihkan.
-                </p>
-              </div>
-              <span className="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-amber-50 text-amber-700">
-                {substituteProducts.length} Usulan
-              </span>
-            </div>
-
-            <div className="flex-1 space-y-4 max-h-[480px] overflow-y-auto pr-1 scrollbar-warm">
-              {substituteProducts.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-neutral-50 border border-dashed border-hairline rounded-2xl">
-                  <div className="w-11 h-11 rounded-full bg-slate-100 text-muted flex items-center justify-center mb-3">
-                    <CheckCircle2 className="w-5.5 h-5.5" />
-                  </div>
-                  <span className="text-[13.5px] font-extrabold text-ink">Tidak Ada Substitusi</span>
-                  <p className="text-[11.5px] text-muted mt-1 max-w-[280px]">
-                    Belum ada item alternatif substitusi yang disarankan oleh sistem untuk sesi ini.
-                  </p>
-                </div>
-              ) : (
-                substituteProducts.map(p => {
-                  const masterItem = masterProducts.find(mp => mp.sku === p.sku);
-                  const isApproved = p.name.includes("Disetujui") || p.status === 'ready';
-
-                  return (
-                    <div 
-                      key={p.sku} 
-                      className={`border rounded-2xl p-4.5 space-y-4 transition-all duration-300 ${
-                        isApproved
-                          ? 'border-emerald-500 bg-emerald-50/10'
-                          : 'border-amber-200 bg-amber-50/10 hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <span className="text-[13px] font-extrabold text-ink block leading-snug">
-                            {p.name.replace(' (Substitusi Disetujui)', '')}
-                          </span>
-                          <span className="text-[10px] text-muted-light font-medium tracking-wider block">
-                            SKU: {p.sku} · Kategori: {masterItem?.category || 'Bahan Bangunan'}
-                          </span>
-                        </div>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider uppercase flex-shrink-0 ${
-                          isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {isApproved ? 'Disetujui' : 'Alternatif'}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2 py-3 border-t border-b border-hairline/60 text-[11.5px]">
-                        <div>
-                          <span className="text-[9px] text-muted-light uppercase tracking-wider block">Harga Satuan</span>
-                          <span className="font-bold text-ink">Rp {p.price.toLocaleString('id-ID')}</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] text-muted-light uppercase tracking-wider block">Estimasi Qty</span>
-                          <span className="font-bold text-ink">{parseQtyNumber(p.qty)} {getQtyUnit(p.qty)}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[9px] text-muted-light uppercase tracking-wider block">Total Harga</span>
-                          <span className="font-bold text-accent">Rp {p.total.toLocaleString('id-ID')}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10.5px] text-muted flex items-center gap-1 font-medium">
-                          <Info className="w-3.5 h-3.5 text-muted-light" />
-                          Spesifikasi setara, stok siap kirim.
-                        </span>
-                        
-                        {!isApproved && (
-                          <button 
-                            onClick={() => handleApproveSubstitution(p.sku)}
-                            className="px-4.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            Setujui Substitusi
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
+          <SubstitutePanel
+            substituteProducts={substituteProducts}
+            masterProducts={masterProducts}
+            handleApproveSubstitution={handleApproveSubstitution}
+            getQtyUnit={getQtyUnit}
+            parseQtyNumber={parseQtyNumber}
+          />
         </div>
 
-        {/* SECTION 3: CONSOLIDATED FINAL RAB SHOPPING CART */}
         <div className="bg-white border border-hairline rounded-3xl p-6.5 space-y-5">
           <div className="border-b border-hairline pb-4 flex items-center justify-between flex-wrap gap-2">
             <div>
@@ -699,7 +460,6 @@ export default function AdminPortal({
                             : 'hover:bg-surface-soft/40'
                       }`}
                     >
-                      {/* Name column */}
                       <td className="py-4.5">
                         <div className="flex flex-col space-y-1">
                           <span className="text-[13px] font-extrabold text-ink leading-snug">
@@ -723,7 +483,6 @@ export default function AdminPortal({
                         </div>
                       </td>
 
-                      {/* Price column */}
                       <td className="py-4.5 text-center px-4">
                         {isEditing ? (
                           <div className="flex items-center justify-center bg-white border border-hairline rounded-lg px-2 py-1 max-w-[120px] mx-auto">
@@ -742,7 +501,6 @@ export default function AdminPortal({
                         )}
                       </td>
 
-                      {/* Quantity column */}
                       <td className="py-4.5 text-center px-4">
                         {isEditing ? (
                           <div className="flex items-center justify-center bg-white border border-hairline rounded-lg px-2 py-1 max-w-[90px] mx-auto">
@@ -760,12 +518,10 @@ export default function AdminPortal({
                         )}
                       </td>
 
-                      {/* Total column */}
                       <td className="py-4.5 text-right font-black text-[13px] text-ink">
                         Rp {(p.price * numQty).toLocaleString('id-ID')}
                       </td>
 
-                      {/* Actions column */}
                       <td className="py-4.5 text-center px-4">
                         <div className="flex items-center justify-center gap-1.5">
                           {isEditing ? (
@@ -794,29 +550,17 @@ export default function AdminPortal({
             </table>
           </div>
 
-          {/* Table Footer Grand Total Row */}
           <div className="flex flex-col sm:flex-row items-center justify-between border-t-2 border-hairline pt-5 gap-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-600" />
-              <span className="text-[12.5px] font-semibold text-muted">Akurasi Rencana Anggaran Biaya Terkurasi</span>
+              <span className="text-[11.5px] font-bold text-ink">Analisis Penyesuaian Harga Diskon Grosir: <span className="text-emerald-600">Optimal</span></span>
             </div>
-            <div className="flex items-baseline gap-2.5 text-right">
-              <span className="text-[12.5px] font-bold text-muted">Grand Total RAB:</span>
-              <span className="text-[22px] font-black text-accent tracking-tight">
-                Rp {finalRAB.toLocaleString('id-ID')}
-              </span>
+            <div className="text-right">
+              <span className="text-[10px] text-muted-light uppercase tracking-widest font-extrabold block mb-0.5">Grand Total Material (Draft)</span>
+              <span className="text-[20px] font-black text-ink">Rp {finalRAB.toLocaleString('id-ID')}</span>
             </div>
           </div>
         </div>
-
-        {/* Footer info */}
-        <footer className="text-[11px] text-muted-light pt-8 border-t border-hairline/60 flex items-center justify-between flex-wrap gap-4">
-          <span>QHomeMart Digital Office Multi-Agent B2B Platform &copy; 2026</span>
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Integrasi Sinkronisasi Database Aktif
-          </span>
-        </footer>
 
       </div>
     </div>

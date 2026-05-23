@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.core.database import init_db
-from backend.api.routes import chat
+from backend.api.routes import chat_routes
 
 # Inisialisasi Database saat startup
 init_db()
@@ -18,4 +18,4 @@ app.add_middleware(
 )
 
 # Registrasi Router (Modular Architecture)
-app.include_router(chat.router)
+app.include_router(chat_routes.router)
