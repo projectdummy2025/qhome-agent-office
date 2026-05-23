@@ -219,13 +219,7 @@ def get_session_messages(session_id: str, db: Session = Depends(get_db)):
 
     result = []
     for msg in messages:
-        # Konversi logs jika bertipe string (misal representasi SQLite JSON)
-        logs = msg.agent_logs
-        if isinstance(logs, str):
-            try:
-                logs = json.loads(logs)
-            except:
-                pass
+        logs = msg.agent_logs or []
 
         # Status selesai jika rolenya system
         status = "completed" if msg.role == ChatRole.system else None
@@ -289,12 +283,7 @@ def generate_pdf(session_id: str, db: Session = Depends(get_db)):
             brief = msg.content or ""
 
         if msg.role == ChatRole.system and msg.agent_logs:
-            logs = msg.agent_logs
-            if isinstance(logs, str):
-                try:
-                    logs = json.loads(logs)
-                except Exception:
-                    logs = []
+            logs = msg.agent_logs or []
             completed_log = next(
                 (
                     l
@@ -586,6 +575,7 @@ def update_session_products(
 ):
     """Penyelamatan: Menyimpan daftar produk yang dimodifikasi admin kembali ke database"""
     from backend.models.schema import ChatMessage as DBMessage, ChatRole
+    from sqlalchemy.orm.attributes import flag_modified
 
     msg = (
         db.query(DBMessage)
@@ -597,22 +587,22 @@ def update_session_products(
     if not msg:
         return {"error": "Pesan system tidak ditemukan untuk sesi ini"}, 404
 
-    logs = msg.agent_logs
-    if isinstance(logs, str):
-        try:
-            logs = json.loads(logs)
-        except Exception:
-            logs = []
+    logs = msg.agent_logs or []
 
     updated = False
+    new_logs = []
     for log in logs:
-        if isinstance(log, dict) and log.get("event") == "completed":
-            log["products"] = payload.products
-            updated = True
-            break
+        if isinstance(log, dict):
+            new_log = dict(log)
+            if new_log.get("event") == "completed":
+                new_log["products"] = payload.products
+                updated = True
+            new_logs.append(new_log)
+        else:
+            new_logs.append(log)
 
     if not updated:
-        logs.append(
+        new_logs.append(
             {
                 "event": "completed",
                 "products": payload.products,
@@ -620,9 +610,47 @@ def update_session_products(
             }
         )
 
-    msg.agent_logs = logs
+    msg.agent_logs = new_logs
+    flag_modified(msg, "agent_logs")
     db.commit()
     return {"status": "success", "products": payload.products}
+
+
+class RestockRequestPayload(BaseModel):
+    items: list
+    products: list
+
+
+@router.post("/sessions/{session_id}/request-restock")
+def request_restock(session_id: str, payload: RestockRequestPayload, db: Session = Depends(get_db)):
+    """Menyuntikkan pesan status yang rapi untuk klien ke sesi chat, sementara data mentah disalurkan langsung ke database/Admin Portal."""
+    from backend.models.schema import ChatMessage as DBMessage, ChatRole
+    from datetime import datetime
+    import uuid
+
+    # Laporan ramah klien (Customer-facing status)
+    narrative = "Persetujuan sudah diterima, harap menunggu pesan."
+
+    new_msg = DBMessage(
+        id=str(uuid.uuid4()),
+        session_id=session_id,
+        role=ChatRole.system,
+        content=narrative,
+        created_at=datetime.utcnow(),
+        agent_logs=[{
+            "event": "completed",
+            "title": "Inventory Administrator",
+            "message": "Persetujuan draf diterima. Menunggu pembaruan stok admin.",
+            "narrative": narrative,
+            "products": payload.products
+        }]
+    )
+    db.add(new_msg)
+    db.commit()
+    
+    # Log teknis mentah tetap dicetak silent di terminal backend
+    print(f"⚠️ [PERMINTAAN RESTOK SILENT] Sesi: {session_id} - Barang: {payload.items}")
+    return {"status": "success"}
 
 
 class ConfirmPaymentPayload(BaseModel):
@@ -685,7 +713,7 @@ def confirm_payment(order_id: str, payload: ConfirmPaymentPayload, db: Session =
         session_id=payload.session_id,
         role=ChatRole.system,
         content=agent_narrative,
-        agent_logs=_json.dumps(system_logs),
+        agent_logs=system_logs,
         created_at=datetime.utcnow(),
     )
     db.add(system_msg)

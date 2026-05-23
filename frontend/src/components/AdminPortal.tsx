@@ -91,13 +91,33 @@ export default function AdminPortal({
     }
   };
 
+  const fetchSessionProducts = async () => {
+    if (!currentSessionId) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/messages`);
+      if (res.ok) {
+        const messages = await res.json();
+        const systemMsgsWithProducts = messages.filter((m: any) => m.role === 'system' && m.products && m.products.length > 0);
+        const freshProducts = systemMsgsWithProducts.length > 0 ? systemMsgsWithProducts[systemMsgsWithProducts.length - 1].products : [];
+        if (freshProducts.length > 0) {
+          setProducts(freshProducts);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching session products in AdminPortal:", err);
+    }
+  };
+
   useEffect(() => {
     fetchMasterProducts();
-  }, []);
+    fetchSessionProducts();
+  }, [currentSessionId]);
 
   // Sync initialProducts if they change externally
   useEffect(() => {
-    setProducts(initialProducts);
+    if (initialProducts && initialProducts.length > 0) {
+      setProducts(initialProducts);
+    }
   }, [initialProducts]);
 
   // Utility to parse quantity values and units

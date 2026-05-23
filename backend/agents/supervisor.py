@@ -98,59 +98,101 @@ def _llm_invoke_with_retry(llm, prompt: str, max_retries: int = 3):
 
 
 def chief_supervisor(state: AgentState):
-    """Menganalisis brief dan menghire agen"""
+    """Menganalisis brief, mendeteksi penghapusan/rejeksi barang, dan menentukan agen spesialis"""
     brief = state.get("brief", "").strip()
     if not brief:
         return {"hired_agents": []}
         
     reports = state.get("reports", [])
-
     history_summary = state.get("history_summary", "")
 
-    # Deteksi jika ini adalah revisi (ada report sebelumnya)
-    if reports:
-        existing_materials = []
-        for r in reports:
-            if "product" in r:
-                p = r["product"]
-                existing_materials.append(
-                    f"- {r['agent']}: {p.get('name')} (Qty: {p.get('qty')}, Total: Rp {p.get('total', 0):,})"
-                )
+    # Deteksi material/spesialis yang ada di report saat ini
+    existing_materials = []
+    for r in reports:
+        if "product" in r:
+            p = r["product"]
+            existing_materials.append(
+                f"- {r['agent']}: {p.get('name')} (Sku: {p.get('sku')}, Qty: {p.get('qty')}, Total: Rp {p.get('total', 0):,})"
+            )
 
-        materials_summary = "\n".join(existing_materials)
-        prompt = (
-            f"Klien mengajukan instruksi perubahan/revisi: '{brief}'.\n\n"
-            f"Konteks Sesi Sebelumnya:\n{history_summary if history_summary else 'Tidak ada.'}\n\n"
-            f"Rencana belanja saat ini:\n{materials_summary}\n\n"
-            "Analisislah instruksi baru ini. Tentukan agen spesialis mana saja yang perlu dipanggil kembali "
-            "untuk merevisi rancangan di atas (tile, wood, stone, paint, researcher).\n"
-            "Penting: Hanya pilih agen yang terpengaruh langsung oleh revisi klien. Jangan pilih agen yang tidak berubah.\n"
-            "Jawab dengan format list python, contoh: ['tile']"
-        )
-    else:
-        prompt = (
-            f"Konteks Sesi Sebelumnya:\n{history_summary if history_summary else 'Percakapan baru.'}\n\n"
-            f"Berdasarkan brief terbaru klien ini: '{brief}', agen apa saja yang dibutuhkan? "
-            "(Pilih dari: tile, wood, stone, paint, researcher). Jawab dengan format list python, contoh: ['tile', 'wood']."
-        )
+    materials_summary = "\n".join(existing_materials) if existing_materials else "Tidak ada."
+
+    prompt = (
+        f"Klien mengajukan instruksi terbaru: '{brief}'.\n\n"
+        f"Konteks Sesi Sebelumnya:\n{history_summary if history_summary else 'Tidak ada.'}\n\n"
+        f"Rencana belanja saat ini:\n{materials_summary}\n\n"
+        "Tugas Anda adalah menganalisis instruksi terbaru klien tersebut dan menentukan:\n"
+        "1. Apakah klien ingin menghapus, membatalkan, menolak, atau tidak ingin menyertakan jenis material tertentu dari rencana belanja saat ini? "
+        "(Misalnya: 'jangan pakai cat', 'batalkan ubin', 'hapus panel kayu', 'cat dicancel saja', 'saya tidak mau ubin/granit').\n"
+        "Jika YA, masukkan nama agent spesialis yang menangani material tersebut ke dalam list 'rejected_agents'. "
+        "Pilihan nama agent: 'tile' (ubin/lantai/semen/nat), 'wood' (kayu/panel/wpc), 'stone' (batu/batu alam), 'paint' (cat/jotaplast).\n\n"
+        "2. Agen spesialis mana saja yang perlu dipanggil (hired) untuk memproses, menghitung, atau merevisi kebutuhan material sesuai instruksi klien? "
+        "Pilihan nama agent: 'tile', 'wood', 'stone', 'paint', 'researcher'.\n\n"
+        "Format output harus HANYA berupa JSON valid dengan skema berikut tanpa backticks atau teks tambahan:\n"
+        "{\n"
+        '  "rejected_agents": ["nama_agent_yang_dihapus"],\n'
+        '  "hired_agents": ["nama_agent_yang_dipanggil"]\n'
+        "}"
+    )
 
     response = _llm_invoke_with_retry(supervisor_llm, prompt)
-
-    # Simple extraction for MVP
+    
+    import json
+    import re
+    
+    rejected = []
     hired = []
-    text = str(response.content).lower()
-    if "tile" in text:
-        hired.append("tile")
-    if "wood" in text:
-        hired.append("wood")
-    if "stone" in text:
-        hired.append("stone")
-    if "paint" in text:
-        hired.append("paint")
-    if "researcher" in text:
-        hired.append("researcher")
+    
+    try:
+        match = re.search(r"\{.*\}", response.content, re.DOTALL)
+        if match:
+            res_json = json.loads(match.group(0))
+            rejected = res_json.get("rejected_agents", [])
+            hired = res_json.get("hired_agents", [])
+    except Exception:
+        # Fallback manual berbasis teks reguler
+        text = str(response.content).lower()
+        if "tile" in text: hired.append("tile")
+        if "wood" in text: hired.append("wood")
+        if "stone" in text: hired.append("stone")
+        if "paint" in text: hired.append("paint")
+        if "researcher" in text: hired.append("researcher")
 
-    return {"hired_agents": hired}
+    # Fallback kata kunci bahasa Indonesia
+    brief_lower = brief.lower()
+    negative_words = ["jangan", "batal", "hapus", "cancel", "tidak usah", "tidak mau", "tanpa", "tolak", "remove", "delete"]
+    if any(neg in brief_lower for neg in negative_words):
+        if "cat" in brief_lower or "paint" in brief_lower:
+            rejected.append("paint")
+        if "ubin" in brief_lower or "tile" in brief_lower or "semen" in brief_lower or "nat" in brief_lower or "lantai" in brief_lower or "granit" in brief_lower:
+            rejected.append("tile")
+        if "kayu" in brief_lower or "wood" in brief_lower or "panel" in brief_lower or "fluted" in brief_lower or "wpc" in brief_lower:
+            rejected.append("wood")
+        if "batu" in brief_lower or "stone" in brief_lower or "veneer" in brief_lower:
+            rejected.append("stone")
+
+    # Bersihkan rejected list agar unik
+    rejected = list(set([r.lower() for r in rejected]))
+    
+    # Lakukan filtering pada reports jika ada rejected agents
+    updated_reports = list(reports)
+    if rejected:
+        filtered_reports = []
+        for r in updated_reports:
+            agent_name = r.get("agent", "").lower()
+            is_rejected = False
+            for rej in rejected:
+                if rej in agent_name:
+                    is_rejected = True
+                    break
+            if not is_rejected:
+                filtered_reports.append(r)
+        updated_reports = filtered_reports
+
+    # Pastikan agen yang di-reject tidak di-hire
+    hired = [h for h in hired if h not in rejected]
+
+    return {"hired_agents": hired, "reports": updated_reports}
 
 
 from backend.core.database import get_chroma_collection

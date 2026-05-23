@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Float, Integer, Enum, Text, ForeignKey, JSON, DateTime
+from sqlalchemy import Column, String, Float, Integer, Enum, Text, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
 import enum
@@ -33,8 +34,8 @@ class ChatMessage(Base):
     # Isi chat (narasi akhir / input user)
     content = Column(Text, nullable=True)
     
-    # Log pemikiran agen (disimpan sebagai JSONB di Postgres, TEXT di SQLite)
-    agent_logs = Column(JSON, nullable=True) 
+    # Log pemikiran agen (disimpan sebagai JSONB di Postgres)
+    agent_logs = Column(JSONB, nullable=True) 
     
     created_at = Column(DateTime, default=datetime.utcnow)
     

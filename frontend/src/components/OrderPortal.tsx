@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Calendar, 
   Package, 
@@ -22,6 +22,7 @@ interface Product {
   total: number;
   status?: string;
   category?: string;
+  approved?: boolean;
 }
 
 interface OrderPortalProps {
@@ -92,6 +93,40 @@ export default function OrderPortal({
   const [isConfirming, setIsConfirming] = useState(false);
   const invoiceRef = useRef<HTMLDivElement | null>(null);
 
+  // Draf Proposal & Keranjang B2B Aktif States
+  const [localProducts, setLocalProducts] = useState<Product[]>([]);
+  const [isProposalApproved, setIsProposalApproved] = useState(false);
+
+  useEffect(() => {
+    // Inisialisasi produk lokal dengan properti approved true secara bawaan
+    setLocalProducts(products.map(p => ({ ...p, approved: true })));
+  }, [products]);
+
+  useEffect(() => {
+    // Cek apakah sudah pernah disetujui sebelumnya di backend
+    if (currentSessionId) {
+      fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/messages`)
+        .then(res => res.json())
+        .then(data => {
+          const hasRestock = data.some((m: any) => m.content && m.content.includes("Persetujuan sudah diterima"));
+          if (hasRestock) {
+            setIsProposalApproved(true);
+          } else {
+            setIsProposalApproved(false);
+          }
+        })
+        .catch(err => console.error(err));
+    } else {
+      setIsProposalApproved(false);
+    }
+  }, [currentSessionId]);
+
+  const approvedItems = localProducts.filter(p => p.approved !== false);
+
+  const toggleProductApproval = (sku: string) => {
+    setLocalProducts(prev => prev.map(p => p.sku === sku ? { ...p, approved: !p.approved } : p));
+  };
+
   // Dipanggil saat user klik "Konfirmasi Sudah Bayar".
   // Mengirim sinyal ke backend → agent menulis balasan di chat → portal ditutup otomatis.
   const handleConfirmPayment = async () => {
@@ -109,7 +144,7 @@ export default function OrderPortal({
           order_id: orderId,
           client_name: currentUser?.name || 'Klien B2B',
           total_invoice: totalInvoice,
-          items_count: products.length,
+          items_count: approvedItems.length,
         }),
       });
       setIsPaymentConfirmed(true);
@@ -140,8 +175,8 @@ export default function OrderPortal({
 
   // Rumus dynamic logistik berdasarkan jarak persona (e.g. Sleman = 8 Km, Bantul = 15 Km, Kulon Progo = 35 Km)
   const shippingCost = activeTruck.basePrice + (distance * activeTruck.kmRate);
-  const materialsTotal = products.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
-  const adminFee = products.length > 0 ? 50000 : 0; // B2B Handling & Dispatch Fee
+  const materialsTotal = approvedItems.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+  const adminFee = approvedItems.length > 0 ? 50000 : 0; // B2B Handling & Dispatch Fee
   const ppn = Math.round((materialsTotal + shippingCost + adminFee) * 0.11);
   const totalInvoice = materialsTotal + shippingCost + adminFee + ppn;
 
@@ -171,7 +206,7 @@ export default function OrderPortal({
       delivery_date: deliveryDate,
       distance_km: distance,
       notes: notes || '',
-      items: products.map(p => ({
+      items: approvedItems.map(p => ({
         product_sku: p.sku,
         qty: parseFloat(p.qty as any) || 0,
         price: p.price,
@@ -215,8 +250,51 @@ export default function OrderPortal({
     window.open(`http://localhost:8000/api/projects/${currentSessionId}/generate-pdf`, '_blank');
   };
 
+  const sendRestockRequestToAdmin = async (items: Product[], approvedItems: Product[]) => {
+    if (!currentSessionId) return;
+    try {
+      await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/request-restock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            sku: item.sku,
+            name: item.name,
+            qty: item.qty,
+            price: item.price,
+            stock_qty: 0,
+          })),
+          products: approvedItems
+        }),
+      });
+      // Broadcast update ke chat utama menggunakan channel yang sama
+      try {
+        const channel = new BroadcastChannel('qhome_payment_channel');
+        channel.postMessage({ event: 'payment_confirmed', sessionId: currentSessionId });
+        channel.close();
+      } catch (broadcastErr) {
+        console.error('Failed to broadcast restock signal:', broadcastErr);
+      }
+    } catch (e) {
+      console.error("Failed to send restock request to admin:", e);
+    }
+  };
+
+  const syncApprovedItemsToSession = async (items: Product[]) => {
+    if (!currentSessionId) return;
+    try {
+      await fetch(`http://localhost:8000/api/projects/sessions/${currentSessionId}/products`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: items })
+      });
+    } catch (e) {
+      console.error("Failed to sync approved products to session:", e);
+    }
+  };
+
   // Mencari produk yang masih memiliki status stok habis/terbatas atau harga 0
-  const warningItem = products.find(p => p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0);
+  const warningItem = approvedItems.find(p => p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0);
 
   return (
     <div className="flex flex-col min-h-screen bg-canvas font-sans text-ink">
@@ -251,7 +329,7 @@ export default function OrderPortal({
       {/* Main Content Container */}
       <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-10">
 
-        {products.length === 0 ? (
+        {localProducts.length === 0 ? (
           /* Empty State */
           <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-scale-in">
             <div className="w-16 h-16 rounded-full bg-surface-soft border border-hairline flex items-center justify-center text-muted-light mb-4">
@@ -343,6 +421,32 @@ export default function OrderPortal({
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start animate-scale-in">
                 {/* Left side: List of curated products */}
                 <div className="lg:col-span-8 space-y-6">
+                  
+                  {/* Status Banner */}
+                  {!isProposalApproved ? (
+                    <div className="bg-amber-50/80 border border-amber-200/60 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-extrabold text-sm">!</div>
+                        <div>
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 block">STATUS: DRAFT PROPOSAL</span>
+                          <span className="text-[12px] text-amber-900 font-medium">Tinjau rencana material di bawah. Hilangkan centang untuk menolak/mengeluarkan item dari keranjang aktif.</span>
+                        </div>
+                      </div>
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-widest text-amber-700 bg-amber-100/50 px-3 py-1 rounded-full border border-amber-200 flex-shrink-0 ml-4">Menunggu Persetujuan</span>
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-extrabold text-sm">✓</div>
+                        <div>
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 block">STATUS: KERANJANG B2B AKTIF</span>
+                          <span className="text-[12px] text-emerald-900 font-medium">Rencana material telah disetujui. Anda dapat melanjutkan ke konfigurasi logistik kargo sekarang.</span>
+                        </div>
+                      </div>
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-100/50 px-3 py-1 rounded-full border border-emerald-200 flex-shrink-0 ml-4">Telah Disetujui</span>
+                    </div>
+                  )}
+
                   <div className="border-b border-hairline pb-4 mb-2">
                     <h2 className="text-[20px] font-light text-ink tracking-tight">
                       Daftar Material <span className="font-extrabold text-ink">Rekomendasi RAG</span>
@@ -386,44 +490,75 @@ export default function OrderPortal({
 
                   {/* Material Cards */}
                   <div className="space-y-4">
-                    {products.map((prod) => (
-                      <div 
-                        key={prod.sku} 
-                        className="bg-white border border-hairline/80 rounded-2xl p-4.5 flex gap-4.5 items-center hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] transition-all duration-300"
-                      >
-                        <img 
-                          src={getProductImage(prod.name)} 
-                          alt={prod.name} 
-                          className="w-16 h-16 rounded-xl object-cover border border-hairline/60 flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[13.5px] font-extrabold text-ink truncate block">{prod.name}</span>
-                            {prod.category && (
-                              <span className="text-[9px] font-bold uppercase tracking-wider text-muted-light border border-hairline/60 px-2 py-0.5 rounded bg-neutral-50/50">
-                                {prod.category}
+                    {(isProposalApproved ? approvedItems : localProducts).map((prod) => {
+                      const isApproved = prod.approved !== false;
+                      return (
+                        <div 
+                          key={prod.sku} 
+                          className={`bg-white border border-hairline/80 rounded-2xl p-4.5 flex gap-4.5 items-center hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] transition-all duration-300 ${
+                            !isApproved ? 'opacity-55 bg-neutral-50/50' : ''
+                          }`}
+                        >
+                          {!isProposalApproved && (
+                            <div className="flex-shrink-0 pr-1 flex items-center">
+                              <input 
+                                type="checkbox" 
+                                id={`chk-${prod.sku}`}
+                                checked={isApproved} 
+                                onChange={() => toggleProductApproval(prod.sku)}
+                                className="w-5 h-5 accent-emerald-600 cursor-pointer rounded-md border-hairline focus:ring-0 focus:ring-offset-0"
+                              />
+                            </div>
+                          )}
+                          <img 
+                            src={getProductImage(prod.name)} 
+                            alt={prod.name} 
+                            className={`w-16 h-16 rounded-xl object-cover border border-hairline/60 flex-shrink-0 transition-opacity ${
+                              !isApproved ? 'opacity-40' : ''
+                            }`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className={`text-[13.5px] font-extrabold text-ink truncate block ${
+                                !isApproved ? 'line-through text-muted-light' : ''
+                              }`}>
+                                {prod.name}
                               </span>
-                            )}
+                              {prod.category && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-light border border-hairline/60 px-2 py-0.5 rounded bg-neutral-50/50">
+                                  {prod.category}
+                                </span>
+                              )}
+                              {!isApproved && (
+                                <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100/50 uppercase tracking-wide">
+                                  Ditolak / Draf Ditangguhkan
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-light font-mono">SKU: {prod.sku}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold ${
+                                !isApproved ? 'bg-neutral-100 text-muted-light' : 'bg-surface-soft text-ink'
+                              }`}>
+                                {prod.qty}
+                              </span>
+                              <span className="text-[11.5px] text-muted-light font-light">&times;</span>
+                              <span className="text-[11px] text-muted font-medium">
+                                Rp {prod.price.toLocaleString('id-ID')} / unit
+                              </span>
+                            </div>
                           </div>
-                          <p className="text-[11px] text-muted-light font-mono">SKU: {prod.sku}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className="text-[11px] text-ink bg-surface-soft px-2.5 py-0.5 rounded-full font-bold">
-                              {prod.qty} unit
+                          <div className="text-right flex-shrink-0 pl-5 border-l border-hairline/60 h-10 flex flex-col justify-center">
+                            <span className={`text-[14.5px] font-black text-ink block ${
+                              !isApproved ? 'line-through text-muted-light' : ''
+                            }`}>
+                              Rp {prod.total.toLocaleString('id-ID')}
                             </span>
-                            <span className="text-[11.5px] text-muted-light font-light">&times;</span>
-                            <span className="text-[11px] text-muted font-medium">
-                              Rp {prod.price.toLocaleString('id-ID')} / unit
-                            </span>
+                            <span className="text-[9px] text-muted-light uppercase tracking-wider block mt-0.5">Subtotal</span>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0 pl-5 border-l border-hairline/60 h-10 flex flex-col justify-center">
-                          <span className="text-[14.5px] font-black text-ink block">
-                            Rp {prod.total.toLocaleString('id-ID')}
-                          </span>
-                          <span className="text-[9px] text-muted-light uppercase tracking-wider block mt-0.5">Subtotal</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -451,28 +586,71 @@ export default function OrderPortal({
                       </div>
                       <div className="flex justify-between text-[12.5px] items-center">
                         <span className="text-muted">Banyak Item</span>
-                        <span className="font-bold text-ink">{products.length} Jenis</span>
+                        <span className="font-bold text-ink">{approvedItems.length} Jenis</span>
                       </div>
                       <div className="flex justify-between text-[12.5px] items-center">
                         <span className="text-muted">Total Volume</span>
                         <span className="font-bold text-ink">
-                          {products.reduce((acc, p) => acc + (Number(p.qty) || 0), 0)} Unit
+                          {approvedItems.reduce((acc, p) => acc + (parseFloat(p.qty as any) || 0), 0)} Unit
                         </span>
                       </div>
                     </div>
 
-                    <button 
-                      onClick={() => !warningItem && setCartStep('logistics')}
-                      disabled={!!warningItem}
-                      className={`w-full py-3.5 rounded-full text-[12px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md focus:outline-none ${
-                        warningItem
-                          ? 'bg-neutral-200 text-muted-light border border-hairline cursor-not-allowed shadow-none'
-                          : 'bg-accent hover:bg-accent/90 text-white shadow-accent/10 active:scale-[0.98]'
-                      }`}
-                    >
-                      {warningItem ? 'Penuhi Stok Terlebih Dahulu' : 'Lanjut ke Logistik'}
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                    {!isProposalApproved ? (
+                      <button 
+                        onClick={async () => {
+                          if (approvedItems.length > 0) {
+                            // Sync ke session DB agar admin beneran melihat draft barang pilihan klien di Admin Portal!
+                            await syncApprovedItemsToSession(approvedItems);
+                            
+                            const warningItems = approvedItems.filter(p => p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0);
+                            if (warningItems.length > 0) {
+                              await sendRestockRequestToAdmin(warningItems, approvedItems);
+                            }
+                            setIsProposalApproved(true);
+                          }
+                        }}
+                        disabled={approvedItems.length === 0}
+                        className={`w-full py-3.5 rounded-full text-[12px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md focus:outline-none ${
+                          approvedItems.length === 0
+                            ? 'bg-neutral-200 text-muted-light border border-hairline cursor-not-allowed shadow-none'
+                            : 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/10 active:scale-[0.98]'
+                        }`}
+                      >
+                        {approvedItems.length === 0 
+                          ? 'Pilih Minimal 1 Item' 
+                          : warningItem 
+                            ? 'Setujui & Ajukan Restok' 
+                            : 'Setujui Rencana & Masukkan Keranjang'}
+                        <Check className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="space-y-3">
+                        {warningItem && (
+                          <div className="p-3 bg-red-50 border border-red-100/50 rounded-xl flex gap-2 items-start text-left mb-2">
+                            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-[11px] font-bold text-red-700 leading-tight">Keranjang Belanja Dibekukan</p>
+                              <p className="text-[9.5px] text-red-600/90 mt-0.5 leading-snug">
+                                Menunggu Admin Gudang memperbarui stok untuk item bermasalah. Tombol checkout akan aktif otomatis setelah stok diperbarui.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        <button 
+                          onClick={() => !warningItem && setCartStep('logistics')}
+                          disabled={!!warningItem}
+                          className={`w-full py-3.5 rounded-full text-[12px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md focus:outline-none ${
+                            warningItem
+                              ? 'bg-neutral-100 text-muted-light border border-hairline cursor-not-allowed shadow-none'
+                              : 'bg-accent hover:bg-accent/90 text-white shadow-accent/10 active:scale-[0.98]'
+                          }`}
+                        >
+                          {warningItem ? 'Menunggu Update Stok Admin' : 'Lanjut ke Logistik'}
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                     
                     <div className="border-t border-hairline/60 pt-4 text-center">
                       <p className="text-[11px] text-muted leading-relaxed">
@@ -726,7 +904,7 @@ export default function OrderPortal({
                       <div className="space-y-3.5">
                         <p className="text-muted-light font-extrabold uppercase text-[9px] tracking-wider">Tabel Rincian Material Proyek</p>
                         <div className="divide-y divide-hairline">
-                          {products.map((prod) => (
+                          {approvedItems.map((prod) => (
                             <div key={prod.sku} className="py-3 flex justify-between text-[12.5px] items-center">
                               <div className="min-w-0 flex-1 pr-4">
                                 <p className="font-bold text-ink truncate">{prod.name}</p>
@@ -933,7 +1111,7 @@ export default function OrderPortal({
                     </div>
                     <div>
                       <p className="text-[12.5px] font-extrabold text-ink leading-tight">Reservasi Alokasi Inventori</p>
-                      <p className="text-[11.5px] text-muted leading-snug">Item material sebanyak <span className="font-semibold text-ink">{products.length} jenis</span> akan dipotong secara real-time dari stok katalog QHomeMart.</p>
+                      <p className="text-[11.5px] text-muted leading-snug">Item material sebanyak <span className="font-semibold text-ink">{approvedItems.length} jenis</span> akan dipotong secara real-time dari stok katalog QHomeMart.</p>
                     </div>
                   </div>
 
