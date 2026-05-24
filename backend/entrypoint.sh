@@ -3,7 +3,6 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-
 # Wait for PostgreSQL to be ready via Python socket ping
 python3 -c "
 import socket
@@ -46,18 +45,12 @@ while True:
         time.sleep(1)
 "
 
-# Pre-warm ChromaDB embedding model (download jika belum ada di cache)
-echo "Memeriksa model embedding ChromaDB (all-MiniLM-L6-v2)..."
-python3 -c "
-from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
-DefaultEmbeddingFunction()(['warmup'])
-print('Model embedding siap!')
-"
+# (Skrip warmup dihapus karena memicu OOM Killer pada RAM/CPU kecil)
 
-# Run database seeding conditionally
+# Run database seeding conditionally IN BACKGROUND
 if [ "$SEED_ON_STARTUP" = "true" ]; then
-    echo "Menjalankan Database Seeding"
-    python3 backend/seed.py
+    echo "Memulai proses Seeding Otomatis di latar belakang (Background)..."
+    (python3 backend/seed.py || echo "Peringatan: Seeding latar belakang gagal/terhenti.") &
 else
     echo "Melewati Seeding"
 fi
