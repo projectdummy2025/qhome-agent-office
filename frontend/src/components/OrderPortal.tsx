@@ -253,9 +253,9 @@ export default function OrderPortal({
       }
     }
     if (currentSessionId) {
-      window.location.href = `/?portal=admin&session_id=${currentSessionId}&user_role=admin&origin_role=${currentUser?.role || ''}`;
+      window.open(`/?portal=admin&session_id=${currentSessionId}&user_role=admin&origin_role=${currentUser?.role || ''}`, '_blank');
     } else {
-      window.location.href = `/?portal=admin&user_role=admin&origin_role=${currentUser?.role || ''}`;
+      window.open(`/?portal=admin&user_role=admin&origin_role=${currentUser?.role || ''}`, '_blank');
     }
   };
 

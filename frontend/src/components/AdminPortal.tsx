@@ -4,16 +4,12 @@ import {
   CheckCircle2,
   UserCog, 
   Edit2,
-  Warehouse,
-  Sparkles,
-  ShoppingCart,
   TrendingUp,
   AlertCircle,
   AlertTriangle
 } from 'lucide-react';
 import RestockPanel from './admin/RestockPanel';
 import SubstitutePanel from './admin/SubstitutePanel';
-import { PERSONAS } from './canvas/PersonaSelect';
 
 interface Product {
   sku: string;
@@ -52,9 +48,6 @@ export default function AdminPortal({
   onBack,
   onUpdateProducts
 }: AdminPortalProps) {
-  const originRole = (currentSessionId ? localStorage.getItem(`originRole:${currentSessionId}`) : null) || localStorage.getItem('originRole');
-  const originPersona = originRole ? PERSONAS.find(p => p.role === originRole) : null;
-
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [masterProducts, setMasterProducts] = useState<MasterProduct[]>([]);
   
@@ -296,50 +289,41 @@ export default function AdminPortal({
   const finalRAB = products.reduce((acc, p) => acc + (p.price * parseQtyNumber(p.qty)), 0);
 
   return (
-    <div className="flex flex-col min-h-screen bg-canvas font-sans text-ink">
-      <header className="w-full border-b border-hairline bg-canvas sticky top-0 z-50">
-        <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-extrabold text-ink tracking-widest uppercase">QHomeMart</span>
-            <span className="text-[11px] font-light text-muted-light">/</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent mt-0.5 animate-pulse">ADMIN LOGISTICS CENTER</span>
+    <div className="flex flex-col min-h-screen bg-slate-50 font-display text-slate-900">
+      <header className="w-full border-b border-slate-200/50 bg-white/70 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-extrabold text-slate-900 tracking-wide uppercase">QHomeMart</span>
+            <span className="text-xs font-light text-slate-400">/</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-accent mt-0.5">Admin Workspace</span>
           </div>
           <div className="flex items-center gap-6">
             <div className="hidden sm:flex items-center gap-2 text-right">
-              <span className="text-[11.5px] font-bold text-ink">{currentUser?.name || "Bapak Rudi"}</span>
-              <span className="text-[9px] font-light text-muted-light">/</span>
-              <span className="text-[9px] uppercase tracking-wider text-accent font-bold">{currentUser?.roleDisplay || "Staff Admin"}</span>
+              <span className="text-sm font-semibold text-slate-800">{currentUser?.name || "Bapak Rudi"}</span>
+              <span className="text-xs font-light text-slate-400">/</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded">{currentUser?.roleDisplay || "Staff Admin"}</span>
             </div>
             <button 
               onClick={onBack}
-              className="text-[10px] font-bold uppercase tracking-widest text-muted hover:text-ink transition-all focus:outline-none cursor-pointer border border-hairline hover:border-ink px-5 py-1.5 rounded-full"
+              className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer border border-slate-200 hover:border-slate-300 bg-white px-5 py-2 rounded-full shadow-sm hover:shadow"
             >
-              KEMBALI KE CHAT{originPersona ? ` (${originPersona.name.toUpperCase()})` : ''}
+              TUTUP PANEL ADMIN
             </button>
           </div>
         </div>
       </header>
 
-      <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-8 space-y-8 animate-scale-in">
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-hairline pb-6 gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider bg-accent/10 text-accent uppercase">
-                Aktif Estimasi Sesi
-              </span>
-              {currentSessionId && (
-                <code className="text-[10.5px] font-bold text-muted bg-surface-soft px-2 py-0.5 rounded border border-hairline">
-                  {currentSessionId.substring(0, 8).toUpperCase()}
-                </code>
-              )}
-            </div>
-            <h1 className="text-[22px] font-extrabold text-ink tracking-tight">
-              Pemisahan Penanganan Stok &amp; Otorisasi Substitusi
-            </h1>
-            <p className="text-[12.5px] text-muted max-w-3xl">
-              Logistik portal untuk membagi alur kerja Restock Permintaan Penambahan Barang dan Konfirmasi Ketersediaan Substitusi secara terpisah sebelum checkout.
-            </p>
-          </div>
+      <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col px-6 sm:px-8 py-16 space-y-14 animate-scale-in">
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <span className="text-xs font-bold text-accent tracking-[0.2em] uppercase block">
+            Manajemen Operasional
+          </span>
+          <h1 className="text-4xl font-extrabold text-slate-900 leading-tight">
+            Penanganan Stok &amp; Substitusi
+          </h1>
+          <p className="text-[15px] text-slate-500 leading-relaxed max-w-2xl mx-auto pt-2">
+            Sistem logistik pusat untuk menangani persetujuan substitusi alternatif dan permintaan penambahan stok dari gudang secara terpusat.
+          </p>
         </div>
 
         {brief && (
@@ -354,50 +338,28 @@ export default function AdminPortal({
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-hairline rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
-              <Warehouse className="w-5 h-5" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto w-full">
+          {[
+            { id: '01', title: 'Permintaan Restok', count: restockProducts.length, desc: 'Menunggu', colSpan: 'col-span-1' },
+            { id: '02', title: 'Substitusi Usulan', count: substituteProducts.length, desc: 'Ditinjau', colSpan: 'col-span-1' },
+            { id: '03', title: 'Item Siap Kirim', count: `${products.length - restockProducts.length} / ${products.length}`, desc: 'Tersedia', colSpan: 'col-span-1' },
+            { id: '04', title: 'Estimasi RAB', count: `Rp ${finalRAB.toLocaleString('id-ID')}`, desc: 'Total Nilai', colSpan: 'col-span-1' }
+          ].map((stat, idx) => (
+            <div key={idx} className={`group relative flex flex-col justify-between p-7 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300 ${stat.colSpan}`}>
+              <div className="flex items-start justify-between mb-8">
+                <div className="text-4xl font-light text-slate-200 leading-none select-none">
+                  {stat.id}
+                </div>
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-50 text-slate-500 border border-slate-100">
+                  {stat.desc}
+                </span>
+              </div>
+              <div className="space-y-3">
+                <p className="text-[13px] text-slate-500 font-semibold tracking-wide">{stat.title}</p>
+                <h3 className="font-extrabold text-slate-900 tracking-tight text-2xl">{stat.count}</h3>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Permintaan Restok</span>
-              <span className="text-[20px] font-black text-ink">{restockProducts.length} Item</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-hairline rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Substitusi Usulan</span>
-              <span className="text-[20px] font-black text-ink">{substituteProducts.length} Item</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-hairline rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Item Siap Kirim</span>
-              <span className="text-[20px] font-black text-ink">
-                {products.length - restockProducts.length} / {products.length}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-hairline rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-              <ShoppingCart className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Estimasi Total Belanja</span>
-              <span className="text-[20px] font-black text-indigo-600">
-                Rp {finalRAB.toLocaleString('id-ID')}
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">

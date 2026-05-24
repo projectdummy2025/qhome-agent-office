@@ -402,7 +402,6 @@ export default function ChatCanvas({
             )}
             {currentUser && (
               <div className="flex items-center gap-2.5 bg-white/80 border border-hairline px-3.5 py-1.5 rounded-full shadow-sm animate-scale-in">
-                <span className="text-[14.5px] select-none">{currentUser.avatar || "👤"}</span>
                 <div className="flex items-center gap-2 text-left">
                   <span className="text-[11.5px] font-bold text-ink leading-none">{currentUser.name}</span>
                   <span className="text-[9px] font-light text-muted-light">/</span>
@@ -657,7 +656,10 @@ export default function ChatCanvas({
           ) : (
             <div className="px-6 py-5">
               {(() => {
-                const systemLogs = messages.filter(m => m.role === 'system').reverse()[0]?.logs || [];
+                const systemLogs = messages
+                  .filter(m => m.role === 'system')
+                  .flatMap(m => m.logs || []);
+                  
                 return systemLogs.map((log: any, idx: number) => {
                   const isSpinnerActive = isProcessing && log.event === 'working' && idx === systemLogs.length - 1;
                   const agentTitle = log.title || 'Sistem';

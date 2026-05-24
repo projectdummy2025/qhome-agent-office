@@ -168,7 +168,13 @@ export default function App() {
             try {
               const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
               const data = await res.json();
-              chatApi.setMessages(data);
+              chatApi.setMessages(prev => {
+                const lastMsg = prev[prev.length - 1];
+                if (lastMsg && lastMsg.status === 'processing') {
+                  return [...data, lastMsg];
+                }
+                return data;
+              });
             } catch (err) {
               console.error('Failed to reload messages on broadcasted payment confirmation:', err);
             }
@@ -182,7 +188,13 @@ export default function App() {
             try {
               const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
               const data = await res.json();
-              chatApi.setMessages(data);
+              chatApi.setMessages(prev => {
+                const lastMsg = prev[prev.length - 1];
+                if (lastMsg && lastMsg.status === 'processing') {
+                  return [...data, lastMsg];
+                }
+                return data;
+              });
             } catch (err) {
               console.error('Failed to reload messages on broadcasted restock completion:', err);
             }
@@ -256,22 +268,12 @@ export default function App() {
         products={products}
         brief={userBrief}
         onBack={() => {
-          const originRole = (chatApi.currentSessionId ? localStorage.getItem(`originRole:${chatApi.currentSessionId}`) : null) || localStorage.getItem('originRole');
-          if (originRole) {
-            const matchedPersona = PERSONAS.find(p => p.role === originRole);
-            if (matchedPersona) {
-              setCurrentUser(matchedPersona);
-            }
-            if (chatApi.currentSessionId) {
-              localStorage.removeItem(`originRole:${chatApi.currentSessionId}`);
-            }
-            localStorage.removeItem('originRole');
-          }
-          if (chatApi.currentSessionId) {
-            setActivePortal('chat');
-          } else {
+          window.close();
+          setTimeout(() => {
             setCurrentUser(null);
-          }
+            chatApi.setCurrentSessionId(null);
+            window.history.replaceState({}, '', '/');
+          }, 300);
         }}
         onUpdateProducts={(newProducts) => {
           chatApi.setMessages(prev => {
