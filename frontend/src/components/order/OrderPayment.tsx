@@ -87,8 +87,12 @@ export default function OrderPayment({
                 <p className="text-[10px] font-mono tracking-wider text-slate-400 mt-1">PT QHomeMart Indonesia (Procurement Div)</p>
               </div>
               <div className="text-right">
-                <span className="inline-block text-[9.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-3.5 py-1 rounded-full mb-2">
-                  PENDING QRIS PAYMENT
+                <span className={`inline-block text-[9.5px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full mb-2 ${
+                  isPaymentConfirmed 
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-100' 
+                    : 'text-amber-700 bg-amber-50 border-amber-100'
+                }`}>
+                  {isPaymentConfirmed ? 'PEMBAYARAN QRIS SELESAI' : 'PENDING QRIS PAYMENT'}
                 </span>
                 <p className="text-[11.5px] font-mono text-slate-800 font-extrabold">
                   {orderId}

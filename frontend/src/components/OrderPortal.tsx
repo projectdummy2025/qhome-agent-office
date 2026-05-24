@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import { ArrowLeft, Check, ShieldAlert, Info, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Check, ShieldAlert, Info, ShoppingBag, Download } from 'lucide-react';
 import OrderCart from './order/OrderCart';
 import OrderShipping from './order/OrderShipping';
 import OrderPayment from './order/OrderPayment';
@@ -93,6 +93,43 @@ export default function OrderPortal({
 
   useEffect(() => {
     if (currentSessionId) {
+      // 1. Check local storage for pending order ID and restore state
+      const pendingId = localStorage.getItem(`pendingOrderId:${currentSessionId}`);
+      if (pendingId) {
+        setOrderId(pendingId);
+        setCartStep('success');
+        
+        // Fetch order details from database to populate localProducts
+        fetch(`${API_BASE_URL}/api/projects/orders/${pendingId}`)
+          .then(res => {
+            if (res.ok) return res.json();
+            throw new Error('Order not found');
+          })
+          .then(order => {
+            if (order.delivery_date) setDeliveryDate(order.delivery_date);
+            if (order.notes) setNotes(order.notes);
+            if (order.truck_type) {
+              const matchedTruck = TRUCKS.find(t => t.name === order.truck_type || t.id === order.truck_type);
+              if (matchedTruck) setSelectedTruck(matchedTruck.id);
+            }
+            if (order.items && order.items.length > 0) {
+              setLocalProducts(order.items.map((item: any) => ({
+                sku: item.sku,
+                name: item.name,
+                price: item.price,
+                qty: item.qty,
+                total: item.total,
+                category: item.category,
+                approved: true
+              })));
+            }
+          })
+          .catch(err => {
+            console.error("Error restoring pending order details:", err);
+            localStorage.removeItem(`pendingOrderId:${currentSessionId}`);
+          });
+      }
+
       fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/messages`)
         .then(res => res.json())
         .then(data => {
@@ -101,6 +138,51 @@ export default function OrderPortal({
             setIsProposalApproved(true);
           } else {
             setIsProposalApproved(false);
+          }
+
+          // Check if payment was confirmed
+          const paymentMsg = data.find((m: any) => 
+            m.role === 'system' && 
+            (m.content.includes("Pembayaran QRIS Diterima") || 
+             m.content.includes("Pembayaran QRIS dikonfirmasi"))
+          );
+
+          if (paymentMsg) {
+            setIsPaymentConfirmed(true);
+            setCartStep('success');
+            
+            const match = paymentMsg.content.match(/ORD-[A-Z0-9]+/i);
+            if (match) {
+              setOrderId(match[0]);
+              localStorage.setItem(`pendingOrderId:${currentSessionId}`, match[0]);
+
+              // Fetch order details for paid order
+              fetch(`${API_BASE_URL}/api/projects/orders/${match[0]}`)
+                .then(res => {
+                  if (res.ok) return res.json();
+                  throw new Error('Order not found');
+                })
+                .then(order => {
+                  if (order.delivery_date) setDeliveryDate(order.delivery_date);
+                  if (order.notes) setNotes(order.notes);
+                  if (order.truck_type) {
+                    const matchedTruck = TRUCKS.find(t => t.name === order.truck_type || t.id === order.truck_type);
+                    if (matchedTruck) setSelectedTruck(matchedTruck.id);
+                  }
+                  if (order.items && order.items.length > 0) {
+                    setLocalProducts(order.items.map((item: any) => ({
+                      sku: item.sku,
+                      name: item.name,
+                      price: item.price,
+                      qty: item.qty,
+                      total: item.total,
+                      category: item.category,
+                      approved: true
+                    })));
+                  }
+                })
+                .catch(err => console.error("Error restoring paid order details:", err));
+            }
           }
         })
         .catch(err => console.error(err));
@@ -164,10 +246,16 @@ export default function OrderPortal({
   const totalInvoice = materialsTotal + shippingCost + adminFee + ppn;
 
   const switchToAdminRudi = () => {
+    if (currentUser?.role) {
+      localStorage.setItem('originRole', currentUser.role);
+      if (currentSessionId) {
+        localStorage.setItem(`originRole:${currentSessionId}`, currentUser.role);
+      }
+    }
     if (currentSessionId) {
-      window.location.href = `/?portal=admin&session_id=${currentSessionId}&user_role=admin`;
+      window.location.href = `/?portal=admin&session_id=${currentSessionId}&user_role=admin&origin_role=${currentUser?.role || ''}`;
     } else {
-      window.location.href = `/?portal=admin&user_role=admin`;
+      window.location.href = `/?portal=admin&user_role=admin&origin_role=${currentUser?.role || ''}`;
     }
   };
 
@@ -206,6 +294,9 @@ export default function OrderPortal({
       if (res.ok) {
         const data = await res.json();
         setOrderId(data.order_id);
+        if (currentSessionId) {
+          localStorage.setItem(`pendingOrderId:${currentSessionId}`, data.order_id);
+        }
         setCartStep('success');
       } else {
         alert(`Gagal mengirimkan pesanan ke database pergudangan. Server responded with ${res.status} ${res.statusText}.`);
@@ -297,7 +388,56 @@ export default function OrderPortal({
       </header>
 
       <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-10">
-        {localProducts.length === 0 ? (
+        {isPaymentConfirmed ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-scale-in max-w-xl mx-auto w-full space-y-6">
+            <div className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-md">
+              <Check className="w-10 h-10 stroke-[3]" />
+            </div>
+            <div className="space-y-2 w-full">
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-emerald-600 block">
+                Transaksi Sukses &amp; Selesai
+              </span>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
+                Keranjang Belanja Anda Kosong
+              </h2>
+              <p className="text-sm font-semibold text-slate-500 leading-relaxed text-justify w-full">
+                Seluruh barang belanjaan pada sesi ini telah berhasil dibeli, lunas terbayar, dan telah masuk ke antrean pengiriman logistik pergudangan terdistribusi QHomeMart.
+              </p>
+            </div>
+            
+            {orderId && (
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full shadow-sm space-y-3.5 text-left">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-bold uppercase tracking-wider">ID PESANAN</span>
+                  <span className="font-mono font-extrabold text-slate-800">{orderId}</span>
+                </div>
+                <div className="h-px bg-slate-100" />
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-bold uppercase tracking-wider">STATUS PEMBAYARAN</span>
+                  <span className="font-bold text-emerald-600 uppercase tracking-wide">Lunas (QRIS GPN Verified)</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center pt-2">
+              <button 
+                onClick={onBack}
+                className="flex-1 w-full px-6 py-3.5 bg-slate-950 hover:bg-black text-white rounded-full text-[11px] font-bold tracking-widest uppercase transition-all shadow-md active:scale-[0.98] cursor-pointer text-center justify-center flex items-center"
+              >
+                Kembali ke Chat Utama
+              </button>
+              {currentSessionId && (
+                <button
+                  onClick={handleDownloadInvoice}
+                  className="flex-1 w-full px-6 py-3.5 border border-slate-250 hover:bg-slate-50 text-slate-700 rounded-full text-[11px] font-bold tracking-widest uppercase transition-all shadow-sm active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Download className="w-4 h-4" />
+                  Unduh Nota PDF
+                </button>
+              )}
+            </div>
+          </div>
+        ) : localProducts.length === 0 && cartStep !== 'success' ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-scale-in">
             <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 mb-4">
               <ShoppingBag className="w-6 h-6" />
@@ -322,7 +462,12 @@ export default function OrderPortal({
                 localProducts={localProducts}
                 approvedItems={approvedItems}
                 isProposalApproved={isProposalApproved}
-                setIsProposalApproved={setIsProposalApproved}
+                setIsProposalApproved={(val) => {
+                  setIsProposalApproved(val);
+                  if (currentSessionId) {
+                    localStorage.setItem(`isProposalApproved:${currentSessionId}`, String(val));
+                  }
+                }}
                 toggleProductApproval={toggleProductApproval}
                 warningItem={warningItem}
                 materialsTotal={materialsTotal}

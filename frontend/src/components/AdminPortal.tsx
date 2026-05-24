@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import RestockPanel from './admin/RestockPanel';
 import SubstitutePanel from './admin/SubstitutePanel';
+import { PERSONAS } from './canvas/PersonaSelect';
 
 interface Product {
   sku: string;
@@ -51,6 +52,9 @@ export default function AdminPortal({
   onBack,
   onUpdateProducts
 }: AdminPortalProps) {
+  const originRole = (currentSessionId ? localStorage.getItem(`originRole:${currentSessionId}`) : null) || localStorage.getItem('originRole');
+  const originPersona = originRole ? PERSONAS.find(p => p.role === originRole) : null;
+
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [masterProducts, setMasterProducts] = useState<MasterProduct[]>([]);
   
@@ -86,7 +90,8 @@ export default function AdminPortal({
         });
         
         const channel = new BroadcastChannel('qhome_payment_channel');
-        channel.postMessage({ event: 'payment_confirmed', sessionId: currentSessionId });
+        // Use 'restock_complete' (not 'payment_confirmed') to avoid triggering wrong navigation in App.tsx
+        channel.postMessage({ event: 'restock_complete', sessionId: currentSessionId });
         channel.close();
       } catch (err) {
         console.error('Failed to notify restock completion:', err);
@@ -309,7 +314,7 @@ export default function AdminPortal({
               onClick={onBack}
               className="text-[10px] font-bold uppercase tracking-widest text-muted hover:text-ink transition-all focus:outline-none cursor-pointer border border-hairline hover:border-ink px-5 py-1.5 rounded-full"
             >
-              KEMBALI KE CHAT
+              KEMBALI KE CHAT{originPersona ? ` (${originPersona.name.toUpperCase()})` : ''}
             </button>
           </div>
         </div>

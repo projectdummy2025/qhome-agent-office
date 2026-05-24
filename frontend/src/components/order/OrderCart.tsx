@@ -117,7 +117,7 @@ export default function OrderCart({
 
         {/* Product Cards List */}
         <div className="space-y-4">
-          {(isProposalApproved ? approvedItems : localProducts).map((prod) => {
+          {localProducts.map((prod) => {
             const isApproved = prod.approved !== false;
             return (
               <div 

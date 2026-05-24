@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 import io
 
 from backend.core.database import get_db
-from backend.models.schema import ChatSession, ChatMessage, ChatRole
+from backend.models.schema import ChatSession, ChatMessage, ChatRole, Order as DBOrder
 from backend.services.simulation_service import run_agent_simulation, cleanup_stream, active_streams
 from backend.services.pdf_service import generate_estimation_pdf
 from backend.services import chat_service
@@ -128,6 +128,37 @@ class OrderInput(BaseModel):
 def create_order(payload: OrderInput, db: Session = Depends(get_db)):
     order_id = chat_service.save_order(db, payload)
     return {"status": "success", "order_id": order_id}
+
+@router.get("/orders/{order_id}")
+def get_order(order_id: str, db: Session = Depends(get_db)):
+    order = db.query(DBOrder).filter(DBOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order tidak ditemukan")
+    return {
+        "id": order.id,
+        "session_id": order.session_id,
+        "user_id": order.user_id,
+        "client_name": order.client_name,
+        "client_role": order.client_role,
+        "materials_total": order.materials_total,
+        "shipping_cost": order.shipping_cost,
+        "total_invoice": order.total_invoice,
+        "truck_type": order.truck_type,
+        "delivery_date": order.delivery_date,
+        "distance_km": order.distance_km,
+        "notes": order.notes,
+        "items": [
+            {
+                "sku": item.product_sku,
+                "name": item.product.name if item.product else "Material QHome",
+                "price": item.price,
+                "qty": item.qty,
+                "total": item.total,
+                "category": item.product.category if item.product else "Lainnya"
+            }
+            for item in order.items
+        ]
+    }
 
 class RestockPayload(BaseModel):
     added_qty: int = 50

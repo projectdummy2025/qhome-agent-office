@@ -82,7 +82,7 @@ export default function App() {
         if (catalogParams?.search) params.set('search', catalogParams.search);
         const query = params.toString();
         const target = `/catalog${query ? `?${query}` : ''}`;
-        
+
         if (location.pathname !== '/catalog' || location.search !== (query ? `?${query}` : '')) {
           navigate(target);
         }
@@ -97,7 +97,10 @@ export default function App() {
         navigate(`${targetPath}${location.search}`);
       }
     }
-  }, [currentUser, activePortal, landingTab, location.pathname, navigate, catalogParams]);
+    // NOTE: location.pathname intentionally excluded from deps — this effect *writes* to the URL,
+    // not reads from it. Including it causes a two-way loop with the route-sync effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, activePortal, landingTab, navigate, catalogParams]);
 
   // Synchronize URL route pathname changes back to state (e.g. Back/Forward browser navigation)
   useEffect(() => {
@@ -117,7 +120,8 @@ export default function App() {
       }
     } else if (['/chat', '/admin', '/order', '/history'].includes(routePath)) {
       const portalName = routePath.substring(1) as 'chat' | 'admin' | 'order' | 'history';
-      setActivePortal(portalName);
+      // Guard: only update if value actually changes to avoid re-triggering the URL-sync effect
+      setActivePortal(prev => prev !== portalName ? portalName : prev);
     }
   }, [location.pathname, currentUser, location.search]);
 
@@ -129,6 +133,7 @@ export default function App() {
     const portalParam = params.get('portal');
     const sessionIdParam = params.get('session_id');
     const userRoleParam = params.get('user_role');
+    const originRoleParam = params.get('origin_role');
 
     if ((portalParam === 'order' || portalParam === 'admin') && sessionIdParam && userRoleParam) {
       const matchedPersona = PERSONAS.find(p => p.role === userRoleParam);
@@ -136,7 +141,11 @@ export default function App() {
         setCurrentUser(matchedPersona);
         chatApi.setCurrentSessionId(sessionIdParam);
         setActivePortal(portalParam as 'order' | 'admin');
-        
+        if (originRoleParam) {
+          localStorage.setItem('originRole', originRoleParam);
+          localStorage.setItem(`originRole:${sessionIdParam}`, originRoleParam);
+        }
+
         fetch(`${API_BASE_URL}/api/projects/sessions/${sessionIdParam}/messages`)
           .then(res => res.json())
           .then(data => {
@@ -151,8 +160,10 @@ export default function App() {
     try {
       const channel = new BroadcastChannel('qhome_payment_channel');
       channel.onmessage = async (event) => {
-        if (event.data && event.data.event === 'payment_confirmed' && event.data.sessionId) {
-          const sid = event.data.sessionId;
+        const { event: evtType, sessionId: sid } = event.data || {};
+
+        // payment_confirmed: reload messages (triggered after order payment)
+        if (evtType === 'payment_confirmed' && sid) {
           if (sid === chatApi.currentSessionId) {
             try {
               const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
@@ -160,6 +171,20 @@ export default function App() {
               chatApi.setMessages(data);
             } catch (err) {
               console.error('Failed to reload messages on broadcasted payment confirmation:', err);
+            }
+          }
+        }
+
+        // restock_complete: reload messages only — do NOT navigate (still on admin page)
+        // Separate from payment_confirmed to avoid state inconsistency
+        if (evtType === 'restock_complete' && sid) {
+          if (sid === chatApi.currentSessionId) {
+            try {
+              const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
+              const data = await res.json();
+              chatApi.setMessages(data);
+            } catch (err) {
+              console.error('Failed to reload messages on broadcasted restock completion:', err);
             }
           }
         }
@@ -231,6 +256,17 @@ export default function App() {
         products={products}
         brief={userBrief}
         onBack={() => {
+          const originRole = (chatApi.currentSessionId ? localStorage.getItem(`originRole:${chatApi.currentSessionId}`) : null) || localStorage.getItem('originRole');
+          if (originRole) {
+            const matchedPersona = PERSONAS.find(p => p.role === originRole);
+            if (matchedPersona) {
+              setCurrentUser(matchedPersona);
+            }
+            if (chatApi.currentSessionId) {
+              localStorage.removeItem(`originRole:${chatApi.currentSessionId}`);
+            }
+            localStorage.removeItem('originRole');
+          }
           if (chatApi.currentSessionId) {
             setActivePortal('chat');
           } else {
@@ -288,7 +324,7 @@ export default function App() {
   }
 
   return (
-    <ChatCanvas 
+    <ChatCanvas
       currentUser={currentUser}
       setCurrentUser={setCurrentUser}
       setActivePortal={setActivePortal}
