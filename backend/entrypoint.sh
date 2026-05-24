@@ -46,6 +46,14 @@ while True:
         time.sleep(1)
 "
 
+# Pre-warm ChromaDB embedding model (download jika belum ada di cache)
+echo "Memeriksa model embedding ChromaDB (all-MiniLM-L6-v2)..."
+python3 -c "
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+DefaultEmbeddingFunction()(['warmup'])
+print('Model embedding siap!')
+"
+
 # Run database seeding conditionally
 if [ "$SEED_ON_STARTUP" = "true" ]; then
     echo "Menjalankan Database Seeding"

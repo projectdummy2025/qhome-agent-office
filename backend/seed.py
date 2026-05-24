@@ -64,29 +64,34 @@ def seed_db():
         print("   Dan pastikan setelan DATABASE_URL di file .env sudah sesuai.")
         sys.exit(1)
 
-    # 3. Clean and seed Relational DB
+    # 3. Seed Relational DB (skip jika jumlah sudah sesuai)
     print("Connecting to relational database...")
     db = SessionLocal()
     try:
-        print("Clearing existing products in relational database...")
-        deleted_count = db.query(Product).delete()
-        print(f"Deleted {deleted_count} existing products.")
+        existing_count = db.query(Product).count()
+        if existing_count == len(products_to_seed):
+            print(f"Relational DB sudah berisi {existing_count} produk. Skip re-seeding.")
+        else:
+            print(f"Ditemukan {existing_count} produk (expected {len(products_to_seed)}). Re-seeding...")
+            print("Clearing existing products in relational database...")
+            deleted_count = db.query(Product).delete()
+            print(f"Deleted {deleted_count} existing products.")
 
-        print("Inserting products into relational database...")
-        db_products = [
-            Product(
-                sku=item["sku"],
-                name=item["name"],
-                category=item["category"],
-                base_price=item["base_price"],
-                coverage_m2=item["coverage_m2"],
-                desc=item["desc"]
-            )
-            for item in products_to_seed
-        ]
-        db.bulk_save_objects(db_products)
-        db.commit()
-        print(f"Successfully seeded {len(db_products)} products in relational database.")
+            print("Inserting products into relational database...")
+            db_products = [
+                Product(
+                    sku=item["sku"],
+                    name=item["name"],
+                    category=item["category"],
+                    base_price=item["base_price"],
+                    coverage_m2=item["coverage_m2"],
+                    desc=item["desc"]
+                )
+                for item in products_to_seed
+            ]
+            db.bulk_save_objects(db_products)
+            db.commit()
+            print(f"Successfully seeded {len(db_products)} products in relational database.")
     except Exception as e:
         db.rollback()
         print(f"Error: Gagal melakukan seeding ke relational database: {e}")
@@ -94,15 +99,21 @@ def seed_db():
     finally:
         db.close()
 
-    # 4. Clean and seed Vector DB (ChromaDB)
+    # 4. Seed Vector DB (ChromaDB) - skip jika jumlah sudah sesuai
     print("Connecting to ChromaDB...")
     try:
-        print("Cleaning old ChromaDB collection 'catalog_knowledge'...")
+        # Cek apakah collection sudah ada dengan jumlah data yang benar
         try:
-            chroma_client.delete_collection("catalog_knowledge")
-            print("Deleted existing ChromaDB collection.")
+            existing_col = chroma_client.get_collection("catalog_knowledge")
+            existing_count = existing_col.count()
+            if existing_count == len(products_to_seed):
+                print(f"ChromaDB sudah berisi {existing_count} produk. Skip re-seeding.")
+                return
+            else:
+                print(f"ChromaDB berisi {existing_count} produk (expected {len(products_to_seed)}). Re-seeding...")
+                chroma_client.delete_collection("catalog_knowledge")
         except Exception:
-            print("No existing ChromaDB collection found. Creating new one.")
+            print("ChromaDB collection belum ada. Membuat baru...")
 
         # Re-create collection
         chroma_col = get_chroma_collection("catalog_knowledge")
@@ -126,7 +137,8 @@ def seed_db():
 
         chunk_size = 100
         for i in range(0, len(products_to_seed), chunk_size):
-            end_idx = i + chunk_size
+            end_idx = min(i + chunk_size, len(products_to_seed))
+            print(f"[{time.strftime('%H:%M:%S')}] Memproses batch {i+1} sampai {end_idx} dari {len(products_to_seed)} produk (Harap sabar, proses AI CPU berjalan)...")
             chroma_col.add(
                 documents=documents[i:end_idx],
                 metadatas=metadatas[i:end_idx],

@@ -148,6 +148,86 @@ docker compose up --build -d
 
 ---
 
+## Manajemen Container Docker (Setelah Perubahan Code)
+
+Setiap kali ada perubahan kode, gunakan perintah berikut sesuai situasinya:
+
+### Rebuild Service Tertentu (Cara Paling Umum)
+
+Karena kode di-*build* ke dalam image Docker, kamu perlu rebuild dulu setelah ada perubahan:
+
+```bash
+# Hanya rebuild & restart frontend
+docker compose up -d --build frontend
+
+# Hanya rebuild & restart backend
+docker compose up -d --build backend
+
+# Rebuild semua sekaligus
+docker compose up -d --build
+```
+
+### Perubahan File `.env` (Tanpa Rebuild)
+
+Perubahan pada `.env` langsung aktif tanpa perlu rebuild image:
+
+```bash
+docker compose up -d backend
+```
+
+### Stop & Start Ulang Bersih
+
+```bash
+# Stop semua container (data PostgreSQL & ChromaDB tetap aman)
+docker compose down
+
+# Jalankan ulang semua service
+docker compose up -d --build
+```
+
+### Reset Total — ⚠️ Hati-hati, Data Akan Hilang!
+
+```bash
+# Hapus container + semua volume (DATABASE AKAN TERHAPUS!)
+docker compose down -v
+
+# Rebuild dari awal
+docker compose up -d --build
+```
+
+### Command Monitoring yang Berguna
+
+```bash
+# Lihat status semua container
+docker compose ps
+
+# Lihat log realtime semua service
+docker compose logs -f
+
+# Lihat log hanya backend
+docker compose logs -f backend
+
+# Lihat log hanya frontend
+docker compose logs -f frontend
+
+# Restart satu service tanpa rebuild (misal ada hang)
+docker compose restart backend
+```
+
+### Ringkasan Cepat
+
+| Situasi | Command |
+|---------|---------|
+| Ubah code frontend | `docker compose up -d --build frontend` |
+| Ubah code backend | `docker compose up -d --build backend` |
+| Ubah file `.env` | `docker compose up -d backend` |
+| Ubah `docker-compose.yml` | `docker compose up -d` |
+| Restart bersih | `docker compose down && docker compose up -d --build` |
+| Cek status | `docker compose ps` |
+| Lihat log | `docker compose logs -f` |
+
+---
+
 ## Kebijakan Penanganan Batasan & Mitigasi Rate Limit
 Untuk mengoptimalkan kuota API Developer dan efisiensi konsumsi token:
 1. **Panggilan Sekuensial (Waterfall Flow)**: Agen spesialis dipanggil bergantian, bukan paralel penuh.

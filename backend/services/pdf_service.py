@@ -45,7 +45,7 @@ def _format_qty(qty_str: str) -> str:
     return re.sub(r'(\d+\.\d+)', replace_decimal, qty_str)
 
 
-def _create_qris_drawing(width: float = 120, height: float = 120) -> Drawing:
+def _create_qris_drawing(width: float = 120, height: float = 120) -> 'Drawing':
     """
     Menggambar barcode QRIS dummy secara vektor menggunakan objek ReportLab shapes.
     Sangat mandiri tanpa library eksternal, performa tinggi, dan aman.
