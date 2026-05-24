@@ -28,7 +28,38 @@ const CATEGORIES = [
   { id: 'all', name: 'Semua' }
 ];
 
-const PLACEHOLDER_SVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140"><rect width="200" height="140" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="Arial, Helvetica, sans-serif" font-size="14">No Image</text></svg>';
+// High-fidelity fallback SVG for products with missing images
+const PLACEHOLDER_SVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23f8fafc"/><path d="M70 90h60v20H70zm0-30h60v20H70zm0 60h60v20H70z" fill="%23cbd5e1"/><text x="50%" y="85%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-family="system-ui, sans-serif" font-weight="700" font-size="12">NO IMAGE</text></svg>';
+
+/**
+ * High-end Skeleton loading cards with a pulsing shimmer effect.
+ * Implements smooth visual transition states matching the catalog layout.
+ */
+function CatalogSkeleton() {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-scale-in">
+      {Array.from({ length: 10 }).map((_, index) => (
+        <div key={index} className="flex flex-col bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+          {/* Shimmer Image Box */}
+          <div className="aspect-square w-full rounded-xl shimmer mb-4" />
+          {/* Shimmer Category Label */}
+          <div className="h-3 w-1/3 rounded-full bg-slate-100 shimmer mb-2" />
+          {/* Shimmer Product Name */}
+          <div className="h-4.5 w-5/6 rounded bg-slate-100 shimmer mb-3" />
+          {/* Shimmer Price Tag */}
+          <div className="h-5 w-1/2 rounded bg-slate-100 shimmer mb-4" />
+          {/* Shimmer Extra Metadata */}
+          <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-50">
+            <div className="h-3 w-1/3 rounded bg-slate-100 shimmer" />
+            <div className="h-3 w-1/4 rounded bg-slate-100 shimmer" />
+          </div>
+          {/* Shimmer Action Button */}
+          <div className="h-10 w-full rounded-full bg-slate-100 shimmer mt-4" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCatalogProps) {
   const [products, setProducts] = useState<DBProduct[]>([]);
@@ -44,11 +75,12 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   const [sortBy, setSortBy] = useState<'relevance' | 'price_asc' | 'price_desc' | 'name'>('relevance');
   const debounceRef = useRef<number | null>(null);
 
-  // Keep category names aligned with the database taxonomy: just normalize to lower-case
+  // Normalize category titles to lowercase matching DB standards
   const mapCategory = (cat: string): string => {
     return (cat || '').toLowerCase();
   };
 
+  // Fetch product list from SQLite backend
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -60,19 +92,26 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
       }));
       setProducts(mappedData);
       setFilteredProducts(mappedData);
-      // derive categories from data to avoid taxonomy mismatches
+      
+      // Derive dynamic categories directly from products to prevent taxonomic issues
       const uniq = Array.from(new Set(mappedData.map((x: any) => (x.category || 'lainnya') as string))).filter(Boolean) as string[];
-      const nice = uniq.map((id: string) => ({ id, name: String(id).split(/\s|&|\/|_/).map((w:any)=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ') }));
+      const nice = uniq.map((id: string) => ({ 
+        id, 
+        name: String(id).split(/\s|&|\/|_/).map((w: any) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') 
+      }));
       setCategories([{ id: 'all', name: 'Semua' }, ...nice]);
     } catch (e) {
       console.error("Error loading products:", e);
     } finally {
-      setLoading(false);
+      // Simulate slight delay for beautiful loading transition display
+      setTimeout(() => {
+        setLoading(false);
+      }, 350);
     }
   };
 
   useEffect(() => {
-    // load persisted UI state
+    // Restore layout selections from local storage on startup
     try {
       const savedView = localStorage.getItem('materialCatalog:viewMode');
       const savedPageSize = localStorage.getItem('materialCatalog:pageSize');
@@ -81,23 +120,21 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
       if (savedPageSize) setPageSize(Number(savedPageSize));
       if (savedPage) setCurrentPage(Math.max(1, Number(savedPage)));
     } catch (e) {
-      // ignore localStorage errors
+      // Catch possible isolated browser errors
     }
     fetchProducts();
   }, []);
 
-  // Debounce search input for better UX
+  // Debounce search input dynamically for robust UX
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    // small debounce to avoid rapid re-filtering
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     debounceRef.current = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
   }, [search]);
 
+  // Synchronize searching, sorting, and category filters
   useEffect(() => {
     let result = products.slice();
     if (selectedCat !== 'all') {
@@ -112,31 +149,30 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
       );
     }
 
-    // apply sorting
+    // Apply sorting filters
     if (sortBy === 'price_asc') result.sort((a, b) => a.base_price - b.base_price);
     else if (sortBy === 'price_desc') result.sort((a, b) => b.base_price - a.base_price);
     else if (sortBy === 'name') result.sort((a, b) => a.name.localeCompare(b.name));
 
     setFilteredProducts(result);
-    // when filters change, reset to first page
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset page layout to first page when filtering
   }, [debouncedSearch, selectedCat, products, sortBy]);
 
-  // persist UI state to localStorage when changed
+  // Sync user layout selections to local storage
   useEffect(() => {
     try {
       localStorage.setItem('materialCatalog:viewMode', viewMode);
       localStorage.setItem('materialCatalog:pageSize', String(pageSize));
       localStorage.setItem('materialCatalog:currentPage', String(currentPage));
     } catch (e) {
-      // ignore
+      // Catch exceptions
     }
   }, [viewMode, pageSize, currentPage]);
 
-  // compute pagination
+  // Calculate pagination boundaries
   const totalItems = filteredProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  // clamp currentPage
+  
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [totalPages]);
@@ -144,50 +180,55 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   const pagedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="flex flex-col min-h-screen bg-canvas font-sans">
+    <div className="flex flex-col min-h-screen bg-[#fcfdfe] font-sans relative overflow-x-hidden">
+      
+      {/* Absolute Ambient Soft Glow Background */}
+      <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-accent/5 to-sage/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-      {/* Header Bar */}
-      <header className="w-full border-b border-hairline bg-canvas sticky top-0 z-50">
-        <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-extrabold text-ink tracking-widest uppercase">QHomeMart</span>
-            <span className="text-[11px] font-light text-muted-light">/</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-muted-light mt-0.5">Master Catalog</span>
+      {/* Modern Sticky Glassmorphic Header */}
+      <header className="w-full border-b border-slate-100 bg-white/85 backdrop-blur-md sticky top-0 z-50 transition-all">
+        <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[13px] font-extrabold text-ink tracking-widest uppercase font-display">QHOMEMART</span>
+            <span className="text-[11px] font-light text-slate-300">/</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-[0.25em] text-slate-400 mt-0.5 font-display">Showroom</span>
           </div>
           <button 
             onClick={onBack}
-            className="text-[10px] font-bold uppercase tracking-widest text-muted hover:text-ink transition-colors focus:outline-none cursor-pointer border border-hairline/60 px-5 py-1.5 rounded-full hover:border-ink transition-all"
+            className="text-[10px] font-extrabold uppercase tracking-widest text-slate-600 hover:text-accent border border-slate-200 hover:border-accent/40 bg-white px-5 py-2.5 rounded-full transition-all active:scale-95 shadow-sm hover:shadow focus:outline-none cursor-pointer"
           >
-            KEMBALI
+            KEMBALI KE CANVAS
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-10">
+      {/* Main Showroom Area */}
+      <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-12">
 
-        {/* Page Title */}
-        <div className="mb-8">
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.3em] text-accent mb-3">Direktori Material</p>
-          <h1 className="text-[32px] font-light text-ink tracking-tight leading-tight mb-2">
-            Katalog Material {' '}
-            <span className="font-extrabold">Premium & Stok</span>
+        {/* Hero Title & Subtitle */}
+        <div className="mb-10 animate-float-up">
+          <p className="text-[10.5px] font-extrabold uppercase tracking-[0.3em] text-accent mb-3 font-display">DIREKTORI PRODUK PREMIUM</p>
+          <h1 className="text-[34px] font-light text-ink tracking-tight leading-tight mb-2.5 font-display">
+            Katalog Material <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ink to-accent">Lengkap & Stok</span>
           </h1>
-          <p className="text-[13px] text-muted">Cari dan filter material kustom berkualitas tinggi dengan informasi stok seketika.</p>
+          <p className="text-[13.5px] text-muted leading-relaxed max-w-2xl">
+            Jelajahi portofolio material konstruksi berkualitas tinggi. Gunakan filter presisi untuk menemukan produk terbaik bagi proyek Anda.
+          </p>
         </div>
 
-        {/* Toolbar: filter + search + view mode — satu baris, no card */}
-        <div className="flex flex-wrap items-center gap-3 border-y border-hairline py-3.5 mb-8">
-          {/* Category Pills (underline style) */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
+        {/* Unified Glassmorphic Control Bar */}
+        <div className="backdrop-blur-md bg-white/70 border border-slate-100 shadow-sm rounded-3xl p-5 mb-10 flex flex-col md:flex-row md:items-center gap-4 justify-between animate-float-up">
+          
+          {/* Category Pill Navigators */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 md:pb-0 min-w-0">
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCat(cat.id)}
-                className={`px-4 py-1.5 rounded-full text-[11.5px] font-semibold transition-all whitespace-nowrap focus:outline-none cursor-pointer ${
+                className={`px-4.5 py-2 rounded-full text-[12px] font-bold transition-all duration-200 whitespace-nowrap focus:outline-none cursor-pointer ${
                   selectedCat === cat.id 
-                    ? 'bg-ink text-white' 
-                    : 'text-muted hover:text-ink hover:bg-surface-soft'
+                    ? 'bg-accent text-white shadow-md shadow-accent/15 border border-accent' 
+                    : 'bg-white hover:bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 shadow-sm'
                 }`}
               >
                 {cat.name}
@@ -195,159 +236,191 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
             ))}
           </div>
 
-          {/* Separator */}
-          <div className="h-5 w-px bg-hairline hidden sm:block" />
+          {/* Search, Sort & Layout Toggles */}
+          <div className="flex flex-wrap items-center gap-3.5 flex-shrink-0">
+            
+            {/* Elegant Search Input */}
+            <div className="relative flex items-center min-w-56">
+              <Search className="absolute left-3.5 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari material..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                aria-label="Cari material"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && filteredProducts.length > 0 && onSelectProduct) {
+                    onSelectProduct(filteredProducts[0]);
+                  }
+                }}
+                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200/80 rounded-full text-[12.5px] font-medium text-slate-700 focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all placeholder:text-slate-400 shadow-sm"
+              />
+            </div>
 
-          {/* Search */}
-          <div className="relative flex items-center">
-            <Search className="absolute left-3.5 w-3.5 h-3.5 text-muted-light" />
-            <input
-              type="text"
-              placeholder="Cari material..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              aria-label="Cari material"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && filteredProducts.length > 0 && onSelectProduct) {
-                  onSelectProduct(filteredProducts[0]);
-                }
-              }}
-              className="pl-9 pr-4 py-1.5 bg-surface-soft border border-hairline rounded-full text-[12.5px] focus:outline-none focus:border-accent/50 transition-all placeholder:text-muted-light w-52"
-            />
-          </div>
+            {/* Custom Sort Selector */}
+            <div className="relative">
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value as any)} 
+                aria-label="Urutkan" 
+                className="text-[12px] font-bold text-slate-600 border border-slate-200/85 rounded-full px-4 py-2 bg-white focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent cursor-pointer shadow-sm"
+              >
+                <option value="relevance">Relevansi</option>
+                <option value="price_asc">Harga: Rendah ke Tinggi</option>
+                <option value="price_desc">Harga: Tinggi ke Rendah</option>
+                <option value="name">Nama (A–Z)</option>
+              </select>
+            </div>
 
-          {/* Sort control */}
-          <div className="ml-2">
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} aria-label="Urutkan" className="text-[12px] border border-hairline rounded px-2 py-1 bg-white">
-              <option value="relevance">Relevansi</option>
-              <option value="price_asc">Harga: Rendah → Tinggi</option>
-              <option value="price_desc">Harga: Tinggi → Rendah</option>
-              <option value="name">Nama (A–Z)</option>
-            </select>
-          </div>
+            {/* Vertical Separator */}
+            <div className="h-6 w-px bg-slate-200/80 hidden sm:block" />
 
-          {/* Reload + View Mode */}
-          <div className="flex items-center gap-1.5">
-            <button 
-              onClick={fetchProducts}
-              className="p-1.5 text-muted-light hover:text-ink rounded-full hover:bg-surface-soft transition-all focus:outline-none cursor-pointer"
-              title="Muat Ulang"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-            </button>
-            <button 
-              onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'list' ? 'text-ink bg-surface-soft' : 'text-muted-light hover:text-ink'}`}
-            >
-              <List className="w-3.5 h-3.5" />
-            </button>
-            <button 
-              onClick={() => setViewMode('card')}
-              className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'card' ? 'text-ink bg-surface-soft' : 'text-muted-light hover:text-ink'}`}
-            >
-              <Grid className="w-3.5 h-3.5" />
-            </button>
+            {/* Layout Controls */}
+            <div className="flex items-center gap-1.5 bg-slate-100/70 p-1.5 rounded-full border border-slate-200/30">
+              <button 
+                onClick={fetchProducts}
+                className="p-1.5 text-slate-500 hover:text-accent rounded-full hover:bg-white transition-all focus:outline-none cursor-pointer"
+                title="Muat Ulang"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+              
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'list' ? 'text-accent bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                title="Tampilan Tabel"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+              
+              <button 
+                onClick={() => setViewMode('card')}
+                className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'card' ? 'text-accent bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                title="Tampilan Grid"
+              >
+                <Grid className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Catalog Display */}
+        {/* Dynamic Display Area */}
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[40vh] gap-3">
-            <RefreshCw className="w-6 h-6 animate-spin text-accent" />
-            <p className="text-[12.5px] text-muted">Memuat katalog material dari database SQLite...</p>
-          </div>
+          <CatalogSkeleton />
         ) : filteredProducts.length === 0 ? (
-          <div className="py-20 text-center">
-            <Package className="w-8 h-8 text-muted-light mx-auto mb-3" />
-            <h3 className="font-bold text-[15px] text-ink mb-1">Material Tidak Ditemukan</h3>
-            <p className="text-[12.5px] text-muted">
-              Tidak ada produk yang cocok dengan filter atau kata kunci pencarian.
+          <div className="py-24 text-center bg-white border border-slate-100 rounded-3xl shadow-sm animate-scale-in">
+            <Package className="w-10 h-10 text-slate-300 mx-auto mb-4" />
+            <h3 className="font-extrabold text-[16px] text-ink mb-1.5 font-display">Material Tidak Ditemukan</h3>
+            <p className="text-[13px] text-slate-400 max-w-sm mx-auto">
+              Tidak ada produk material yang sesuai dengan pencarian atau kategori filter Anda.
             </p>
           </div>
         ) : viewMode === 'list' ? (
-          /* ── LIST VIEW: Editorial table rows, no card boxing ── */
-          <div>
-            {/* Table header */}
-            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-6 px-2 pb-2 border-b border-hairline">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-light">Material</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-light text-center w-24">Coverage</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-light text-center w-20">Stok</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-light text-right w-32">Harga Satuan</span>
-            </div>
-            <div className="divide-y divide-hairline/70">
-              {pagedProducts.map((p) => (
-                <div 
-                  key={p.sku} 
-                  onClick={() => onSelectProduct && onSelectProduct(p)}
-                  onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && onSelectProduct) onSelectProduct(p); }}
-                  role={onSelectProduct ? 'button' : undefined}
-                  tabIndex={onSelectProduct ? 0 : undefined}
-                  className={`grid grid-cols-[1fr_auto_auto_auto] gap-6 items-center py-4 px-2 hover:bg-surface-soft/50 transition-colors group ${onSelectProduct ? 'cursor-pointer' : ''}`}
-                >
-                  {/* Product identity */}
-                  <div className="flex items-center gap-4 min-w-0">
-                    <img 
-                      src={p.image_url || PLACEHOLDER_SVG} 
-                      alt={p.name}
-                      loading="lazy"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_SVG; }}
-                      className="w-11 h-11 rounded-lg object-cover border border-hairline/70 flex-shrink-0 group-hover:border-accent/20 transition-colors"
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[13.5px] font-bold text-ink group-hover:text-accent transition-colors leading-tight">
-                          {p.name}
+          
+          /* ── LUXURY EDITORIAL TABLE VIEW ── */
+          <div className="bg-white border border-slate-100 shadow-sm rounded-3xl p-6 overflow-x-auto animate-scale-in">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="border-b border-slate-100 pb-3">
+                  <th className="pb-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 font-display">Material</th>
+                  <th className="pb-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 text-center w-28 font-display">Cakupan Area</th>
+                  <th className="pb-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 text-center w-28 font-display">Status Stok</th>
+                  <th className="pb-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 text-right w-36 font-display">Harga Satuan</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {pagedProducts.map((product) => {
+                  let badgeStyle = 'bg-emerald-50 text-emerald-600 border-emerald-500/10';
+                  let dotStyle = 'bg-emerald-500';
+                  let stockText = `${product.stock_qty} pcs`;
+                  
+                  if (product.stock_qty === 0) {
+                    badgeStyle = 'bg-rose-50 text-rose-600 border-rose-500/10';
+                    dotStyle = 'bg-rose-500';
+                    stockText = 'Habis';
+                  } else if (product.stock_qty < 10) {
+                    badgeStyle = 'bg-amber-50 text-amber-600 border-amber-500/10';
+                    dotStyle = 'bg-amber-500';
+                  }
+
+                  return (
+                    <tr 
+                      key={product.sku} 
+                      onClick={() => onSelectProduct && onSelectProduct(product)}
+                      className={`hover:bg-slate-50/50 transition-colors group ${onSelectProduct ? 'cursor-pointer' : ''}`}
+                    >
+                      {/* Product identity */}
+                      <td className="py-4.5 pr-4 flex items-center gap-4">
+                        <img 
+                          src={product.image_url || PLACEHOLDER_SVG} 
+                          alt={product.name}
+                          loading="lazy"
+                          onError={(e) => { e.currentTarget.src = PLACEHOLDER_SVG; }}
+                          className="w-12 h-12 rounded-xl object-cover border border-slate-100 flex-shrink-0 group-hover:border-accent/30 transition-colors shadow-sm"
+                        />
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[13.5px] font-bold text-slate-800 group-hover:text-accent transition-colors leading-tight">
+                              {product.name}
+                            </span>
+                            <span className="text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 border border-slate-200/40 px-2.5 py-0.5 rounded-full text-slate-500 font-display">
+                              {product.category}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 font-display">{product.sku}</p>
+                        </div>
+                      </td>
+
+                      {/* Coverage Area */}
+                      <td className="py-4.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5 text-slate-600">
+                          <Layers className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="text-[13px] font-bold">{product.coverage_m2} m²</span>
+                        </div>
+                        <span className="text-[9.5px] font-medium text-slate-400 block mt-0.5">per dus</span>
+                      </td>
+
+                      {/* Dynamic Stock Status */}
+                      <td className="py-4.5 px-4 text-center">
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${badgeStyle} font-display shadow-sm`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${dotStyle} animate-pulse`} />
+                          {stockText}
+                        </div>
+                      </td>
+
+                      {/* Pricing Tag & Selection button */}
+                      <td className="py-4.5 pl-4 text-right">
+                        <span className="text-[14.5px] font-extrabold text-ink block font-display">
+                          Rp {product.base_price.toLocaleString('id-ID')}
                         </span>
-                        <span className="text-[9.5px] font-bold uppercase tracking-wider bg-surface-soft border border-hairline/70 px-2.5 py-0.5 rounded-full text-muted whitespace-nowrap">
-                          {p.category}
-                        </span>
-                      </div>
-                      <p className="text-[10.5px] text-muted-light tracking-wider uppercase mt-0.5">{p.sku}</p>
-                    </div>
-                  </div>
+                        {onSelectProduct && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectProduct(product);
+                            }}
+                            className="mt-1 text-[11px] font-extrabold text-accent hover:text-accent-hover transition-colors focus:outline-none cursor-pointer uppercase tracking-wider font-display"
+                          >
+                            Pilih Material →
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-                  {/* Coverage */}
-                  <div className="text-center w-24">
-                    <div className="flex items-center justify-center gap-1 text-muted">
-                      <Layers className="w-3 h-3 text-muted-light" />
-                      <span className="text-[12.5px] font-medium">{p.coverage_m2} m²</span>
-                    </div>
-                    <span className="text-[9.5px] text-muted-light">/ box</span>
-                  </div>
-
-                  {/* Stock */}
-                  <div className="text-center w-20">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                      <span className="text-[12.5px] font-semibold text-emerald-600">{p.stock_qty}</span>
-                    </div>
-                    <span className="text-[9.5px] text-muted-light">pcs ready</span>
-                  </div>
-
-                  {/* Price + action */}
-                  <div className="text-right w-32">
-                    <span className="text-[14.5px] font-extrabold text-ink block">
-                      Rp {p.base_price.toLocaleString('id-ID')}
-                    </span>
-                    {onSelectProduct && (
-                      <button 
-                        onClick={() => onSelectProduct(p)}
-                        className="mt-1 text-[10.5px] font-bold text-accent hover:text-accent-hover transition-colors focus:outline-none cursor-pointer"
-                      >
-                        Pilih →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Count footer */}
-            <div className="pt-4 border-t border-hairline mt-2 flex items-center justify-between gap-4">
-              <span className="text-[11px] text-muted-light">{totalItems} material · menampilkan {( (currentPage-1)*pageSize + 1)} - {Math.min(currentPage*pageSize, totalItems)}</span>
+            {/* List Table Footer */}
+            <div className="pt-5 border-t border-slate-100 mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <span className="text-[11.5px] text-slate-400 font-semibold">{totalItems} material total · menampilkan {((currentPage - 1) * pageSize + 1)} - {Math.min(currentPage * pageSize, totalItems)}</span>
               <div className="flex items-center gap-2">
-                <label className="text-[11px] text-muted-light">Per halaman:</label>
-                <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="text-[11px] border border-hairline rounded px-2 py-1 bg-white">
+                <label className="text-[11.5px] text-slate-400 font-semibold">Tampilkan per halaman:</label>
+                <select 
+                  value={pageSize} 
+                  onChange={(e) => setPageSize(Number(e.target.value))} 
+                  className="text-[11px] font-bold text-slate-600 border border-slate-200/80 rounded-full px-3 py-1.5 bg-white focus:outline-none cursor-pointer shadow-sm"
+                >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
@@ -357,71 +430,116 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
           </div>
 
         ) : (
-          /* ── GRID VIEW: Flat image + info, minimal separation ── */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-8">
-            {pagedProducts.map((p) => (
-              <div key={p.sku} className={`group ${onSelectProduct ? 'cursor-pointer' : 'cursor-default'}`} onClick={() => onSelectProduct && onSelectProduct(p)} onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && onSelectProduct) onSelectProduct(p); }} role={onSelectProduct ? 'button' : undefined} tabIndex={onSelectProduct ? 0 : undefined}>
-                {/* Image — no border radius card, just image */}
-                  <div className="relative aspect-square bg-neutral-100 overflow-hidden rounded-xl mb-3">
-                  <img 
-                    src={p.image_url || PLACEHOLDER_SVG} 
-                    alt={p.name}
-                    loading="lazy"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_SVG; }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  {p.stock_qty < 10 && (
-                    <span className="absolute top-2 right-2 text-[9px] font-bold bg-amber-500 text-white px-1.5 py-0.5 rounded">
-                      LOW STOCK
-                    </span>
-                  )}
-                </div>
+          
+          /* ── PREMIUM ELEVATED GRID VIEW ── */
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-scale-in">
+            {pagedProducts.map((product) => {
+              let badgeStyle = 'bg-emerald-50 text-emerald-600 border-emerald-500/10';
+              let dotStyle = 'bg-emerald-500';
+              let stockText = `${product.stock_qty} pcs`;
+              
+              if (product.stock_qty === 0) {
+                badgeStyle = 'bg-rose-50 text-rose-600 border-rose-500/10';
+                dotStyle = 'bg-rose-500';
+                stockText = 'Habis';
+              } else if (product.stock_qty < 10) {
+                badgeStyle = 'bg-amber-50 text-amber-600 border-amber-500/10';
+                dotStyle = 'bg-amber-500';
+              }
 
-                {/* Info — below image, no boxing */}
-                <div>
-                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-accent mb-1 block">
-                    {p.category}
-                  </span>
-                  <h4 className="text-[12.5px] font-bold text-ink leading-snug group-hover:text-accent transition-colors line-clamp-2 mb-1">
-                    {p.name}
-                  </h4>
-                  <span className="text-[13px] font-extrabold text-ink block">
-                    Rp {p.base_price.toLocaleString('id-ID')}
-                  </span>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-[10.5px] text-muted">{p.coverage_m2} m²/box</span>
-                    <span className="text-[10.5px] text-emerald-600 font-semibold">{p.stock_qty} pcs</span>
+              return (
+                <div 
+                  key={product.sku} 
+                  onClick={() => onSelectProduct && onSelectProduct(product)}
+                  className={`group flex flex-col justify-between bg-white border border-slate-100 shadow-sm rounded-2xl p-4 hover:-translate-y-1.5 hover:shadow-lg transition-all duration-300 ${onSelectProduct ? 'cursor-pointer' : 'cursor-default'}`}
+                >
+                  <div>
+                    {/* Material Image Container */}
+                    <div className="relative aspect-square bg-slate-50 overflow-hidden rounded-xl mb-4 border border-slate-50 shadow-inner">
+                      <img 
+                        src={product.image_url || PLACEHOLDER_SVG} 
+                        alt={product.name}
+                        loading="lazy"
+                        onError={(e) => { e.currentTarget.src = PLACEHOLDER_SVG; }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      {/* Interactive Stock Badge on top of card */}
+                      <div className={`absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border bg-white ${badgeStyle} shadow-sm font-display`}>
+                        <span className={`w-1 h-1 rounded-full ${dotStyle}`} />
+                        {stockText}
+                      </div>
+                    </div>
+
+                    {/* Metadata Content */}
+                    <div>
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-accent mb-1 block font-display">
+                        {product.category}
+                      </span>
+                      <h4 className="text-[13px] font-bold text-slate-800 leading-snug group-hover:text-accent transition-colors line-clamp-2 mb-2">
+                        {product.name}
+                      </h4>
+                    </div>
                   </div>
-                  {onSelectProduct && (
-                    <button 
-                      onClick={() => onSelectProduct(p)}
-                      className="mt-3.5 w-full py-2 border border-accent/20 hover:border-accent bg-accent/5 hover:bg-accent text-accent hover:text-white rounded-full text-[10.5px] font-bold uppercase tracking-wider transition-all text-center focus:outline-none cursor-pointer"
-                    >
-                      Pilih Material
-                    </button>
-                  )}
+
+                  <div className="mt-4 pt-3 border-t border-slate-50">
+                    <span className="text-[14.5px] font-extrabold text-ink block font-display">
+                      Rp {product.base_price.toLocaleString('id-ID')}
+                    </span>
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 mt-1">
+                      <span>{product.coverage_m2} m²/dus</span>
+                      <span>{product.sku.substring(0, 8)}...</span>
+                    </div>
+                    {onSelectProduct && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectProduct(product);
+                        }}
+                        className="mt-4 w-full py-2.5 bg-accent hover:bg-accent-hover active:scale-95 text-white rounded-full text-[10.5px] font-extrabold uppercase tracking-wider transition-all duration-200 text-center shadow-md shadow-accent/10 focus:outline-none cursor-pointer font-display"
+                      >
+                        Pilih Material
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {/* Pagination controls */}
+        {/* Modern Showroom Pagination */}
         {totalItems > pageSize && (
-          <div className="flex items-center justify-between mt-6 mb-4">
+          <div className="flex items-center justify-between border-t border-slate-100 pt-6 mt-10">
             <div className="flex items-center gap-2">
-              <button onClick={() => setCurrentPage((s) => Math.max(1, s-1))} disabled={currentPage===1} className="px-3 py-1 border rounded bg-white disabled:opacity-50">Prev</button>
-              <span className="text-[11px] text-muted-light">Halaman {currentPage} / {totalPages}</span>
-              <button onClick={() => setCurrentPage((s) => Math.min(totalPages, s+1))} disabled={currentPage===totalPages} className="px-3 py-1 border rounded bg-white disabled:opacity-50">Next</button>
+              <button 
+                onClick={() => setCurrentPage((s) => Math.max(1, s - 1))} 
+                disabled={currentPage === 1} 
+                className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed shadow-sm bg-white text-slate-600"
+              >
+                KEMBALI
+              </button>
+              <span className="text-[12px] font-bold text-slate-500 px-2 font-display">
+                Halaman {currentPage} / {totalPages}
+              </span>
+              <button 
+                onClick={() => setCurrentPage((s) => Math.min(totalPages, s + 1))} 
+                disabled={currentPage === totalPages} 
+                className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed shadow-sm bg-white text-slate-600"
+              >
+                LANJUT
+              </button>
             </div>
-            <div className="text-[11px] text-muted-light">Total: {totalItems}</div>
+            <div className="text-[12px] text-slate-400 font-bold tracking-wider font-display uppercase">
+              TOTAL: {totalItems} MATERIAL
+            </div>
           </div>
         )}
 
-        {/* Footer */}
-        <footer className="text-[11px] text-muted-light mt-auto pt-6 border-t border-hairline/60">
-          QHomeMart Multi-Agent System &copy; 2026 · Digital Office B2B Platform · Dev Mode
+        {/* Corporate Digital Office Footer */}
+        <footer className="text-[11px] font-bold tracking-wider text-slate-300/80 mt-16 pt-6 border-t border-slate-100 font-display uppercase">
+          QHomeMart Multi-Agent System &copy; 2026 · Digital Office Platform
         </footer>
       </div>
     </div>

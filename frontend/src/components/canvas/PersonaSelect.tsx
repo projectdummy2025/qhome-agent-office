@@ -9,7 +9,7 @@ export const PERSONAS = [
     icon: Palette,
     iconBg: 'bg-blue-50 text-blue-600 border border-blue-100/50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30',
     iconColor: 'text-blue-600 dark:text-blue-400',
-    desc: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior B2B.',
+    desc: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior.',
     colorClass: 'border-hairline hover:border-blue-300 hover:shadow-[0_8px_30px_rgb(219,234,254,0.3)] hover:bg-blue-50/5 focus:ring-blue-100',
     badgeColor: 'bg-blue-50 text-blue-700 border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-300',
     distanceKm: 8,
@@ -105,22 +105,22 @@ export const getPersonaGreeting = (role: string) => {
     case 'retailer':
       return {
         title: "Halo Ibu Santi, mari cek ketersediaan stok pergudangan.",
-        subtitle: "Simulasi fokus pada kuantitas stok volume besar, substitusi alternatif barang, and logistik B2B.",
+        subtitle: "Simulasi fokus pada kuantitas stok volume besar, substitusi alternatif barang, and logistik.",
         presets: [
           {
             title: "Bulk Order Ubin Granit Aula",
-            desc: "Pengadaan ubin granit lantai 80 m² dalam satu single-batch produksi untuk menjamin kesamaan warna (tonality) dengan harga tier B2B.",
-            prompt: "Verifikasi ketersediaan stok pergudangan terdistribusi QHomeMart untuk pengadaan grosir (bulk procurement) ubin granit lantai ukuran 60x60 cm (misalnya Tile Polished 60x60 #8 Sandimas atau Tile Matte 50x50 #12 TileCo) guna merenovasi lantai aula serbaguna seluas 80 m². Berhubung area lantai sangat luas, pembeli menegaskan syarat mutlak bahwa seluruh ubin granit harus berasal dari single-batch produksi yang sama (tonality matching) untuk menghindari perbedaan gradasi warna sekecil apa pun di area terbuka. Tolong cari produk dari brand lokal berkualitas tinggi yang memiliki stok terjamin minimal 65 dus di gudang utama. Berikan rincian perhitungan harga khusus untuk tier mitra B2B (volume discount), masa garansi pecah selama proses pengiriman, dan buatkan draf surat penawaran harga resmi (proforma invoice) yang mencakup diskon volume khusus pengadaan institusi."
+            desc: "Pengadaan ubin granit lantai 80 m² dalam satu single-batch produksi untuk menjamin kesamaan warna (tonality) dengan harga tier khusus.",
+            prompt: "Verifikasi ketersediaan stok pergudangan terdistribusi QHomeMart untuk pengadaan grosir (bulk procurement) ubin granit lantai ukuran 60x60 cm (misalnya Tile Polished 60x60 #8 Sandimas atau Tile Matte 50x50 #12 TileCo) guna merenovasi lantai aula serbaguna seluas 80 m². Berhubung area lantai sangat luas, pembeli menegaskan syarat mutlak bahwa seluruh ubin granit harus berasal dari single-batch produksi yang sama (tonality matching) untuk menghindari perbedaan gradasi warna sekecil apa pun di area terbuka. Tolong cari produk dari brand lokal berkualitas tinggi yang memiliki stok terjamin minimal 65 dus di gudang utama. Berikan rincian perhitungan harga khusus untuk tier mitra utama (volume discount), masa garansi pecah selama proses pengiriman, dan buatkan draf surat penawaran harga resmi (proforma invoice) yang mencakup diskon volume khusus pengadaan institusi."
           },
           {
             title: "Pengadaan Cat Proyek Perumahan",
             desc: "Pengadaan cat interior volume besar untuk 5 unit rumah (total 200 m²) dengan skema harga khusus di atas Rp 50 Juta.",
-            prompt: "Lakukan audit ketersediaan stok inventaris dan formulasikan penawaran harga grosir B2B untuk pengadaan cat tembok interior premium dalam jumlah besar guna menutupi dinding interior 5 unit rumah baru di kompleks perumahan kelas menengah (total luas permukaan dinding pengecatan bruto mencapai 200 m²). Tentukan kebutuhan total cat akhir (misalnya cat akhir dari brand Jotaplast atau sejenisnya) dan cat dasar sealer alkali primer dalam satuan Pail besar (20 kg). Pastikan stok kode warna yang sama (tinting code) tersedia melimpah di gudang utama atau gudang cabang Sleman dan Bantul untuk menghindari keterlambatan proyek. Susun skema penawaran harga dengan diskon kemitraan bertingkat (B2B pricing tier) karena nilai transaksi diproyeksikan melebihi Rp 50 juta rupiah, lengkap dengan opsi ketentuan termin pembayaran kredit (term of payment) selama 30 hari (TOP 30) untuk kontraktor terdaftar."
+            prompt: "Lakukan audit ketersediaan stok inventaris dan formulasikan penawaran harga grosir untuk pengadaan cat tembok interior premium dalam jumlah besar guna menutupi dinding interior 5 unit rumah baru di kompleks perumahan kelas menengah (total luas permukaan dinding pengecatan bruto mencapai 200 m²). Tentukan kebutuhan total cat akhir (misalnya cat akhir dari brand Jotaplast atau sejenisnya) and cat dasar sealer alkali primer dalam satuan Pail besar (20 kg). Pastikan stok kode warna yang sama (tinting code) tersedia melimpah di gudang utama atau gudang cabang Sleman dan Bantul untuk menghindari keterlambatan proyek. Susun skema penawaran harga dengan diskon kemitraan bertingkat (volume discount tier) karena nilai transaksi diproyeksikan melebihi Rp 50 juta rupiah, lengkap dengan opsi ketentuan termin pembayaran kredit (term of payment) selama 30 hari (TOP 30) untuk kontraktor terdaftar."
           },
           {
             title: "Konsolidasi Material Kayu & Cat",
             desc: "Konsolidasi pengiriman campuran panel kayu WPC 20 m² dan cat 10 m² dalam satu armada Colt Diesel Double (CDD) terintegrasi.",
-            prompt: "Konsolidasikan rantai pengiriman logistik B2B dan rencanakan distribusi kargo terpadu untuk pesanan campuran multi-material proyek komersil: panel kayu WPC (furniture) seluas 20 m² (berat estimasi 250 kg) dan cat tembok interior beserta cat dasar (building material) seluas 10 m² (berat estimasi 80 kg). Tolong verifikasi ketersediaan stok kedua material tersebut secara real-time di Gudang Pusat QHomeMart Yogyakarta. Hitung total berat kargo keseluruhan, tentukan kubikasi volume barang, dan susun rute pengiriman logistik yang paling efisien menggunakan armada truk Colt Diesel Double (CDD) agar kedua material dapat dikirimkan dalam satu perjalanan tanpa risiko kerusakan cat bocor atau panel kayu patah terhimpit. Jadwalkan waktu tiba yang sinkron di lokasi proyek pada pagi hari sebelum jam operasional pekerja bangunan dimulai."
+            prompt: "Konsolidasikan rantai pengiriman logistik dan rencanakan distribusi kargo terpadu untuk pesanan campuran multi-material proyek komersil: panel kayu WPC (furniture) seluas 20 m² (berat estimasi 250 kg) dan cat tembok interior beserta cat dasar (building material) seluas 10 m² (berat estimasi 80 kg). Tolong verifikasi ketersediaan stok kedua material tersebut secara real-time di Gudang Pusat QHomeMart Yogyakarta. Hitung total berat kargo keseluruhan, tentukan kubikasi volume barang, dan susun rute pengiriman logistik yang paling efisien menggunakan armada truk Colt Diesel Double (CDD) agar kedua material dapat dikirimkan dalam satu perjalanan tanpa risiko kerusakan cat bocor atau panel kayu patah terhimpit. Jadwalkan waktu tiba yang sinkron di lokasi proyek pada pagi hari sebelum jam operasional pekerja bangunan dimulai."
           }
         ]
       };
@@ -141,9 +141,9 @@ export const getPersonaGreeting = (role: string) => {
             prompt: "Uji koordinasi antar staf secara simultan: hitung ubin granit lantai untuk area 60 m2, panel dinding kayu WPC untuk partisi 25 m2, dan cat interior Jotaplast untuk dinding seluas 40 m2 dalam satu sesi estimasi terpadu."
           },
           {
-            title: "Override Diskon Volume B2B",
+            title: "Override Diskon Volume",
             desc: "Pengadaan material bernilai tinggi di atas Rp 50 Juta untuk memicu verifikasi approval diskon khusus admin.",
-            prompt: "Simulasikan pengadaan material bernilai tinggi (total di atas Rp 50 Juta) untuk menguji modul approval diskon volume B2B khusus admin pada portal evaluasi."
+            prompt: "Simulasikan pengadaan material bernilai tinggi (total di atas Rp 50 Juta) untuk menguji modul approval diskon volume khusus admin pada portal evaluasi."
           }
         ]
       };
@@ -219,12 +219,12 @@ export default function PersonaSelect({
           {/* Eyebrow + Headline */}
           <div className="mb-10">
             <p className="text-[10.5px] font-bold uppercase tracking-[0.3em] text-accent mb-4">
-              QHomeMart B2B Enterprise Workspace
+              QHomeMart Enterprise Workspace
             </p>
             <h1 className="text-[42px] font-light text-ink tracking-tight leading-[1.05] mb-5">
               Portal Estimasi &<br />
               <span className="font-extrabold text-ink">Procurement</span>{' '}
-              <span className="text-accent font-light">B2B</span>
+              <span className="text-accent font-light">Grosir</span>
             </h1>
             <p className="text-[14px] text-muted leading-relaxed max-w-lg font-normal border-l-2 border-accent/40 pl-4">
               Sistem staf terintegrasi untuk otomatisasi kalkulasi volume material proyek, sinkronisasi stok gudang real-time, dan kurasi spesifikasi arsitektural bagi mitra profesional.
@@ -285,7 +285,7 @@ export default function PersonaSelect({
                   {/* Right — badge */}
                   <div className="flex items-center gap-3 flex-shrink-0 mt-2">
                     <span className="hidden sm:inline-block text-[9.5px] font-bold uppercase tracking-wider text-muted-light border border-hairline/60 px-3 py-0.5 rounded-full">
-                      {persona.role === 'admin' ? 'Admin' : 'B2B'}
+                      {persona.role === 'admin' ? 'Admin' : 'Mitra'}
                     </span>
                   </div>
                 </button>
@@ -297,7 +297,7 @@ export default function PersonaSelect({
 
         {/* Footer pinned to the absolute bottom of the viewport */}
         <footer className="text-[11px] text-muted-light mt-12 pt-6 border-t border-hairline/60 w-full">
-          QHomeMart Multi-Agent System &copy; 2026 · Digital Office B2B Platform · Dev Mode
+          QHomeMart Multi-Agent System &copy; 2026 · Digital Office Platform · Dev Mode
         </footer>
       </div>
     </div>

@@ -424,7 +424,7 @@ export default function AdminPortal({
                 3. Daftar Evaluasi Rencana Belanja (RAB) Final
               </h2>
               <p className="text-[11.5px] text-muted mt-1">
-                Kompilasi final seluruh item material yang siap untuk dimasukkan ke Nota Transaksi B2B Procurement.
+                Kompilasi final seluruh item material yang siap untuk dimasukkan ke Nota Transaksi Pengadaan.
               </p>
             </div>
             <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-ink">

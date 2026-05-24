@@ -13,7 +13,7 @@ const consultantList = [
     role: 'architect',
     name: 'Ibu Amalia',
     label: 'Senior Architect & Designer',
-    description: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior B2B.',
+    description: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior.',
     borderClass: 'border-slate-100 hover:border-blue-400/60 hover:shadow-[0_12px_30px_-5px_rgba(59,130,246,0.08)]',
     glowColor: 'bg-blue-400/10'
   },
@@ -76,13 +76,13 @@ const SimulationModal: React.FC<SimulationModalProps> = ({ isOpen, onClose, onSe
         {/* Header Block */}
         <div className="px-8 pt-10 pb-8 text-center border-b border-slate-100 bg-slate-50/30 flex flex-col items-center">
           <div className="mb-2 bg-accent/10 border border-accent/25 text-[10px] tracking-[0.2em] uppercase font-bold text-accent px-3 py-1 rounded-full w-max select-none">
-            Simulasi B2B
+            Simulasi Proyek
           </div>
           <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 mb-2.5 uppercase tracking-[0.12em]">
             Pilih Persona Simulasi
           </h2>
           <p className="text-sm font-semibold text-slate-500 max-w-md leading-relaxed">
-            Pilih salah satu persona profesional berikut untuk mensimulasikan alur kerja estimasi dan pengadaan material B2B
+            Pilih salah satu persona profesional berikut untuk mensimulasikan alur kerja estimasi dan pengadaan material
           </p>
         </div>
 

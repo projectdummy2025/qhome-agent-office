@@ -128,7 +128,7 @@ export default function OrderPortal({
         body: JSON.stringify({
           session_id: currentSessionId,
           order_id: orderId,
-          client_name: currentUser?.name || 'Klien B2B',
+          client_name: currentUser?.name || 'Pelanggan',
           total_invoice: totalInvoice,
           items_count: approvedItems.length,
         }),
@@ -179,7 +179,7 @@ export default function OrderPortal({
     const payload = {
       session_id: currentSessionId,
       user_id: currentUser?.role || 'default-user',
-      client_name: currentUser?.name || 'Klien B2B',
+      client_name: currentUser?.name || 'Pelanggan',
       client_role: currentUser?.roleDisplay || 'Mitra Profesional',
       materials_total: materialsTotal,
       shipping_cost: shippingCost,
@@ -212,7 +212,7 @@ export default function OrderPortal({
       }
     } catch (e: any) {
       console.error("Error creating order:", e);
-      alert(`Terjadi kesalahan koneksi saat mengirimkan pesanan B2B: ${e?.message || e}`);
+      alert(`Terjadi kesalahan koneksi saat mengirimkan pesanan: ${e?.message || e}`);
     }
   };
 
@@ -275,7 +275,7 @@ export default function OrderPortal({
           <div className="flex items-center gap-2">
             <span className="text-base font-extrabold text-slate-900 tracking-tight leading-none uppercase">QHomeMart</span>
             <span className="text-xs font-light text-slate-400">/</span>
-            <span className="text-[9px] font-mono tracking-[0.2em] uppercase text-accent mt-0.5">B2B Procurement Portal</span>
+            <span className="text-[9px] font-mono tracking-[0.2em] uppercase text-accent mt-0.5">Procurement Portal</span>
           </div>
           <div className="flex items-center gap-6">
             {currentUser && (
@@ -457,7 +457,7 @@ export default function OrderPortal({
         )}
 
         <footer className="text-[11px] text-muted-light mt-auto pt-6 border-t border-hairline/60">
-          QHomeMart Multi-Agent System &copy; 2026 · Digital Office B2B Platform · Dev Mode
+          QHomeMart Multi-Agent System &copy; 2026 · Digital Office Platform · Dev Mode
         </footer>
       </div>
     </div>

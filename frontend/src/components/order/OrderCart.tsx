@@ -67,7 +67,7 @@ export default function OrderCart({
                 <Check className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-800 block mb-1">Keranjang B2B Aktif</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-800 block mb-1">Keranjang Belanja Aktif</span>
                 <span className="text-[13px] text-slate-700 font-semibold leading-relaxed">Rencana material telah disetujui secara resmi. Anda dapat melangkah ke konfigurasi kargo &amp; logistik.</span>
               </div>
             </div>

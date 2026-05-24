@@ -101,7 +101,7 @@ export default function OrderPayment({
               <div>
                 <p className="text-slate-400 font-extrabold uppercase text-[9px] tracking-widest mb-2">Diterbitkan Untuk</p>
                 <p className="font-extrabold text-slate-800">{currentUser?.name || 'Mitra Korporat'}</p>
-                <p className="text-slate-500 mt-1 font-bold uppercase tracking-wider text-[11px]">{currentUser?.roleDisplay || 'B2B Partner'}</p>
+                <p className="text-slate-500 mt-1 font-bold uppercase tracking-wider text-[11px]">{currentUser?.roleDisplay || 'Pelanggan Utama'}</p>
                 <p className="text-slate-400 text-xs mt-1.5 font-semibold">Wilayah Jarak: {currentUser?.city || 'Sleman'} ({distance} Km)</p>
               </div>
               <div className="text-right">

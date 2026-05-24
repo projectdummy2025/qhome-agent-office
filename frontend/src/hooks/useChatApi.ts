@@ -6,9 +6,42 @@ export function useChatApi(currentUser: any) {
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeAgents, setActiveAgents] = useState<string[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [currentAgentOnDuty, setCurrentAgentOnDuty] = useState<string | null>(null);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+
+  // Load initial session ID from local storage (or null if not set)
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
+    return localStorage.getItem('currentSessionId');
+  });
+
+  // Save active session ID to local storage whenever it changes
+  useEffect(() => {
+    if (currentSessionId) {
+      localStorage.setItem('currentSessionId', currentSessionId);
+    } else {
+      localStorage.removeItem('currentSessionId');
+    }
+  }, [currentSessionId]);
+
+  // Fetch and restore messages for the active session on initial component mount
+  useEffect(() => {
+    const restoreSessionMessages = async () => {
+      if (currentSessionId) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/messages`);
+          const messageData = await response.json();
+          setMessages(messageData);
+          
+          // Auto-expand the right sidebar if system messages are present
+          const hasSystemMessage = messageData.some((message: any) => message.role === 'system');
+          setIsRightSidebarOpen(hasSystemMessage);
+        } catch (error) {
+          console.error("Failed to restore active session messages on startup:", error);
+        }
+      }
+    };
+    restoreSessionMessages();
+  }, []);
 
   const fetchHistory = async () => {
     try {

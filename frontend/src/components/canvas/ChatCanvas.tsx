@@ -239,7 +239,7 @@ export default function ChatCanvas({
 
   return (
     <div className="flex h-screen bg-canvas font-sans overflow-hidden">
-      {/* Left Sidebar — Premium B2B Studio List */}
+      {/* Left Sidebar — Premium Studio List */}
       <div className={`bg-canvas border-r border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[260px]' : 'w-0 overflow-hidden border-none'}`}>
         {/* Header Sidebar — Ultra Minimalis (Harmonis dengan Sidebar Kanan) */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[260px]">
@@ -437,7 +437,7 @@ export default function ChatCanvas({
             <button
               onClick={() => setActivePortal('order')}
               className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-accent hover:border-accent group relative cursor-pointer"
-              title="Buka Keranjang Pengadaan B2B"
+              title="Buka Keranjang Pengadaan"
             >
               <ShoppingBag className="w-4.5 h-4.5 text-accent transition-transform group-hover:scale-110" />
               {(() => {
@@ -471,7 +471,7 @@ export default function ChatCanvas({
               <div className="h-full flex flex-col items-center justify-center text-center space-y-12 animate-float-up min-h-[68vh] px-4">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent">
-                    KONSOLIDASI MATERIAL & REKAYASA ESTIMASI B2B
+                    KONSOLIDASI MATERIAL & REKAYASA ESTIMASI
                   </span>
                   <div className="w-6 h-px bg-hairline mx-auto mt-2.5" />
                 </div>
@@ -588,7 +588,7 @@ export default function ChatCanvas({
           </div>
         </main>
 
-        {/* B2B Prompt Console */}
+        {/* Prompt Console */}
         <div className="absolute bottom-0 w-full bg-gradient-to-t from-canvas via-canvas/95 to-transparent pt-12 pb-7 px-6 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="relative flex items-end bg-white border border-hairline rounded-[26px] pl-6 pr-2.5 py-2.5 shadow-sm focus-within:border-accent/50 focus-within:shadow-md transition-all gap-3">
@@ -721,7 +721,7 @@ export default function ChatCanvas({
         </div>
       </div>
 
-      {/* Floating Hover Card (B2B Tooltip) */}
+      {/* Floating Hover Card (Tooltip) */}
       {hoveredSession && (
         <div
           className="fixed w-[280px] bg-white border border-hairline rounded-[18px] shadow-2xl p-4.5 z-[9999] animate-scale-in flex flex-col pointer-events-none"

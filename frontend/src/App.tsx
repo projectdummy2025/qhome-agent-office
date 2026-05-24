@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminPortal from './components/AdminPortal';
 import { API_BASE_URL } from './config';
 import OrderPortal from './components/OrderPortal';
@@ -10,19 +11,107 @@ import LandingPage from './components/landing/LandingPage';
 import { useChatApi } from './hooks/useChatApi';
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [activePortal, setActivePortal] = useState<'chat' | 'admin' | 'order' | 'catalog' | 'history'>('chat');
-  const [landingTab, setLandingTab] = useState<'simulation' | 'catalog'>('simulation');
+  // Load current logged in user persona from local storage (or null if not logged in)
+  const [currentUser, setCurrentUser] = useState<any | null>(() => {
+    const storedUser = localStorage.getItem('currentUser');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  // Load the active portal page from local storage, defaulting to 'chat'
+  const [activePortal, setActivePortal] = useState<'chat' | 'admin' | 'order' | 'catalog' | 'history'>(() => {
+    const storedPortal = localStorage.getItem('activePortal');
+    return (storedPortal as 'chat' | 'admin' | 'order' | 'catalog' | 'history') || 'chat';
+  });
+
+  // Load the landing page tab (simulation or catalog) from local storage
+  const [landingTab, setLandingTab] = useState<'simulation' | 'catalog'>(() => {
+    const storedTab = localStorage.getItem('landingTab');
+    return (storedTab as 'simulation' | 'catalog') || 'simulation';
+  });
+
+  // Load cart items from local storage
+  const [cartItems, setCartItems] = useState<any[]>(() => {
+    const storedCart = localStorage.getItem('cartItems');
+    return storedCart ? JSON.parse(storedCart) : [];
+  });
+
+  // Helper function to add a selected catalog item to cart
   const addToCart = (product: any) => {
     setCartItems(prev => [...prev, product]);
   };
 
+  // Instantiate the chat API hook with the current logged in user
   const chatApi = useChatApi(currentUser);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Save current user to local storage whenever it changes
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    if (currentUser) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [currentUser]);
+
+  // Save active portal to local storage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('activePortal', activePortal);
+  }, [activePortal]);
+
+  // Save landing tab to local storage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('landingTab', landingTab);
+  }, [landingTab]);
+
+  // Save cart items to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  // Synchronize state changes to URL route pathname
+  useEffect(() => {
+    if (!currentUser) {
+      if (landingTab === 'catalog') {
+        if (location.pathname !== '/catalog') {
+          navigate('/catalog');
+        }
+      } else {
+        if (location.pathname !== '/') {
+          navigate('/');
+        }
+      }
+    } else {
+      const targetPath = `/${activePortal}`;
+      if (location.pathname !== targetPath) {
+        navigate(targetPath);
+      }
+    }
+  }, [currentUser, activePortal, landingTab, location.pathname, navigate]);
+
+  // Synchronize URL route pathname changes back to state (e.g. Back/Forward browser navigation)
+  useEffect(() => {
+    const routePath = location.pathname;
+    if (routePath === '/' || routePath === '/landing') {
+      setLandingTab('simulation');
+    } else if (routePath === '/catalog') {
+      if (!currentUser) {
+        setLandingTab('catalog');
+      } else {
+        setActivePortal('catalog');
+      }
+    } else if (['/chat', '/admin', '/order', '/history'].includes(routePath)) {
+      const portalName = routePath.substring(1) as 'chat' | 'admin' | 'order' | 'history';
+      setActivePortal(portalName);
+    }
+  }, [location.pathname, currentUser]);
+
+  // Load session from URL parameters if redirected from backend (e.g. direct admin/order links)
+  useEffect(() => {
+    // Support query strings in both standard location.search and hash fragments
+    const searchString = window.location.search || window.location.hash.split('?')[1] || '';
+    const params = new URLSearchParams(searchString);
     const portalParam = params.get('portal');
     const sessionIdParam = params.get('session_id');
     const userRoleParam = params.get('user_role');
@@ -39,7 +128,7 @@ export default function App() {
           .then(data => {
             chatApi.setMessages(data);
           })
-          .catch(err => console.error("Error loading cart session messages:", err));
+          .catch(err => console.error("Error loading cart session messages from URL:", err));
       }
     }
   }, []);
