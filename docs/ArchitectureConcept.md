@@ -37,35 +37,31 @@ Pilar utama arsitektur ini meliputi:
 
 ---
 
-## 2. Strategi Routing LLM Dinamis (Berdasarkan Beban Kognitif)
+## 2. Strategi Penyediaan LLM Terpadu (SumoPod AI Gateway)
 
-Untuk memastikan keseimbangan antara **kecepatan (latency)**, **biaya**, dan **kualitas penalaran**, sistem tidak akan mengandalkan satu model LLM secara kaku. Kita akan menerapkan *Dynamic LLM Routing* di mana agen akan memilih "otak" yang sesuai dengan beratnya tugas:
+Untuk memastikan keseimbangan antara **kecepatan (latency)**, **biaya**, dan **kualitas penalaran**, sistem ini sepenuhnya mengintegrasikan **SumoPod AI Gateway** (OpenAI-compatible) sebagai penyedia LLM eksklusif. Hal ini memusatkan seluruh manajemen rate limit dan penyediaan token:
 
-### A. Heavy-Duty LLM (Tugas Kompleks & Orkestrasi)
+### A. High-Reasoning Model (Tugas Kompleks & Orkestrasi)
 * **Peran**: Digunakan oleh **Chief Supervisor** untuk menganalisis *brief* pelanggan yang ambigu, memutuskan strategi *hiring* karyawan, dan mengevaluasi logika dalam Laporan Analisis.
-* **Engine**: **Gemini 3 Flash Preview**
-* **Integrasi**: Native HTTP/cURL Request dengan header `x-goog-api-key: $GEMINI_API_KEY`.
+* **Model Config**: Ditentukan melalui variabel lingkungan `SUPERVISOR_MODEL` (default: `glm-5-turbo`).
 
-### B. Distributed Lightweight LLMs (Eksekusi Cepat & Load Balancing)
-* **Peran**: Digunakan oleh **Dynamic Employees** (misal: Tile Estimator, Paint Consultant) untuk menyusun draf laporan naratif dan memproses RAG.
-* **Strategi Load Balancing**: Untuk menghindari limitasi *Token Per Minute* (TPM) yang ketat pada Groq (Maks 6K TPM), beban agen karyawan akan disebar (*distributed*):
-  * **Engine 1**: **Qwen (qwen/qwen3-32b)** via Groq (untuk 2 agen spesialis).
-  * **Engine 2**: **Gemini 2.5 Flash** atau **Gemini 3 Flash Standard** (untuk 2 agen spesialis lainnya).
-* **Integrasi**: Native HTTP/cURL Request dengan header masing-masing sesuai dokumentasi API.
+### B. Lightweight & Fast Model (Eksekusi Cepat & Efisiensi)
+* **Peran**: Digunakan oleh **Dynamic Employees** (misal: Tile Estimator, Paint Consultant) untuk menyusun draf laporan naratif dan memproses RAG dengan cepat.
+* **Model Config**: Ditentukan melalui variabel lingkungan `SUBAGENT_MODEL` (default: `gpt-5-nano`).
 
-*Catatan: Seluruh kredensial akan dilindungi dan dikelola melalui konfigurasi Environment (`.env` memuat `$GEMINI_API_KEY` dan `$GROQ_API_KEY`).*
+*Catatan: Seluruh kredensial dikelola secara aman melalui konfigurasi Environment (`.env` memuat `SUMOPOD_API_KEY` dan `SUMOPOD_API_BASE`).*
 
 ---
 
-## 3. Analisis Kode Saat Ini & Rencana Refaktor
+## 3. Analisis Kode & Rencana Refaktor
 
 ### A. Yang Dipertahankan (Fondasi Baik)
-1. **Pemisahan Mesin Kalkulasi (Decoupled Math Engine)**: File `rules.py` akan dipertahankan dan ditransformasikan menjadi salah satu fungsi utama di dalam "Server Custom MCP" kita.
+1. **Pemisahan Mesin Kalkulasi (Decoupled Math Engine)**: File `rules.py` ditransformasikan menjadi salah satu fungsi utama di dalam "Server Custom MCP" kita.
 2. **Visualisasi Antarmuka**: UI *Live Canvas* dan *Interaction Log* sudah merepresentasikan konsep "Kantor Digital" dengan sangat baik.
 
 ### B. Yang Direfaktor (Untuk Mencapai Dinamisme)
 1. **Pemanggilan Agen yang Kaku**: Mengubah `asyncio.gather` statis di `supervisor.py` menjadi loop otonom di mana Supervisor yang memegang kendali untuk membangkitkan agen berdasarkan analisis natural *brief* pelanggan.
-2. **Katalog File Statis**: Akan dibuang dan diganti sepenuhnya dengan Database Relasional (SQL) dan Vektorial (Qdrant/Milvus) yang diakses melalui arsitektur MCP.
+2. **Katalog File Statis**: Diganti sepenuhnya dengan Database Relasional (SQL) dan Vektorial (ChromaDB) yang diakses melalui arsitektur MCP.
 
 ---
 
@@ -86,20 +82,80 @@ Untuk memastikan keseimbangan antara **kecepatan (latency)**, **biaya**, dan **k
 ## 5. Skema Database MVP (Sebagai Backend MCP)
 
 ### A. Relational Database (PostgreSQL)
-Menyimpan state proyek dan kebenaran mutlak harga (deterministik).
+Menyimpan *state* sesi konsultasi, log interaksi agen, detail kalkulasi harga deterministik, metrik performa (KPI), serta pesanan transaksi logistik B2B yang ternormalisasi (3NF).
 
-1. **`projects` (Sesi Konsultasi)**
-   * `id` (UUID), `customer_name`, `project_scope_brief` (Teks asli pelanggan).
-   * `status` (Enum: scoping, delegating, reviewing, completed).
-2. **`products` (Katalog Harga Deterministik - No Hallucination)**
-   * `sku` (String, PK), `category`, `name`, `base_price`, `coverage_m2`.
-3. **`agent_communications` (Audit Trail Rapat)**
-   * `id`, `project_id`, `sender_role`, `receiver_role`
-   * `message` (Teks naratif "Laporan Analisis" atau "Revisi dari Supervisor").
+1. **`chat_sessions` (Sesi Konsultasi & Memori)**
+   * `id` (String, PK): ID unik sesi percakapan/estimasi (UUID).
+   * `user_id` (String): ID pengguna (default: `default-user`).
+   * `title` (String): Judul sesi estimasi (default: `Chat Baru`).
+   * `created_at` (DateTime): Waktu pembuatan sesi.
+   * `summary` (Text, Nullable): Ringkasan kumulatif percakapan sebagai *long-term memory* bagi agen.
 
-### B. Vector Database (Pinecone / Qdrant)
-Menyimpan *embeddings* teks untuk pencarian kognitif melalui MCP.
+2. **`chat_messages` (Audit Trail Rapat & Interaksi)**
+   * `id` (String, PK): ID unik pesan (UUID).
+   * `session_id` (String, FK ke `chat_sessions`): ID sesi percakapan terkait.
+   * `role` (Enum `ChatRole`): Peran pengirim pesan (`user`, `system`).
+   * `content` (Text, Nullable): Isi bubble chat (narasi akhir dari asisten atau input dari pengguna).
+   * `agent_logs` (JSONB, Nullable): Log pemikiran internal agen (*agent thoughts* dan kolaborasi multi-agent) dalam format terstruktur.
+   * `created_at` (DateTime): Waktu pesan dicatat.
+
+3. **`products` (Katalog Material & Stok Deterministik)**
+   * `sku` (String, PK): Kode unik produk (Stock Keeping Unit).
+   * `category` (String): Kategori material (misalnya: `tile`, `paint`, dll.).
+   * `name` (String): Nama lengkap material.
+   * `base_price` (Float): Harga dasar produk per unit.
+   * `coverage_m2` (Float): Luas cakupan area per unit (m²).
+   * `desc` (Text, Nullable): Keterangan deskriptif detail mengenai produk.
+   * `stock_qty` (Integer): Jumlah stok fisik yang tersedia di gudang.
+
+4. **`estimation_kpi` (Pelacak KPI & Performa Sistem - P6)**
+   * `id` (String, PK): ID unik log KPI.
+   * `session_id` (String, FK ke `chat_sessions`): Sesi estimasi yang diukur.
+   * `started_at` (DateTime): Waktu dimulainya proses simulasi.
+   * `completed_at` (DateTime, Nullable): Waktu selesainya seluruh proses simulasi.
+   * `lead_time_seconds` (Float, Nullable): Total waktu pengerjaan simulasi (KPI target: < 30 detik).
+   * `agent_count` (Integer): Jumlah agen yang di-hire oleh Chief Supervisor selama sesi berlangsung.
+   * `product_count` (Integer): Jumlah produk unik yang dihasilkan dalam estimasi akhir.
+   * `brief_length` (Integer): Panjang teks input pelanggan (*brief* awal) dalam karakter.
+   * `pdf_generated` (Integer): Status ekspor PDF proposal (0 = belum, 1 = sudah dibuat).
+
+5. **`orders` (Master Transaksi Pengiriman B2B - 3NF)**
+   * `id` (String, PK): ID transaksi pesanan unik (UUID).
+   * `session_id` (String, FK ke `chat_sessions`): Sesi konsultasi asal transaksi.
+   * `user_id` (String): ID pengguna pembuat pesanan.
+   * `client_name` (String, Nullable): Nama pelanggan/instansi B2B.
+   * `client_role` (String, Nullable): Peran/jabatan perwakilan pelanggan.
+   * `materials_total` (Float): Total biaya untuk seluruh kuantitas material.
+   * `shipping_cost` (Float): Biaya armada pengiriman logistik berdasarkan jarak.
+   * `total_invoice` (Float): Total tagihan akhir (`materials_total` + `shipping_cost`).
+   * `truck_type` (String): Jenis armada angkutan logistik yang digunakan.
+   * `delivery_date` (String): Tanggal pengapalan/pengiriman barang.
+   * `distance_km` (Float, Nullable): Jarak tempuh lokasi pengiriman (km).
+   * `notes` (Text, Nullable): Catatan instruksi pengiriman.
+   * `created_at` (DateTime): Waktu transaksi diselesaikan.
+
+6. **`order_items` (Detail Transaksi / Order Line Items - 3NF)**
+   * `id` (String, PK): ID unik baris item transaksi.
+   * `order_id` (String, FK ke `orders`): ID order induk terkait.
+   * `product_sku` (String, FK ke `products`): SKU material produk yang dibeli.
+   * `qty` (Float): Jumlah kuantitas material yang dibeli.
+   * `price` (Float): Harga satuan barang saat dibeli.
+   * `total` (Float): Subtotal harga item (`qty` * `price`).
+
+7. **`stock_recommendations` (Rekomendasi Restok Eksternal dari Research Agent)**
+   * `id` (Integer, PK): ID auto-increment.
+   * `session_id` (String, FK ke `chat_sessions`): Sesi riset di mana rekomendasi diusulkan.
+   * `product_name` (String): Nama barang baru hasil penelusuran internet.
+   * `suggested_sku` (String): Usulan kode SKU baru untuk dimasukkan ke katalog.
+   * `estimated_price` (Float, Nullable): Estimasi harga pasar terendah.
+   * `source_url` (Text, Nullable): Tautan referensi/sumber penelusuran.
+   * `specs` (Text, Nullable): Spesifikasi teknis dari produk baru yang direkomendasikan.
+   * `status` (String): Status persetujuan restok (misalnya: `pending`, `approved`, dll.).
+   * `created_at` (DateTime): Waktu pencatatan rekomendasi.
+
+### B. Vector Database (ChromaDB)
+Menyimpan representasi *embeddings* teks untuk pencarian kognitif cepat dan kemampuan *Retrieval-Augmented Generation* (RAG) oleh sub-agent melalui *server* MCP.
 
 1. **Collection `catalog_knowledge`**
-   * *Embeddings* dari narasi visual/SOP produk (misal: "Ubin motif bata merah klasik untuk nuansa hangat vintage").
-   * Agen (via MCP) dapat melakukan *Semantic Search* pada koleksi ini.
+   * *Embeddings* dari deskripsi visual, keunggulan, petunjuk pemasangan, dan SOP produk.
+   * Spesialis Agen (Tile Estimator, Paint Consultant, dll.) melakukan *Semantic Search* ke koleksi ini guna menemukan kesesuaian estetik material dengan *brief* pelanggan.

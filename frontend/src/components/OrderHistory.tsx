@@ -34,7 +34,7 @@ export default function OrderHistory({
             <h1 className="text-[28px] font-light tracking-tight text-ink">
               Riwayat <span className="font-extrabold">Pesanan & Estimasi</span>
             </h1>
-            <p className="text-[13px] text-muted mt-1.5 font-medium">Daftar arsip sesi konsultasi B2B dan dokumen nota PDF Anda.</p>
+            <p className="text-[13px] text-muted mt-1.5 font-medium">Daftar arsip sesi konsultasi dan dokumen nota PDF Anda.</p>
           </div>
           <div className="w-12 h-12 bg-white rounded-full border border-hairline flex items-center justify-center shadow-sm">
             <Clock className="w-5 h-5 text-accent" />
@@ -58,7 +58,7 @@ export default function OrderHistory({
               titleDisplay = titleDisplay.replace(/<think>[\s\S]*?<\/think>/gi, "");
               titleDisplay = titleDisplay.replace(/<think>[\s\S]*/gi, "").trim();
               if (!titleDisplay) {
-                titleDisplay = "Konsultasi B2B";
+                titleDisplay = "Konsultasi Desain";
               }
 
               return (

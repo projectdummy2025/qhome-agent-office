@@ -13,6 +13,13 @@ services:
       - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data:z
+    networks:
+      - qhome-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d qhome_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   chromadb:
     image: docker.io/chromadb/chroma:latest
@@ -22,3 +29,55 @@ services:
       - "8080:8000"
     volumes:
       - ./chroma_data:/chroma/chroma:z
+    networks:
+      - qhome-network
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: qhome_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/qhome_db"
+      CHROMA_HOST: "chromadb"
+      CHROMA_PORT: "8000"
+      SEED_ON_STARTUP: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    networks:
+      - qhome-network
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/projects/sessions')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 300s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: qhome_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - qhome-network
+
+networks:
+  qhome-network:
+    name: qhome-network
+    driver: bridge
+

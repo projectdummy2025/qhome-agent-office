@@ -42,36 +42,66 @@ qhomemart-mas-agent/
 │   ├── requirements.txt      # Dependensi library Python backend
 │   │
 │   ├── core/                 # Konfigurasi utama
-│   │   ├── config.py         # Pengaturan Environment ($GEMINI_API_KEY, dll)
+│   │   ├── config.py         # Pengaturan Environment ($SUMOPOD_API_KEY, dll)
 │   │   └── database.py       # Inisialisasi PostgreSQL & ChromaDB
 │   │
 │   ├── agents/               # Modul Orkestrasi AI
-│   │   └── supervisor.py     # Chief Supervisor & Node Spesialis (Tile, Wood, Paint, Stone, Researcher)
+│   │   ├── agent_graph.py    # Chief Supervisor & Orkestrasi LangGraph
+│   │   ├── tile_agent.py     # Agen Tile Estimator
+│   │   ├── wood_agent.py     # Agen Wood Specialist
+│   │   ├── paint_agent.py    # Agen Paint Consultant
+│   │   ├── stone_agent.py    # Agen Stone Specialist
+│   │   ├── research_agent.py # Agen Restock Researcher
+│   │   └── shared.py         # Konfigurasi state, LLM, dan fungsi pembantu
 │   │
 │   ├── api/                  # Jalur Routing API
 │   │   └── routes/
-│   │       └── chat.py       # Endpoint POST analyze, GET stream (SSE), GET history, GET PDF
+│   │       └── chat_routes.py # Endpoint POST analyze, GET stream, GET history, POST orders, dll.
 │   │
 │   ├── services/             # Layanan Bisnis Tambahan
+│   │   ├── chat_service.py   # Manajemen data percakapan & transaksi database
 │   │   ├── pdf_service.py    # Pembuatan laporan PDF proposal belanja juri
-│   │   └── simulation_service.py # Logika simulasi stream log agen
+│   │   └── simulation_service.py # Logika penyaluran log orkestrasi agen secara real-time
 │   │
 │   ├── mcp_tools/            # Model Context Protocol Tools
 │   │   ├── calculators.py    # Rumus estimasi material (Tile, Wood, Paint, Stone)
 │   │   └── web_search.py     # Konektor pencarian web Tavily
 │   │
 │   └── models/               # Model database relasional
-│       └── schema.py         # Definisi tabel SQLAlchemy (Project, Product, dll)
+│       └── schema.py         # Definisi tabel SQLAlchemy (ChatSession, Product, Order, dll)
 │
 ├── frontend/                 # Domain khusus Frontend (Vite + React)
 │   ├── package.json          # Dependensi Node.js frontend
 │   ├── index.html            # Entry point web HTML
 │   ├── src/
 │   │   ├── main.tsx          # React root render
-│   │   ├── App.tsx           # Layout dashboard tunggal (Live Canvas, Chat, & Terminal)
+│   │   ├── App.tsx           # Layout dashboard utama / entry portal
 │   │   ├── App.css           # Styling CSS dashboard
 │   │   ├── index.css         # Styling CSS global & Glassmorphism
-│   │   └── assets/           # Gambar & ikon statis (Vite, React, Hero)
+│   │   ├── config.ts         # Konfigurasi URL API backend
+│   │   │
+│   │   ├── components/       # Komponen visual modular dashboard
+│   │   │   ├── AdminPortal.tsx   # Portal administrasi restok & substitusi barang
+│   │   │   ├── OrderPortal.tsx   # Portal transaksi pesanan B2B, armada & pembayaran
+│   │   │   ├── MaterialCatalog.tsx # Katalog pencarian semantik produk RAG
+│   │   │   ├── OrderHistory.tsx  # Riwayat pemesanan pelanggan
+│   │   │   │
+│   │   │   ├── canvas/       # Komponen visualisasi orkestrasi agen
+│   │   │   │   ├── ChatCanvas.tsx   # Interaksi obrolan & Live Canvas rapat multi-agent
+│   │   │   │   └── PersonaSelect.tsx # Pengaturan Persona Supervisor & Spesialis
+│   │   │   │
+│   │   │   ├── order/        # Komponen fungsional transaksi pemesanan
+│   │   │   │   ├── OrderCart.tsx     # Detail keranjang belanja & item detail
+│   │   │   │   ├── OrderShipping.tsx # Pengaturan kurir logistik & kalkulator jarak
+│   │   │   │   └── OrderPayment.tsx  # Konfirmasi invoice & simulasi pembayaran
+│   │   │   │
+│   │   │   └── admin/        # Komponen fungsional admin pergudangan
+│   │   │       ├── RestockPanel.tsx    # Restok produk habis
+│   │   │       └── SubstitutePanel.tsx # Pengalihan produk alternatif
+│   │   │
+│   │   ├── hooks/            # Custom React Hooks
+│   │   ├── constants/        # Konstanta pengaturan
+│   │   └── utils/            # Helper utilitas frontend
 │   │
 │   └── public/               # File statis publik
 │
@@ -91,11 +121,11 @@ qhomemart-mas-agent/
 ## 3. Alur Komunikasi Sistem (Backend $\leftrightarrow$ Frontend)
 
 1. **Inisialisasi**: User membuka UI web (React) dan mengetik kebutuhan renovasi, lalu menekan tombol "Mulai Konsultasi".
-2. **REST API Call**: Frontend mengirim POST request ke endpoint backend: `POST /api/v1/projects/analyze`.
+2. **REST API Call**: Frontend mengirim POST request ke endpoint backend: `POST /api/projects/analyze`.
 3. **Orkestrasi AI**: 
    * FastAPI meneruskan *brief* pelanggan ke **Supervisor Agent** (LangGraph).
-   * Supervisor mulai merumuskan strategi dan men-*hire* karyawan.
+   * Supervisor mulai merumuskan strategi dan men-*hire* karyawan secara otonom.
 4. **Live Streaming (SSE)**: 
-   * Selama agen bekerja dan saling menyerahkan laporan, backend menyemburkan (*streaming*) status melalui endpoint `GET /api/v1/projects/{id}/stream`.
+   * Selama agen bekerja dan saling menyerahkan laporan, backend menyemburkan (*streaming*) status melalui endpoint `GET /api/projects/{session_id}/stream`.
    * Frontend (React) menangkap sinyal ini dan meng-update UI secara instan (Misal: Avatar *Tile Estimator* menyala, menandakan dia sedang bekerja).
 5. **Finalisasi**: Setelah Supervisor melakukan QC dan menyetujui semua laporan bawahan, status proyek menjadi `completed`. Frontend menampilkan *Grand Proposal* PDF yang bisa diunduh pelanggan.

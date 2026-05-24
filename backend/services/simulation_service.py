@@ -19,7 +19,7 @@ async def run_agent_simulation(brief: str, session_id: str, history_summary: str
     await asyncio.sleep(1.5)
     
     try:
-        from backend.agents.supervisor import app_graph
+        from backend.agents.agent_graph import app_graph
         
         config = {"configurable": {"thread_id": session_id}}
         async for output in app_graph.astream({"brief": brief, "history_summary": history_summary}, config=config, stream_mode="updates"):
@@ -61,7 +61,8 @@ async def run_agent_simulation(brief: str, session_id: str, history_summary: str
                     if reports:
                         last_report = reports[-1]
                         agent_title = last_report.get('agent', node_name.capitalize())
-                        add_log({"event": "working", "agent": node_name, "title": agent_title, "message": "Sedang menganalisis dan meninjau katalog..."})
+                        working_msg = "Sedang melakukan riset spesifikasi dan estimasi harga material di internet..." if node_name == "restock_researcher" else "Sedang menganalisis dan meninjau katalog..."
+                        add_log({"event": "working", "agent": node_name, "title": agent_title, "message": working_msg})
                         await asyncio.sleep(2.5)
                         add_log({"event": "report", "agent": node_name, "title": agent_title, "message": last_report.get('content')})
                 
@@ -115,7 +116,7 @@ async def run_agent_simulation(brief: str, session_id: str, history_summary: str
             
             # --- UPDATE SUMMARY ---
             try:
-                from backend.agents.supervisor import gemini_specialist, _llm_invoke_with_retry
+                from backend.agents.shared import gemini_specialist, _llm_invoke_with_retry
                 
                 # Kita ambil narasi terakhir yang di-generate synthesizer
                 last_narrative = ""

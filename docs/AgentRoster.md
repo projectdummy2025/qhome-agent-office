@@ -11,13 +11,13 @@
 
 ---
 
-Dokumen ini memuat daftar lengkap para agen (*Digital Employees*) yang akan di-hire dan dioperasikan di dalam ekosistem QHome-MAS. Masing-masing agen memiliki porsi tugas kognitif yang berbeda, dan ditenagai oleh model LLM yang disesuaikan dengan berat ringannya peran mereka.
+Dokumen ini memuat daftar lengkap para agen (*Digital Employees*) yang akan di-hire dan dioperasikan di dalam ekosistem QHome-MAS. Masing-masing agen memiliki porsi tugas kognitif yang berbeda, dan ditenagai secara eksklusif oleh model terpadu pada **SumoPod AI Gateway**.
 
 ---
 
 ## 1. Chief Project Supervisor (Manajer Utama)
 * **Karakter**: Pemimpin proyek yang teliti, analitis, dan tegas dalam menjaga *Quality Control* (QC) agar sesuai dengan standar B2B Qhomemart.
-* **LLM Engine**: **Gemini 3 Flash Preview** (Membutuhkan *context window* raksasa dan *reasoning* mendalam untuk mengorkestrasi agen lain).
+* **LLM Engine**: **SumoPod AI (Supervisor Model - `SUPERVISOR_MODEL`)** (Membutuhkan *context window* besar dan *reasoning* mendalam untuk mengorkestrasi agen lain).
 * **Tanggung Jawab**:
   1. Membaca instruksi mentah/brief dari pelanggan.
   2. Menganalisis niat/kebutuhan pelanggan (*buyer's intent*) dan HANYA me-hire karyawan spesialis yang benar-benar relevan dengan proyek tersebut (*Dynamic Routing*).
@@ -30,7 +30,7 @@ Dokumen ini memuat daftar lengkap para agen (*Digital Employees*) yang akan di-h
 
 ## 2. Ceramic & Tile Estimator (Spesialis Lantai)
 * **Karakter**: Insinyur lantai yang cermat. Sangat paham soal pola pemasangan (standard vs vintage) dan selalu memperhitungkan risiko ubin meletup (*popping*).
-* **LLM Engine**: **Gemini 2.5 Flash (atau Gemini 3 Flash Standard)** (Untuk mendistribusikan beban token API).
+* **LLM Engine**: **SumoPod AI (Sub-Agent Model - `SUBAGENT_MODEL`)** (Optimal untuk instruksi terfokus dan kecepatan respon tinggi).
 * **Tanggung Jawab**:
   1. Mencari ubin lantai yang cocok dengan estetika ruangan.
   2. Menghitung kebutuhan Box ubin berdasarkan luas (m²).
@@ -43,7 +43,7 @@ Dokumen ini memuat daftar lengkap para agen (*Digital Employees*) yang akan di-h
 
 ## 3. Wood & Cladding Specialist (Spesialis Kayu & Eksterior)
 * **Karakter**: Seniman kayu yang fokus pada kehangatan alami, presisi modul buatan tangan, dan ketahanan jangka panjang (anti-rayap/jamur).
-* **LLM Engine**: **Qwen 3 (32B) via Groq**.
+* **LLM Engine**: **SumoPod AI (Sub-Agent Model - `SUBAGENT_MODEL`)**.
 * **Tanggung Jawab**:
   1. Menyesuaikan jenis kayu (Jati Klasik vs Recycle Mixwood Modern).
   2. Menghitung jumlah panel cladding per m².
@@ -55,7 +55,7 @@ Dokumen ini memuat daftar lengkap para agen (*Digital Employees*) yang akan di-h
 
 ## 4. Stone Veneer Specialist (Spesialis Batu Alam)
 * **Karakter**: Ahli struktur dinding. Fokus utamanya bukan hanya pada keindahan batu alam, tetapi pada teknik pengikatan yang kuat (*double-buttering*) dan keamanan.
-* **LLM Engine**: **Gemini 2.5 Flash (atau Gemini 3 Flash Standard)**.
+* **LLM Engine**: **SumoPod AI (Sub-Agent Model - `SUBAGENT_MODEL`)**.
 * **Tanggung Jawab**:
   1. Menghitung kebutuhan lembaran batu (Golden Sand vs Slate Grey).
   2. Mengkalkulasi *bonding agent* beban berat (*heavy-duty*).
@@ -66,8 +66,8 @@ Dokumen ini memuat daftar lengkap para agen (*Digital Employees*) yang akan di-h
 ---
 
 ## 5. Color & Coating Consultant (Spesialis Qpaint Gallery)
-* **Karakter**: Konsultan warna yang *up-to-date* dengan tren warna 2025. Paham betul tentang harmoni *color palette* ruangan.
-* **LLM Engine**: **Qwen 3 (32B) via Groq**.
+* **Karakter**: Konsultan warna yang *up-to-date* dengan tren warna saat ini. Paham betul tentang harmoni *color palette* ruangan.
+* **LLM Engine**: **SumoPod AI (Sub-Agent Model - `SUBAGENT_MODEL`)**.
 * **Tanggung Jawab**:
   1. Menyelaraskan warna cat interior dengan tekstur ubin dan kayu yang sudah dipilih bawahan lain.
   2. Menerapkan teknik *double-coat* (2 lapis) dalam perhitungannya.
@@ -79,7 +79,7 @@ Dokumen ini memuat daftar lengkap para agen (*Digital Employees*) yang akan di-h
 
 ## 6. Market Research Analyst (Spesialis Riset Internet)
 * **Karakter**: Peneliti yang selalu *up-to-date* dengan dunia luar. Fokus utamanya adalah memastikan rekomendasi Qhomemart tidak tertinggal zaman dengan meriset tren desain global secara *real-time*.
-* **LLM Engine**: **Gemini 2.5 Flash** (Paling andal untuk mencerna teks panjang/rangkuman artikel hasil pencarian internet).
+* **LLM Engine**: **SumoPod AI (Sub-Agent Model - `SUBAGENT_MODEL`)** (Andal mencerna hasil pencarian internet berukuran panjang).
 * **Tanggung Jawab**:
   1. Mencari referensi tren arsitektur dan interior terbaru di web (misal: "Tren warna cat interior 2026").
   2. Meriset teknologi material terbaru atau perbandingan harga pasar eksternal jika diperlukan oleh Supervisor.
@@ -94,11 +94,9 @@ Agen-agen spesialis (Nomor 2 hingga 6) hanya akan "hidup" (di-instansiasi) jika 
 
 ---
 
-## Mitigasi Batasan Infrastruktur (Groq Rate Limits)
+## Mitigasi Batasan Infrastruktur & Rate Limits
 
-Berdasarkan spesifikasi *Free Tier / Developer Plan* pada infrastruktur Groq, model `qwen/qwen3-32b` memiliki limitasi **Tokens Per Minute (TPM)** yang sangat ketat, yaitu maksimal **6.000 TPM**.
-
-Untuk mencegah *Crash* atau *HTTP 429 Too Many Requests*, ekosistem MAS ini wajib menerapkan aturan berikut:
-1. **No Pure Parallel Execution**: Supervisor tidak boleh membangkitkan 3-4 agen Groq secara bersamaan. Eksekusi (*hiring*) harus dilakukan secara bergiliran (*sequential/waterfall*) atau menggunakan *Throttling Task Queue*.
-2. **Ultra-Lean Prompting**: Prompt dan *System Instruction* yang dikirimkan ke Groq harus sangat padat dan ringkas (*Token-Optimized*). *Payload* RAG dari Vector DB harus dibatasi maksimal 1-2 dokumen paling relevan untuk menjaga ukuran *context window* tetap di bawah batas aman.
-3. **Graceful Degradation (Retry & Fallback)**: Modul *Custom MCP* harus dilengkapi penangkap error (Try/Catch) pada *header* HTTP 429. Jika TPM jebol, agen otomatis akan melakukan penundaan (*sleep*) selama beberapa detik atau langsung mengembalikan draf statis dari mesin *local fallback*.
+Untuk mencegah *Crash* atau error *HTTP 429 Too Many Requests* saat menangani beban kueri agen, ekosistem MAS ini menerapkan aturan berikut:
+1. **No Pure Parallel Execution**: Supervisor tidak boleh membangkitkan banyak agen secara bersamaan. Eksekusi (*hiring*) dilakukan secara bergiliran (*sequential/waterfall*) untuk melancarkan pembagian token.
+2. **Ultra-Lean Prompting**: Prompt dan *System Instruction* yang dikirimkan ke model dirancang padat dan ringkas (*Token-Optimized*). *Payload* RAG dari Vector DB dibatasi maksimal 1-2 dokumen paling relevan untuk menjaga ukuran *context window* tetap aman.
+3. **Graceful Degradation (Retry & Fallback)**: Modul *Custom MCP* dilengkapi penangkap error (Try/Catch). Jika kuota rate limit terlampaui, agen otomatis akan melakukan penundaan (*sleep*) selama beberapa detik sebelum mencoba kembali atau langsung mengembalikan draf dari mesin *local fallback* deterministik.

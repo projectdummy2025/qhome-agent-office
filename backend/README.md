@@ -1,48 +1,62 @@
-# QHome-MAS Backend Setup
+# QHome-MAS Backend Setup & Architecture
 
-Panduan ini berisi cara menyiapkan dan menjalankan *backend* FastAPI untuk proyek QHome-MAS.
+Berkas ini berisi panduan untuk menyiapkan, menjalankan, dan memahami arsitektur layanan *backend* FastAPI untuk proyek QHome-MAS, baik secara lokal maupun menggunakan kontainerisasi Docker.
 
-## Persyaratan
-- Python 3.10 atau lebih baru (direkomendasikan)
-- Akun dan API Key untuk: Gemini, Groq, dan (opsional) Tavily.
+---
 
-## Langkah-Langkah Setup
+## 1. Arsitektur Komponen Backend
 
-1. **Masuk ke Direktori Proyek Utama**
-   Kembali ke root proyek utama jika Anda belum di sana.
-   ```bash
-   cd /home/ahmad/projects/qhomemart-mas-agent
-   ```
+Layanan *backend* dirancang secara modular dan performa tinggi menggunakan:
+*   **FastAPI**: Sebagai framework API asinkron.
+*   **LangGraph**: Mengelola DAG State Graph untuk penugasan multi-agent AI secara bergiliran (*waterfall execution*).
+*   **Server-Sent Events (SSE)**: Menayangkan log pemikiran agen dan hasil simulasi secara *real-time* ke frontend melalui endpoint `/api/projects/{session_id}/stream`.
+*   **MCP Tools & Calculators**: Logika komputasi lokal untuk perhitungan ubin, kayu, cat, dan batu alam untuk menghindari halusinasi LLM.
 
-2. **Buat Virtual Environment**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+---
 
-3. **Install Dependensi**
-   Masuk ke direktori `backend` atau *install* secara langsung menggunakan *requirements.txt* dari *root*:
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
+## 2. Pilihan A: Setup Lokal (Host Development)
 
-4. **Konfigurasi Environment**
-   Buat file `.env` di dalam folder *root* proyek (`/home/ahmad/projects/qhomemart-mas-agent/.env`) atau di *environment system* Anda, lalu isi variabel berikut:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key
-   GROQ_API_KEY=your_groq_api_key
-   TAVILY_API_KEY=your_tavily_api_key
-   ```
+### Persyaratan Lokal
+*   Python 3.10 atau lebih baru (direkomendasikan Python 3.11/3.12).
+*   PostgreSQL & ChromaDB berjalan di latar belakang (dapat dinyalakan via Docker Compose).
 
-5. **Inisialisasi & Seeding Database**
-   Jalankan file *seed* untuk memuat produk awal ke SQLite dan ChromaDB. (Pastikan dijalankan dari *root* direktori).
-   ```bash
-   python backend/seed.py
-   ```
+### Langkah-Langkah Setup
+1.  **Buat & Aktifkan Virtual Environment**:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+2.  **Instal Dependensi**:
+    ```bash
+    pip install -r backend/requirements.txt
+    ```
+3.  **Inisialisasi & Seeding Database**:
+    Jalankan file *seed* untuk memuat produk awal dari CSV (`seed_products.csv`) ke PostgreSQL dan ChromaDB. (Dijalankan dari *root* direktori).
+    ```bash
+    python backend/seed.py
+    ```
+4.  **Jalankan Server Uvicorn**:
+    ```bash
+    uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+    ```
+    API Anda akan aktif di `http://127.0.0.1:8000`. Dokumentasi Swagger interaktif dapat diakses langsung di `/docs`.
 
-6. **Jalankan Server API**
-   Setelah semua terinstal dan database siap, nyalakan *server*:
-   ```bash
-   uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-   *Server backend* akan berjalan pada `http://localhost:8000`.
+---
+
+## 3. Pilihan B: Setup Docker (Production-Ready)
+
+Backend telah dilengkapi dengan konfigurasi kontainer terisolasi yang sangat ringan dan aman.
+
+### Berkas Konfigurasi Utama
+*   **`backend/Dockerfile`**: Menggunakan teknik *Multi-Stage Build* berbasis `python:3.11-slim` untuk memangkas compiler tools pasca kompilasi dependensi. Kontainer berjalan menggunakan user non-privileged (`appuser`) demi keamanan production.
+*   **`backend/entrypoint.sh`**: Skrip otomatisasi cold start yang berfungsi:
+    1.  Melakukan TCP pinging untuk menunggu layanan database PostgreSQL dan ChromaDB aktif sepenuhnya sebelum API backend dinyalakan.
+    2.  Melakukan seeding database otomatis lewat `seed.py` secara aman jika variabel lingkungan `SEED_ON_STARTUP="true"`.
+*   **`backend/.dockerignore`**: Memblokir berkas temporer (`__pycache__`), virtual environment lokal (`venv`), logs, dan berkas rahasia host `.env` agar tidak ikut ter-copy ke dalam Docker daemon.
+
+### Variabel Lingkungan Kontainer (Docker Compose)
+Dua variabel lingkungan khusus diinjeksikan pada layer orkestrasi:
+*   `DATABASE_URL`: Diarahkan ke host internal kontainer DB `postgresql://postgres:postgrespassword@postgres:5432/qhome_db`.
+*   `CHROMA_HOST` & `CHROMA_PORT`: Diarahkan ke layanan `chromadb` port `8000`.
+*   `SEED_ON_STARTUP`: Disetel `"true"` untuk memaksa database melakukan seeding otomatis saat pertama kali dideploy (*cold-start*).
+
