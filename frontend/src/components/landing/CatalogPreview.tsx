@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 interface CatalogPreviewProps {
-  onViewCatalog: () => void;
+  onViewCatalog: (categoryId?: string, search?: string) => void;
 }
 
 const categoryList = [
@@ -11,36 +11,46 @@ const categoryList = [
     description: 'Solusi pengikat dan struktur dengan kualitas yang dapat diandalkan dan sesuai standar teknis.',
     accent: 'from-amber-100 via-white to-white',
     border: 'border-amber-100',
+    categoryId: 'building material',
+    search: 'semen',
   },
   {
     name: 'Bata & Blok',
     description: 'Material dinding yang ideal untuk setiap kebutuhan konstruksi hunian dan komersial.',
     accent: 'from-red-100 via-white to-white',
     border: 'border-red-100',
+    categoryId: 'building material',
+    search: 'mortar',
   },
   {
     name: 'Besi & Rangka',
     description: 'Pilihan rangka baja dan struktur untuk kekuatan bangunan yang teruji.',
     accent: 'from-slate-100 via-white to-white',
     border: 'border-slate-200',
+    categoryId: 'building material',
+    search: 'rangka',
   },
   {
     name: 'Keramik & Granit',
     description: 'Finishing premium untuk tampilan yang elegan dan mudah dirawat.',
     accent: 'from-blue-100 via-white to-white',
     border: 'border-blue-100',
+    categoryId: 'floor',
+    search: 'tile',
   },
   {
     name: 'Kayu & Plafon',
     description: 'Material interior dengan sentuhan hangat dan detail yang rapi.',
     accent: 'from-emerald-100 via-white to-white',
     border: 'border-emerald-100',
+    categoryId: 'furniture',
   },
   {
     name: 'Sanitasi & MEP',
     description: 'Solusi instalasi dan sanitasi yang lengkap untuk setiap kebutuhan proyek.',
     accent: 'from-cyan-100 via-white to-white',
     border: 'border-cyan-100',
+    categoryId: 'sanitary & plumbing',
   },
 ];
 
@@ -72,7 +82,7 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ onViewCatalog }) => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.35, delay: index * 0.05 }}
-              onClick={onViewCatalog}
+              onClick={() => onViewCatalog(category.categoryId, category.search)}
             >
               <div className={`absolute inset-x-0 top-0 h-36 bg-gradient-to-br ${category.accent}`} />
               <div className="relative flex min-h-[230px] flex-col justify-between p-8">
@@ -100,7 +110,7 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ onViewCatalog }) => {
         {/* CTA Button below grid */}
         <div className="text-center">
           <button 
-            onClick={onViewCatalog}
+            onClick={() => onViewCatalog()}
             className="inline-flex items-center justify-center rounded-xl border-2 border-slate-200 bg-transparent px-8 py-3.5 text-sm font-bold text-slate-700 hover:border-slate-950 hover:text-slate-950 transition-all duration-200 cursor-pointer"
           >
             Lihat Semua Kategori

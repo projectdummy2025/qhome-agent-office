@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 import { 
   Search, 
@@ -62,18 +63,64 @@ function CatalogSkeleton() {
 }
 
 export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCatalogProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<DBProduct[]>([]);
   const [categories, setCategories] = useState<{id:string,name:string}[]>(CATEGORIES);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedCat, setSelectedCat] = useState('all');
+
+  // Initialize state from search parameters
+  const [search, setSearch] = useState(() => searchParams.get('search') || '');
+  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams.get('search') || '');
+  const [selectedCat, setSelectedCat] = useState(() => searchParams.get('category') || 'all');
+
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [pageSize, setPageSize] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [sortBy, setSortBy] = useState<'relevance' | 'price_asc' | 'price_desc' | 'name'>('relevance');
   const debounceRef = useRef<number | null>(null);
+
+  // Handle category changes
+  const handleCategoryChange = (catId: string) => {
+    setSelectedCat(catId);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (catId === 'all') {
+        next.delete('category');
+      } else {
+        next.set('category', catId);
+      }
+      return next;
+    }, { replace: true });
+  };
+
+  // Handle search changes
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (!val) {
+        next.delete('search');
+      } else {
+        next.set('search', val);
+      }
+      return next;
+    }, { replace: true });
+  };
+
+  // Sync URL search params to local state (for back/forward navigation support)
+  useEffect(() => {
+    const category = searchParams.get('category') || 'all';
+    const query = searchParams.get('search') || '';
+    if (category !== selectedCat) {
+      setSelectedCat(category);
+    }
+    if (query !== search) {
+      setSearch(query);
+      setDebouncedSearch(query);
+    }
+  }, [searchParams]);
 
   // Normalize category titles to lowercase matching DB standards
   const mapCategory = (cat: string): string => {
@@ -224,7 +271,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCat(cat.id)}
+                onClick={() => handleCategoryChange(cat.id)}
                 className={`px-4.5 py-2 rounded-full text-[12px] font-bold transition-all duration-200 whitespace-nowrap focus:outline-none cursor-pointer ${
                   selectedCat === cat.id 
                     ? 'bg-accent text-white shadow-md shadow-accent/15 border border-accent' 
@@ -246,7 +293,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                 type="text"
                 placeholder="Cari material..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 aria-label="Cari material"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && filteredProducts.length > 0 && onSelectProduct) {

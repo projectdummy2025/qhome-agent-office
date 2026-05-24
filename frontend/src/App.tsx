@@ -29,6 +29,9 @@ export default function App() {
     return (storedTab as 'simulation' | 'catalog') || 'simulation';
   });
 
+  // Track parameters for catalog filtering to avoid router race conditions
+  const [catalogParams, setCatalogParams] = useState<{ category?: string; search?: string } | null>(null);
+
   // Load cart items from local storage
   const [cartItems, setCartItems] = useState<any[]>(() => {
     const storedCart = localStorage.getItem('cartItems');
@@ -74,8 +77,14 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) {
       if (landingTab === 'catalog') {
-        if (location.pathname !== '/catalog') {
-          navigate('/catalog');
+        const params = new URLSearchParams();
+        if (catalogParams?.category) params.set('category', catalogParams.category);
+        if (catalogParams?.search) params.set('search', catalogParams.search);
+        const query = params.toString();
+        const target = `/catalog${query ? `?${query}` : ''}`;
+        
+        if (location.pathname !== '/catalog' || location.search !== (query ? `?${query}` : '')) {
+          navigate(target);
         }
       } else {
         if (location.pathname !== '/') {
@@ -85,19 +94,24 @@ export default function App() {
     } else {
       const targetPath = `/${activePortal}`;
       if (location.pathname !== targetPath) {
-        navigate(targetPath);
+        navigate(`${targetPath}${location.search}`);
       }
     }
-  }, [currentUser, activePortal, landingTab, location.pathname, navigate]);
+  }, [currentUser, activePortal, landingTab, location.pathname, navigate, catalogParams]);
 
   // Synchronize URL route pathname changes back to state (e.g. Back/Forward browser navigation)
   useEffect(() => {
     const routePath = location.pathname;
     if (routePath === '/' || routePath === '/landing') {
       setLandingTab('simulation');
+      setCatalogParams(null);
     } else if (routePath === '/catalog') {
       if (!currentUser) {
         setLandingTab('catalog');
+        const params = new URLSearchParams(location.search);
+        const category = params.get('category') || undefined;
+        const search = params.get('search') || undefined;
+        setCatalogParams({ category, search });
       } else {
         setActivePortal('catalog');
       }
@@ -105,7 +119,7 @@ export default function App() {
       const portalName = routePath.substring(1) as 'chat' | 'admin' | 'order' | 'history';
       setActivePortal(portalName);
     }
-  }, [location.pathname, currentUser]);
+  }, [location.pathname, currentUser, location.search]);
 
   // Load session from URL parameters if redirected from backend (e.g. direct admin/order links)
   useEffect(() => {
@@ -167,7 +181,7 @@ export default function App() {
         />
       );
     }
-      return (
+    return (
       <LandingPage
         onSelectPersona={(role) => {
           const matchedPersona = PERSONAS.find(p => p.role === role);
@@ -176,7 +190,10 @@ export default function App() {
             setActivePortal(role === 'admin' ? 'admin' : 'chat');
           }
         }}
-        onViewCatalog={() => setLandingTab('catalog')}
+        onViewCatalog={(categoryId, search) => {
+          setCatalogParams({ category: categoryId, search });
+          setLandingTab('catalog');
+        }}
       />
     );
   }

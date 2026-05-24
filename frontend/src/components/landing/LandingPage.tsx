@@ -8,7 +8,7 @@ import SimulationModal from './SimulationModal';
 
 interface LandingPageProps {
   onSelectPersona: (role: string) => void;
-  onViewCatalog: () => void;
+  onViewCatalog: (categoryId?: string, search?: string) => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onSelectPersona, onViewCatalog }) => {
@@ -17,13 +17,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPersona, onViewCatalo
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans selection:bg-red-100 selection:text-red-900">
       <NavigationBar 
-        onViewCatalog={onViewCatalog} 
+        onViewCatalog={() => onViewCatalog()} 
       />
       
       <main>
         <HeroSection 
           onStartSimulation={() => setModalOpen(true)} 
-          onViewCatalog={onViewCatalog} 
+          onViewCatalog={() => onViewCatalog()} 
         />
         <FeaturesSection />
         <CatalogPreview onViewCatalog={onViewCatalog} />
