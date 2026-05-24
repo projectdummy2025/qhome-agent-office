@@ -197,7 +197,7 @@ def generate_estimation_pdf(
 
     # ── Header Brand ──────────────────────────────────────────────────────
     is_official_invoice = order_id is not None
-    right_header_title = "NOTA BELANJA B2B" if is_official_invoice else "KOLABORASI DESAIN"
+    right_header_title = "NOTA BELANJA MITRA" if is_official_invoice else "KOLABORASI DESAIN"
     right_header_subtitle = f"#{order_id}" if is_official_invoice else f"#{ref_id}"
     
     header_data = [[
@@ -226,7 +226,7 @@ def generate_estimation_pdf(
     
     # Jika invoice resmi, tambahkan info Klien
     if is_official_invoice:
-        meta_data.append(["Identitas Klien:", client_name or "Klien B2B", "Peran Klien:", client_role or "Mitra Profesional"])
+        meta_data.append(["Identitas Klien:", client_name or "Klien Mitra", "Peran Klien:", client_role or "Mitra Profesional"])
         
     meta_table = Table(meta_data, colWidths=["25%", "35%", "20%", "20%"])
     meta_table.setStyle(TableStyle([
@@ -244,7 +244,7 @@ def generate_estimation_pdf(
 
     # ── Rincian Logistik (Jika Invoice Resmi) ──────────────────────────────
     if is_official_invoice and truck_type:
-        story.append(Paragraph("RINCIAN DISTRIBUSI & LOGISTIK B2B", style_section))
+        story.append(Paragraph("RINCIAN DISTRIBUSI & LOGISTIK MITRA", style_section))
         logistics_data = [
             ["Jenis Armada:", truck_type, "Tanggal Pengiriman:", delivery_date or "-"],
             ["Jarak Pengiriman:", f"{distance_km} Km", "Biaya Pengiriman:", _format_rupiah(shipping_cost or 0)],
@@ -338,7 +338,7 @@ def generate_estimation_pdf(
             grand_total_val = total_invoice if total_invoice is not None else (mat_total_val + ship_cost_val)
             
             tbl_data.append(["", "", "", "SUBTOTAL MATERIAL", _format_rupiah(mat_total_val)])
-            tbl_data.append(["", "", "", "BIAYA LOGISTIK B2B", _format_rupiah(ship_cost_val)])
+            tbl_data.append(["", "", "", "BIAYA LOGISTIK MITRA", _format_rupiah(ship_cost_val)])
             tbl_data.append(["", "", "", "TOTAL INVOICE RESMI", _format_rupiah(grand_total_val)])
         else:
             tbl_data.append(["", "", "", "TOTAL INVESTASI RUANG", _format_rupiah(grand_total)])
@@ -440,12 +440,12 @@ def generate_estimation_pdf(
         qris_drawing = _create_qris_drawing()
         bank_data = [
             [
-                Paragraph("<b>INSTRUKSI PEMBAYARAN B2B & TRANSFER</b>", bank_style_label),
+                Paragraph("<b>INSTRUKSI PEMBAYARAN MITRA & TRANSFER</b>", bank_style_label),
                 Paragraph("<b>SCAN QRIS RESMI PEMBAYARAN</b>", bank_style_label)
             ],
             [
                 Paragraph(
-                    "Pembayaran B2B wajib dilakukan ke rekening bank korporasi resmi <b>PT QHome Mart</b>:<br/>"
+                    "Pembayaran Kemitraan wajib dilakukan ke rekening bank korporasi resmi <b>PT QHome Mart</b>:<br/>"
                     "<b>Bank Central Asia (BCA)</b> Cabang Yogyakarta<br/>"
                     "No. Rekening: <b>456-789-1011</b> a.n. <b>PT QHome Mart</b><br/><br/>"
                     "<i>Silakan scan barcode QRIS di samping kanan untuk melakukan simulasi pembayaran instan bernilai legal dari asisten digital Anda.</i>", 
@@ -526,7 +526,7 @@ def generate_estimation_pdf(
             Paragraph("<b>( ___________________________ )</b>", sig_name_style)
         ],
         [
-            Paragraph("Divisi Perencanaan B2B & Proyek", sig_sub_style),
+            Paragraph("Divisi Perencanaan & Proyek", sig_sub_style),
             Paragraph("Tanda Tangan & Nama Terang", sig_sub_style)
         ]
     ]

@@ -276,7 +276,7 @@ def update_session_products_db(db: Session, session_id: str, products: list):
             {
                 "event": "completed",
                 "products": products,
-                "narrative": msg.content or "Material terkurasi oleh asisten B2B.",
+                "narrative": msg.content or "Material terkurasi oleh asisten digital.",
             }
         )
 
@@ -338,7 +338,7 @@ def confirm_payment_db(db: Session, payload):
 
     agent_narrative = (
         f"**Pembayaran QRIS Diterima — Kargo Diaktifkan**\n\n"
-        f"Terima kasih banyak, **{payload.client_name}**! 🙏 Kami sangat mengapresiasi kepercayaan dan kerja sama Anda dalam transaksi B2B ini.\n\n"
+        f"Terima kasih banyak, **{payload.client_name}**! Kami sangat mengapresiasi kepercayaan dan kerja sama Anda dalam transaksi kemitraan ini.\n\n"
         f"Sistem kami telah berhasil memverifikasi pembayaran QRIS untuk pesanan **{payload.order_id}** dengan rincian berikut:\n\n"
         f"- **Total Pembayaran:** Rp {payload.total_invoice:,.0f}\n"
         f"- **Jumlah Item:** {payload.items_count} jenis material bangunan\n"
@@ -486,7 +486,7 @@ def generate_pdf_service(session_id: str, db: Session):
         distance_km = order.distance_km
         notes = order.notes
 
-        client_name = order.client_name or "Klien B2B"
+        client_name = order.client_name or "Klien Mitra"
         client_role = order.client_role or "Mitra Profesional"
 
         if order.items:
@@ -533,7 +533,7 @@ def generate_pdf_service(session_id: str, db: Session):
         kpi.pdf_generated = 1
         db.commit()
 
-    filename_prefix = "Nota_B2B" if order_id is not None else "Estimasi_QHome"
+    filename_prefix = "Nota_Mitra" if order_id is not None else "Estimasi_QHome"
     filename = f"{filename_prefix}_{session_id[:8].upper()}.pdf"
     return StreamingResponse(
         io.BytesIO(pdf_bytes),

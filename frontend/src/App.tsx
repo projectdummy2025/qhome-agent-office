@@ -167,13 +167,13 @@ export default function App() {
         />
       );
     }
-    return (
+      return (
       <LandingPage
         onSelectPersona={(role) => {
           const matchedPersona = PERSONAS.find(p => p.role === role);
           if (matchedPersona) {
             setCurrentUser(matchedPersona);
-            setActivePortal('chat');
+            setActivePortal(role === 'admin' ? 'admin' : 'chat');
           }
         }}
         onViewCatalog={() => setLandingTab('catalog')}
