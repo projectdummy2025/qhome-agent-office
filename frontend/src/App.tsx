@@ -4,8 +4,9 @@ import { API_BASE_URL } from './config';
 import OrderPortal from './components/OrderPortal';
 import MaterialCatalog from './components/MaterialCatalog';
 import OrderHistory from './components/OrderHistory';
-import PersonaSelect, { PERSONAS } from './components/canvas/PersonaSelect';
+import { PERSONAS } from './components/canvas/PersonaSelect';
 import ChatCanvas from './components/canvas/ChatCanvas';
+import LandingPage from './components/landing/LandingPage';
 import { useChatApi } from './hooks/useChatApi';
 
 export default function App() {
@@ -69,13 +70,24 @@ export default function App() {
   }, [chatApi.currentSessionId]);
 
   if (!currentUser) {
+    if (landingTab === 'catalog') {
+      return (
+        <MaterialCatalog
+          onBack={() => setLandingTab('simulation')}
+          onSelectProduct={(p) => { addToCart(p); setActivePortal('order'); }}
+        />
+      );
+    }
     return (
-      <PersonaSelect 
-        landingTab={landingTab}
-        setLandingTab={setLandingTab}
-        setCurrentUser={setCurrentUser}
-        setActivePortal={setActivePortal}
-        addToCart={addToCart}
+      <LandingPage
+        onSelectPersona={(role) => {
+          const matchedPersona = PERSONAS.find(p => p.role === role);
+          if (matchedPersona) {
+            setCurrentUser(matchedPersona);
+            setActivePortal('chat');
+          }
+        }}
+        onViewCatalog={() => setLandingTab('catalog')}
       />
     );
   }
@@ -139,7 +151,6 @@ export default function App() {
   if (activePortal === 'order') {
     const systemMsgsWithProducts = chatApi.messages.filter(m => m.role === 'system' && m.products && m.products.length > 0);
     const products = systemMsgsWithProducts.length > 0 ? systemMsgsWithProducts[systemMsgsWithProducts.length - 1].products : [];
-    const userBrief = chatApi.messages.filter(m => m.role === 'user')[0]?.content || "";
 
     return (
       <OrderPortal
@@ -153,7 +164,6 @@ export default function App() {
           total: (p.base_price || p.price || 0) * 1,
           category: p.category
         })) : products}
-        brief={userBrief}
         onBack={() => setActivePortal('chat')}
         onPlaceOrder={async (_orderDetails) => {
           setActivePortal('chat');

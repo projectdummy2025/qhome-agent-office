@@ -20,7 +20,6 @@ interface OrderPortalProps {
   currentUser: any;
   currentSessionId: string | null;
   products: Product[];
-  brief: string;
   onBack: () => void;
   onPlaceOrder: (orderDetails: any) => void;
 }
@@ -63,14 +62,16 @@ const getProductImage = (name: string) => {
   if (n.includes('fluted') || n.includes('panel') || n.includes('wood') || n.includes('wpc') || n.includes('dinding')) {
     return 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=240&auto=format&fit=crop';
   }
-  return 'https://images.unsplash.com/photo-1581094288338-2314dddb7ecc?q=80&w=240&auto=format&fit=crop';
+  if (n.includes('semen') || n.includes('perekat') || n.includes('mortar') || n.includes('grout') || n.includes('sika') || n.includes('hebel')) {
+    return 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=240&auto=format&fit=crop';
+  }
+  return 'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?q=80&w=240&auto=format&fit=crop';
 };
 
 export default function OrderPortal({
   currentUser,
   currentSessionId,
   products,
-  brief,
   onBack,
   onPlaceOrder
 }: OrderPortalProps) {
@@ -268,27 +269,27 @@ export default function OrderPortal({
   const warningItem = approvedItems.find(p => p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0);
 
   return (
-    <div className="flex flex-col min-h-screen bg-canvas font-sans text-ink">
-      <header className="w-full border-b border-hairline bg-canvas sticky top-0 z-40">
-        <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
+    <div className="flex flex-col min-h-screen bg-slate-50/30 font-sans text-slate-900">
+      <header className="w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-40 py-3 font-display">
+        <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-extrabold text-ink tracking-widest uppercase">QHomeMart</span>
-            <span className="text-[11px] font-light text-muted-light">/</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent mt-0.5">B2B Procurement Portal</span>
+            <span className="text-base font-extrabold text-slate-900 tracking-tight leading-none uppercase">QHomeMart</span>
+            <span className="text-xs font-light text-slate-400">/</span>
+            <span className="text-[9px] font-mono tracking-[0.2em] uppercase text-accent mt-0.5">B2B Procurement Portal</span>
           </div>
           <div className="flex items-center gap-6">
             {currentUser && (
-              <div className="hidden sm:flex items-center gap-2 text-right">
-                <span className="text-[11.5px] font-bold text-ink">{currentUser.name}</span>
-                <span className="text-[9px] font-light text-muted-light">/</span>
-                <span className="text-[9px] uppercase tracking-wider text-muted-light font-bold">{currentUser.roleDisplay}</span>
+              <div className="hidden sm:flex items-center gap-2.5 text-right">
+                <span className="text-xs font-bold text-slate-800">{currentUser.name}</span>
+                <span className="text-xs font-light text-slate-350">/</span>
+                <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">{currentUser.roleDisplay}</span>
               </div>
             )}
             <button 
               onClick={onBack}
-              className="text-[10px] font-bold uppercase tracking-widest text-muted hover:text-ink transition-colors focus:outline-none cursor-pointer border border-hairline/60 px-5 py-1.5 rounded-full hover:border-ink transition-all flex items-center gap-1.5"
+              className="text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-slate-900 transition-all duration-200 focus:outline-none cursor-pointer border border-slate-200 hover:border-slate-800 px-5 py-2 rounded-full flex items-center gap-1.5 bg-white shadow-sm hover:shadow active:scale-[0.98]"
             >
-              <ArrowLeft className="w-3 h-3" />
+              <ArrowLeft className="w-3.5 h-3.5" />
               Kembali ke Chat
             </button>
           </div>
@@ -298,88 +299,26 @@ export default function OrderPortal({
       <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-10">
         {localProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-scale-in">
-            <div className="w-16 h-16 rounded-full bg-surface-soft border border-hairline flex items-center justify-center text-muted-light mb-4">
+            <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 mb-4">
               <ShoppingBag className="w-6 h-6" />
             </div>
-            <h2 className="text-[18px] font-bold text-ink tracking-tight">Keranjang Belanja Kosong</h2>
-            <p className="text-[12.5px] text-muted max-w-sm mt-1 mb-6 leading-relaxed">
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight font-display">Keranjang Belanja Kosong</h2>
+            <p className="text-sm font-semibold text-slate-500 max-w-sm mt-1.5 mb-6 leading-relaxed">
               Belum ada data estimasi material proyek yang dikurasi oleh asisten digital untuk sesi aktif ini.
             </p>
             <button 
               onClick={onBack}
-              className="px-6 py-2.5 bg-ink hover:opacity-90 text-white rounded-full text-[11px] font-bold tracking-widest uppercase transition-all"
+              className="px-6 py-2.5 bg-slate-950 hover:bg-black text-white rounded-full text-[11px] font-bold tracking-widest uppercase transition-all shadow-md active:scale-[0.98]"
             >
               Kembali ke Chat Utama
             </button>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col">
-            <div className="w-full max-w-3xl mx-auto mb-12">
-              <div className="flex items-center justify-between relative">
-                <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-hairline -translate-y-1/2 z-0" />
-                <div 
-                  className="absolute top-1/2 left-0 h-[2px] bg-accent -translate-y-1/2 z-0 transition-all duration-500 ease-in-out"
-                  style={{ 
-                    width: cartStep === 'review' ? '0%' : cartStep === 'logistics' ? '50%' : '100%' 
-                  }}
-                />
-
-                <div className="z-10 flex flex-col items-center">
-                  <button
-                    disabled={cartStep === 'success'}
-                    onClick={() => setCartStep('review')}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[12.5px] transition-all duration-300 ${
-                      cartStep === 'review'
-                        ? 'bg-accent text-white ring-4 ring-accent/20 scale-105'
-                        : 'bg-emerald-600 text-white'
-                    }`}
-                  >
-                    {cartStep !== 'review' ? <Check className="w-4.5 h-4.5" /> : '1'}
-                  </button>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider mt-2.5 transition-all ${
-                    cartStep === 'review' ? 'text-accent' : 'text-muted-light'
-                  }`}>Review Material</span>
-                </div>
-
-                <div className="z-10 flex flex-col items-center">
-                  <button
-                    disabled={cartStep === 'review' || cartStep === 'success'}
-                    onClick={() => setCartStep('logistics')}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[12.5px] transition-all duration-300 ${
-                      cartStep === 'logistics'
-                        ? 'bg-accent text-white ring-4 ring-accent/20 scale-105'
-                        : cartStep === 'success'
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-surface-soft border border-hairline text-muted-light'
-                    }`}
-                  >
-                    {cartStep === 'success' ? <Check className="w-4.5 h-4.5" /> : '2'}
-                  </button>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider mt-2.5 transition-all ${
-                    cartStep === 'logistics' ? 'text-accent' : 'text-muted-light'
-                  }`}>Logistik &amp; Kargo</span>
-                </div>
-
-                <div className="z-10 flex flex-col items-center">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[12.5px] transition-all duration-300 ${
-                    cartStep === 'success'
-                      ? 'bg-emerald-600 text-white ring-4 ring-emerald-600/20 scale-105'
-                      : 'bg-surface-soft border border-hairline text-muted-light'
-                  }`}>
-                    3
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider mt-2.5 transition-all ${
-                    cartStep === 'success' ? 'text-emerald-600' : 'text-muted-light'
-                  }`}>Nota &amp; QRIS</span>
-                </div>
-              </div>
-            </div>
+          <div className="flex-1 flex flex-col pt-4">
 
             {cartStep === 'review' && (
               <OrderCart
                 currentUser={currentUser}
-                currentSessionId={currentSessionId}
-                brief={brief}
                 localProducts={localProducts}
                 approvedItems={approvedItems}
                 isProposalApproved={isProposalApproved}

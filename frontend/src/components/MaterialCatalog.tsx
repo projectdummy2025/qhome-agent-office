@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../config';
 import { 
   Search, 
@@ -25,23 +25,24 @@ interface MaterialCatalogProps {
 }
 
 const CATEGORIES = [
-  { id: 'all', name: 'Semua' },
-  { id: 'building material', name: 'Building Material' },
-  { id: 'floor', name: 'Floor' },
-  { id: 'appliance & household', name: 'Appliance & Household' },
-  { id: 'furniture', name: 'Furniture' },
-  { id: 'sanitary & plumbing', name: 'Sanitary & Plumbing' },
-  { id: 'electrical & lighting', name: 'Electrical & Lighting' },
-  { id: 'tools & machinery', name: 'Tools & Machinery' }
+  { id: 'all', name: 'Semua' }
 ];
+
+const PLACEHOLDER_SVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140"><rect width="200" height="140" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="Arial, Helvetica, sans-serif" font-size="14">No Image</text></svg>';
 
 export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCatalogProps) {
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<DBProduct[]>([]);
+  const [categories, setCategories] = useState<{id:string,name:string}[]>(CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [sortBy, setSortBy] = useState<'relevance' | 'price_asc' | 'price_desc' | 'name'>('relevance');
+  const debounceRef = useRef<number | null>(null);
 
   // Keep category names aligned with the database taxonomy: just normalize to lower-case
   const mapCategory = (cat: string): string => {
@@ -59,6 +60,10 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
       }));
       setProducts(mappedData);
       setFilteredProducts(mappedData);
+      // derive categories from data to avoid taxonomy mismatches
+      const uniq = Array.from(new Set(mappedData.map((x: any) => (x.category || 'lainnya') as string))).filter(Boolean) as string[];
+      const nice = uniq.map((id: string) => ({ id, name: String(id).split(/\s|&|\/|_/).map((w:any)=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ') }));
+      setCategories([{ id: 'all', name: 'Semua' }, ...nice]);
     } catch (e) {
       console.error("Error loading products:", e);
     } finally {
@@ -67,24 +72,76 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   };
 
   useEffect(() => {
+    // load persisted UI state
+    try {
+      const savedView = localStorage.getItem('materialCatalog:viewMode');
+      const savedPageSize = localStorage.getItem('materialCatalog:pageSize');
+      const savedPage = localStorage.getItem('materialCatalog:currentPage');
+      if (savedView === 'list' || savedView === 'card') setViewMode(savedView as 'list' | 'card');
+      if (savedPageSize) setPageSize(Number(savedPageSize));
+      if (savedPage) setCurrentPage(Math.max(1, Number(savedPage)));
+    } catch (e) {
+      // ignore localStorage errors
+    }
     fetchProducts();
   }, []);
 
+  // Debounce search input for better UX
   useEffect(() => {
-    let result = products;
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    // small debounce to avoid rapid re-filtering
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    debounceRef.current = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    };
+  }, [search]);
+
+  useEffect(() => {
+    let result = products.slice();
     if (selectedCat !== 'all') {
-      result = result.filter(p => p.category.toLowerCase().includes(selectedCat));
+      result = result.filter(p => (p.category || '').toLowerCase() === selectedCat.toLowerCase());
     }
-    if (search.trim() !== '') {
-      const query = search.toLowerCase();
+    if (debouncedSearch !== '') {
+      const query = debouncedSearch.toLowerCase();
       result = result.filter(p => 
         p.name.toLowerCase().includes(query) || 
         p.sku.toLowerCase().includes(query) ||
         p.category.toLowerCase().includes(query)
       );
     }
+
+    // apply sorting
+    if (sortBy === 'price_asc') result.sort((a, b) => a.base_price - b.base_price);
+    else if (sortBy === 'price_desc') result.sort((a, b) => b.base_price - a.base_price);
+    else if (sortBy === 'name') result.sort((a, b) => a.name.localeCompare(b.name));
+
     setFilteredProducts(result);
-  }, [search, selectedCat, products]);
+    // when filters change, reset to first page
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedCat, products, sortBy]);
+
+  // persist UI state to localStorage when changed
+  useEffect(() => {
+    try {
+      localStorage.setItem('materialCatalog:viewMode', viewMode);
+      localStorage.setItem('materialCatalog:pageSize', String(pageSize));
+      localStorage.setItem('materialCatalog:currentPage', String(currentPage));
+    } catch (e) {
+      // ignore
+    }
+  }, [viewMode, pageSize, currentPage]);
+
+  // compute pagination
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  // clamp currentPage
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages]);
+
+  const pagedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="flex flex-col min-h-screen bg-canvas font-sans">
@@ -113,7 +170,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
         <div className="mb-8">
           <p className="text-[10.5px] font-bold uppercase tracking-[0.3em] text-accent mb-3">Direktori Material</p>
           <h1 className="text-[32px] font-light text-ink tracking-tight leading-tight mb-2">
-            Katalog Material{' '}
+            Katalog Material {' '}
             <span className="font-extrabold">Premium & Stok</span>
           </h1>
           <p className="text-[13px] text-muted">Cari dan filter material kustom berkualitas tinggi dengan informasi stok seketika.</p>
@@ -123,7 +180,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
         <div className="flex flex-wrap items-center gap-3 border-y border-hairline py-3.5 mb-8">
           {/* Category Pills (underline style) */}
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCat(cat.id)}
@@ -149,8 +206,24 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
               placeholder="Cari material..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              aria-label="Cari material"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && filteredProducts.length > 0 && onSelectProduct) {
+                  onSelectProduct(filteredProducts[0]);
+                }
+              }}
               className="pl-9 pr-4 py-1.5 bg-surface-soft border border-hairline rounded-full text-[12.5px] focus:outline-none focus:border-accent/50 transition-all placeholder:text-muted-light w-52"
             />
+          </div>
+
+          {/* Sort control */}
+          <div className="ml-2">
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} aria-label="Urutkan" className="text-[12px] border border-hairline rounded px-2 py-1 bg-white">
+              <option value="relevance">Relevansi</option>
+              <option value="price_asc">Harga: Rendah → Tinggi</option>
+              <option value="price_desc">Harga: Tinggi → Rendah</option>
+              <option value="name">Nama (A–Z)</option>
+            </select>
           </div>
 
           {/* Reload + View Mode */}
@@ -169,8 +242,8 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
               <List className="w-3.5 h-3.5" />
             </button>
             <button 
-              onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'grid' ? 'text-ink bg-surface-soft' : 'text-muted-light hover:text-ink'}`}
+              onClick={() => setViewMode('card')}
+              className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'card' ? 'text-ink bg-surface-soft' : 'text-muted-light hover:text-ink'}`}
             >
               <Grid className="w-3.5 h-3.5" />
             </button>
@@ -202,16 +275,22 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-light text-right w-32">Harga Satuan</span>
             </div>
             <div className="divide-y divide-hairline/70">
-              {filteredProducts.map((p) => (
+              {pagedProducts.map((p) => (
                 <div 
                   key={p.sku} 
-                  className="grid grid-cols-[1fr_auto_auto_auto] gap-6 items-center py-4 px-2 hover:bg-surface-soft/50 transition-colors group"
+                  onClick={() => onSelectProduct && onSelectProduct(p)}
+                  onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && onSelectProduct) onSelectProduct(p); }}
+                  role={onSelectProduct ? 'button' : undefined}
+                  tabIndex={onSelectProduct ? 0 : undefined}
+                  className={`grid grid-cols-[1fr_auto_auto_auto] gap-6 items-center py-4 px-2 hover:bg-surface-soft/50 transition-colors group ${onSelectProduct ? 'cursor-pointer' : ''}`}
                 >
                   {/* Product identity */}
                   <div className="flex items-center gap-4 min-w-0">
                     <img 
-                      src={p.image_url} 
+                      src={p.image_url || PLACEHOLDER_SVG} 
                       alt={p.name}
+                      loading="lazy"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_SVG; }}
                       className="w-11 h-11 rounded-lg object-cover border border-hairline/70 flex-shrink-0 group-hover:border-accent/20 transition-colors"
                     />
                     <div className="min-w-0">
@@ -264,21 +343,31 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
             </div>
 
             {/* Count footer */}
-            <div className="pt-4 border-t border-hairline mt-2">
-              <span className="text-[11px] text-muted-light">{filteredProducts.length} material ditampilkan</span>
+            <div className="pt-4 border-t border-hairline mt-2 flex items-center justify-between gap-4">
+              <span className="text-[11px] text-muted-light">{totalItems} material · menampilkan {( (currentPage-1)*pageSize + 1)} - {Math.min(currentPage*pageSize, totalItems)}</span>
+              <div className="flex items-center gap-2">
+                <label className="text-[11px] text-muted-light">Per halaman:</label>
+                <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="text-[11px] border border-hairline rounded px-2 py-1 bg-white">
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
             </div>
           </div>
 
         ) : (
           /* ── GRID VIEW: Flat image + info, minimal separation ── */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-8">
-            {filteredProducts.map((p) => (
-              <div key={p.sku} className="group cursor-default">
+            {pagedProducts.map((p) => (
+              <div key={p.sku} className={`group ${onSelectProduct ? 'cursor-pointer' : 'cursor-default'}`} onClick={() => onSelectProduct && onSelectProduct(p)} onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && onSelectProduct) onSelectProduct(p); }} role={onSelectProduct ? 'button' : undefined} tabIndex={onSelectProduct ? 0 : undefined}>
                 {/* Image — no border radius card, just image */}
-                <div className="relative aspect-square bg-neutral-100 overflow-hidden rounded-xl mb-3">
+                  <div className="relative aspect-square bg-neutral-100 overflow-hidden rounded-xl mb-3">
                   <img 
-                    src={p.image_url} 
+                    src={p.image_url || PLACEHOLDER_SVG} 
                     alt={p.name}
+                    loading="lazy"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_SVG; }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -315,6 +404,18 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination controls */}
+        {totalItems > pageSize && (
+          <div className="flex items-center justify-between mt-6 mb-4">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setCurrentPage((s) => Math.max(1, s-1))} disabled={currentPage===1} className="px-3 py-1 border rounded bg-white disabled:opacity-50">Prev</button>
+              <span className="text-[11px] text-muted-light">Halaman {currentPage} / {totalPages}</span>
+              <button onClick={() => setCurrentPage((s) => Math.min(totalPages, s+1))} disabled={currentPage===totalPages} className="px-3 py-1 border rounded bg-white disabled:opacity-50">Next</button>
+            </div>
+            <div className="text-[11px] text-muted-light">Total: {totalItems}</div>
           </div>
         )}
 
