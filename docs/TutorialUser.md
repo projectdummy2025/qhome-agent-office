@@ -47,6 +47,17 @@ Salin salah satu prompt percakapan alami berikut ke kolom input chat di aplikasi
 > **Salin & Tempel Prompt Ini:**
 > "Selamat siang, saya Santi dari divisi pengadaan retail untuk proyek perumahan baru di Kulon Progo. Kami berencana melakukan pemesanan grosir untuk tipe ubin lantai standar berukuran 60x60 sebanyak 80 dus, serta cat dinding interior warna putih netral sebanyak 15 pail untuk pengerjaan tahap pertama. Mohon dibantu estimasi ketersediaan barang dan perhitungan pengiriman kargo ke lokasi proyek kami di Kulon Progo. Terima kasih."
 
+### Opsi C: Skenario Barang Tidak Tersedia / Riset Internet (Menguji OOS & Research Agent)
+> **Salin & Tempel Prompt Ini:**
+> "Halo, saya Joko dari Bantul. Saya ingin memesan Semen Instan QHome #1 sebanyak 150 sak. Namun, kami juga membutuhkan Cat Dinding Nippon Paint Spotless sebanyak 8 pail dan Perekat Keramik Khusus SikaCeram-200 sebanyak 12 sak yang tidak terdaftar di daftar utama showroom. Tolong carikan spesifikasinya di internet, berikan estimasi harga pasarnya, dan buatkan rincian anggarannya."
+
+### Alur Uji Coba (Sinyal ke Admin):
+1. **Analisis Ketersediaan Inventaris (Inventory Administrator)**:
+   * Setelah agen spesialis memilih ubin/kayu, *Inventory Administrator* akan mengecek database Gudang.
+   * Jika stok `< 20` atau `0`, agen akan memberikan sinyal ke frontend dengan menyisipkan tag `[STOK TERBATAS]` atau `[STOK HABIS]` pada nama produk, serta memunculkan alternatif dengan tag `(Substitusi)`.
+2. **Respons B2B Cart**:
+   * Keranjang B2B akan membaca tag *string* tersebut dan memunculkan *banner* merah peringatan bahwa Checkout dikunci.
+   * Muncul tombol **"Intervensi Admin"**.
 ---
 
 ## Langkah 3: Memantau Proses Berpikir Multi-Agent (Live Canvas)
@@ -84,6 +95,14 @@ Jika Anda menggunakan **Opsi Skenario Bapak Joko** (kebutuhan volume ubin dan ka
 5. Kirim prompt lanjutan berikut di kolom chat:
    > "Tadi kata admin sudah direstock. Coba tolong dicek lagi apakah stoknya sudah aman dan hitung ulang total biayanya."
 6. **Verifikasi Stateful RAG**: Agen spesialis akan memanfaatkan memori jangka panjang (`_should_reuse_product`), mendeteksi pembaruan stok tanpa mengulang pencarian di ChromaDB, lalu membuka kembali tombol Checkout di Keranjang B2B Anda!
+
+### Skenario Barang Tidak Tersedia / Belum Terdaftar di Katalog (OOS Flow & Riset Internet):
+Jika Anda meminta barang yang **tidak tersedia** atau **belum terdaftar** dalam katalog master (misalnya meminta merek cat impor khusus atau produk perekat spesifik yang tidak ada di showroom):
+
+1. **Pemicuan Research Agent**: Sistem multi-agent akan mendeteksi ketidaktersediaan barang di database lokal, lalu memicu **Research Agent** (Agen Riset) secara otomatis.
+2. **Riset Internet Real-time**: Agen Riset akan melakukan pencarian web secara asinkron menggunakan *Tavily Search API* untuk menemukan estimasi harga pasar, merek alternatif populer di Indonesia, dan spesifikasi kemasan barang tersebut.
+3. **Pemberian Estimasi Sementara**: Di dalam ruang obrolan, item tersebut akan diberikan label `(Estimasi Internet - Menunggu Validasi)` dengan estimasi harga pasar agar perhitungan estimasi anggaran proyek Anda tetap dapat berjalan tanpa hambatan.
+4. **Penyimpanan Usulan Stok Baru**: Data hasil riset internet tersebut akan disimpan ke database (`stock_recommendations`) dengan status `pending`. Admin Gudang dapat melihat rekomendasi tersebut di Admin Portal untuk divalidasi dan ditambahkan ke dalam katalog master secara resmi jika disetujui.
 
 ---
 
