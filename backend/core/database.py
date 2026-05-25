@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from backend.core.config import settings
 from backend.models.schema import Base
@@ -11,6 +11,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Idempotent column additions for tables that already exist
+    with engine.begin() as conn:
+        conn.execute(text(
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR DEFAULT 'pending'"
+        ))
 
 def get_db():
     db = SessionLocal()

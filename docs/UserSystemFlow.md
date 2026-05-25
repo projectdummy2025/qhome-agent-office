@@ -110,6 +110,7 @@ User menekan tombol "Lanjutkan ke Pengiriman" untuk masuk ke **Step 2 (Logistics
    * Menampilkan **Simulated QRIS Stand** interaktif bergaya GPN Standard Indonesia lengkap dengan matrix piksel dinamis sebagai metode pembayaran B2B.
    * Menyediakan tombol **"Unduh PDF Nota Belanja Resmi"** yang memicu backend memproduksi dokumen nota komersial resmi dengan grafis vektor stand QR Code.
    * Menyediakan tombol **"Konfirmasi Sudah Bayar"** interaktif. Ketika diklik, sistem mengirim sinyal verifikasi pembayaran ke backend secara real-time.
+   * **Status Pembayaran Persisten**: Setelah konfirmasi berhasil, kolom `payment_status` pada tabel `orders` di-update menjadi `'paid'`. Frontend langsung menghapus `pendingOrderId` dari localStorage dan menggantinya dengan `paidOrderId:${sessionId}`. Dengan demikian, setiap kali Order Portal dibuka kembali untuk sesi yang sama, portal langsung menampilkan layar "Keranjang Belanja Anda Kosong" tanpa flash daftar barang.
    * **Sinkronisasi Otomatis Tanpa Reload**: Setelah tombol konfirmasi diklik, sistem menggunakan **BroadcastChannel (`qhome_payment_channel`)** untuk memicu sinkronisasi riwayat obrolan secara instan di tab obrolan utama. Pengguna otomatis dialihkan kembali ke layar chat utama setelah 1.5 detik dengan gelembung chat dari agen yang langsung menampilkan status verifikasi pembayaran sukses dan pengaktifan kargo logistik tanpa perlu me-reload halaman.
 
 ---
@@ -199,11 +200,20 @@ Saat tombol "Unduh PDF" ditekan:
 ### Fase 7: Verifikasi Transaksi & Sinkronisasi Obrolan Lintas-Tab (BroadcastChannel)
 Ketika pengguna mengklik "Konfirmasi Sudah Bayar" pada halaman sukses QRIS:
 1. Frontend mengirimkan request `POST /api/projects/orders/{order_id}/confirm-payment` ke backend.
-2. **Penyuntikan Pesan Otomatis (backend/api/routes/chat_routes.py)**:
+2. **Pembaruan Status Pembayaran (schema.py)**:
+   * Backend men-set `orders.payment_status = 'paid'` secara langsung pada baris order bersangkutan di database. Ini adalah source of truth yang eksplisit — tidak lagi bergantung pada parsing teks pesan.
+3. **Penyuntikan Pesan Otomatis (backend/api/routes/chat_routes.py)**:
    * Backend menyisipkan pesan baru bertindak sebagai pengguna (`role=user`) yang mengonfirmasi penyelesaian pembayaran QRIS.
    * Backend menyisipkan tanggapan otomatis dari agen (`role=system`) yang menyatakan pembayaran sukses diterima dan kargo logistik diaktifkan secara resmi.
    * Kedua pesan tersebut disimpan ke database SQL dengan UUID pesan (`id=str(uuid.uuid4())`) yang di-generate secara manual untuk menghindari pelanggaran not-null constraint.
-3. **Sinkronisasi Obrolan Instan (BroadcastChannel)**:
+4. **Pembersihan & Penandaan localStorage (frontend)**:
+   * `pendingOrderId:${sessionId}` dihapus dari localStorage.
+   * `paidOrderId:${sessionId}` ditulis ke localStorage dengan nilai order ID.
+   * `localProducts` state dikosongkan secara eksplisit (`setLocalProducts([])`).
+5. **Sinkronisasi Obrolan Instan (BroadcastChannel)**:
    * Frontend mengirim sinyal `payment_confirmed` melalui `BroadcastChannel('qhome_payment_channel')`.
    * Tab obrolan utama mendengarkan channel tersebut dan langsung me-refresh/memuat ulang seluruh riwayat chat secara asinkron dari API `/api/projects/sessions/{session_id}/messages` tanpa memicu pemuatan ulang halaman web secara keseluruhan (hard reload).
    * Portal B2B ditutup secara elegan setelah 1.5 detik untuk transisi visual yang mulus.
+6. **Re-open Order Portal setelah Lunas**:
+   * Bila user membuka kembali Order Portal untuk sesi yang sama, `paidOrderId` ditemukan di localStorage secara synchronous → portal langsung menampilkan layar "Keranjang Belanja Anda Kosong" tanpa race condition atau flash daftar barang.
+   * Untuk sesi lama (sebelum `paidOrderId` key ada), fallback ke parsing pesan `/messages` tetap berjalan — jika ditemukan, kunci dimigrasikan ke `paidOrderId` agar re-open berikutnya instan.

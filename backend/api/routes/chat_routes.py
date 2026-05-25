@@ -147,6 +147,7 @@ def get_order(order_id: str, db: Session = Depends(get_db)):
         "delivery_date": order.delivery_date,
         "distance_km": order.distance_km,
         "notes": order.notes,
+        "payment_status": order.payment_status or "pending",
         "items": [
             {
                 "sku": item.product_sku,

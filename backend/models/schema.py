@@ -90,6 +90,7 @@ class Order(Base):
     distance_km = Column(Float, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    payment_status = Column(String, default="pending", nullable=True)
 
     # Relasi 1-to-many: Satu order dapat memiliki banyak item detail
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")

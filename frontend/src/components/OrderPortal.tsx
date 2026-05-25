@@ -92,103 +92,92 @@ export default function OrderPortal({
   }, [products]);
 
   useEffect(() => {
-    if (currentSessionId) {
-      // 1. Check local storage for pending order ID and restore state
-      const pendingId = localStorage.getItem(`pendingOrderId:${currentSessionId}`);
-      if (pendingId) {
-        setOrderId(pendingId);
-        setCartStep('success');
-        
-        // Fetch order details from database to populate localProducts
-        fetch(`${API_BASE_URL}/api/projects/orders/${pendingId}`)
-          .then(res => {
-            if (res.ok) return res.json();
-            throw new Error('Order not found');
-          })
-          .then(order => {
-            if (order.delivery_date) setDeliveryDate(order.delivery_date);
-            if (order.notes) setNotes(order.notes);
-            if (order.truck_type) {
-              const matchedTruck = TRUCKS.find(t => t.name === order.truck_type || t.id === order.truck_type);
-              if (matchedTruck) setSelectedTruck(matchedTruck.id);
-            }
-            if (order.items && order.items.length > 0) {
-              setLocalProducts(order.items.map((item: any) => ({
-                sku: item.sku,
-                name: item.name,
-                price: item.price,
-                qty: item.qty,
-                total: item.total,
-                category: item.category,
-                approved: true
-              })));
-            }
-          })
-          .catch(err => {
-            console.error("Error restoring pending order details:", err);
-            localStorage.removeItem(`pendingOrderId:${currentSessionId}`);
-          });
-      }
-
-      fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/messages`)
-        .then(res => res.json())
-        .then(data => {
-          const hasRestock = data.some((m: any) => m.content && m.content.includes("Persetujuan sudah diterima"));
-          if (hasRestock) {
-            setIsProposalApproved(true);
-          } else {
-            setIsProposalApproved(false);
-          }
-
-          // Check if payment was confirmed
-          const paymentMsg = data.find((m: any) => 
-            m.role === 'system' && 
-            (m.content.includes("Pembayaran QRIS Diterima") || 
-             m.content.includes("Pembayaran QRIS dikonfirmasi"))
-          );
-
-          if (paymentMsg) {
-            setIsPaymentConfirmed(true);
-            setCartStep('success');
-            
-            const match = paymentMsg.content.match(/ORD-[A-Z0-9]+/i);
-            if (match) {
-              setOrderId(match[0]);
-              localStorage.setItem(`pendingOrderId:${currentSessionId}`, match[0]);
-
-              // Fetch order details for paid order
-              fetch(`${API_BASE_URL}/api/projects/orders/${match[0]}`)
-                .then(res => {
-                  if (res.ok) return res.json();
-                  throw new Error('Order not found');
-                })
-                .then(order => {
-                  if (order.delivery_date) setDeliveryDate(order.delivery_date);
-                  if (order.notes) setNotes(order.notes);
-                  if (order.truck_type) {
-                    const matchedTruck = TRUCKS.find(t => t.name === order.truck_type || t.id === order.truck_type);
-                    if (matchedTruck) setSelectedTruck(matchedTruck.id);
-                  }
-                  if (order.items && order.items.length > 0) {
-                    setLocalProducts(order.items.map((item: any) => ({
-                      sku: item.sku,
-                      name: item.name,
-                      price: item.price,
-                      qty: item.qty,
-                      total: item.total,
-                      category: item.category,
-                      approved: true
-                    })));
-                  }
-                })
-                .catch(err => console.error("Error restoring paid order details:", err));
-            }
-          }
-        })
-        .catch(err => console.error(err));
-    } else {
+    if (!currentSessionId) {
       setIsProposalApproved(false);
+      return;
     }
+
+    const applyOrderState = (order: any) => {
+      if (order.delivery_date) setDeliveryDate(order.delivery_date);
+      if (order.notes) setNotes(order.notes);
+      if (order.truck_type) {
+        const matched = TRUCKS.find(t => t.name === order.truck_type || t.id === order.truck_type);
+        if (matched) setSelectedTruck(matched.id);
+      }
+      // If already paid: show empty cart immediately — do not repopulate items
+      if (order.payment_status === 'paid') {
+        setIsPaymentConfirmed(true);
+        setLocalProducts([]);
+      } else if (order.items && order.items.length > 0) {
+        setLocalProducts(order.items.map((item: any) => ({
+          sku: item.sku,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          total: item.total,
+          category: item.category,
+          approved: true
+        })));
+      }
+    };
+
+    // paidOrderId: set by handleConfirmPayment — order is done, show empty cart
+    const paidId = localStorage.getItem(`paidOrderId:${currentSessionId}`);
+    if (paidId) {
+      setOrderId(paidId);
+      setIsPaymentConfirmed(true);
+      setLocalProducts([]);
+      setCartStep('success');
+      return;
+    }
+
+    // pendingOrderId: order submitted but payment not yet confirmed
+    const pendingId = localStorage.getItem(`pendingOrderId:${currentSessionId}`);
+    if (pendingId) {
+      setOrderId(pendingId);
+      setCartStep('success');
+      fetch(`${API_BASE_URL}/api/projects/orders/${pendingId}`)
+        .then(res => { if (res.ok) return res.json(); throw new Error('Order not found'); })
+        .then(order => applyOrderState(order))
+        .catch(err => {
+          console.error("Error restoring pending order details:", err);
+          localStorage.removeItem(`pendingOrderId:${currentSessionId}`);
+        });
+      return;
+    }
+
+    // Fallback: check session messages (legacy sessions before paidOrderId key existed)
+    fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/messages`)
+      .then(res => res.json())
+      .then(data => {
+        const hasRestock = data.some((m: any) => m.content && m.content.includes("Persetujuan sudah diterima"));
+        setIsProposalApproved(hasRestock);
+
+        const paymentMsg = data.find((m: any) =>
+          m.role === 'system' &&
+          (m.content.includes("Pembayaran QRIS Diterima") ||
+           m.content.includes("Pembayaran QRIS dikonfirmasi"))
+        );
+        if (paymentMsg) {
+          const match = paymentMsg.content.match(/ORD-[A-Z0-9]+/i);
+          if (match) {
+            const legacyOrderId = match[0];
+            setOrderId(legacyOrderId);
+            // Migrate legacy key so future re-opens are instant
+            localStorage.setItem(`paidOrderId:${currentSessionId}`, legacyOrderId);
+            localStorage.removeItem(`pendingOrderId:${currentSessionId}`);
+            fetch(`${API_BASE_URL}/api/projects/orders/${legacyOrderId}`)
+              .then(res => { if (res.ok) return res.json(); throw new Error('Order not found'); })
+              .then(order => applyOrderState(order))
+              .catch(err => console.error("Error restoring legacy paid order:", err));
+          } else {
+            setIsPaymentConfirmed(true);
+            setLocalProducts([]);
+            setCartStep('success');
+          }
+        }
+      })
+      .catch(err => console.error(err));
   }, [currentSessionId]);
 
   const approvedItems = localProducts.filter(p => p.approved !== false);
@@ -215,7 +204,13 @@ export default function OrderPortal({
           items_count: approvedItems.length,
         }),
       });
+
+      // Mark as paid in localStorage and clear pending key
+      localStorage.removeItem(`pendingOrderId:${currentSessionId}`);
+      localStorage.setItem(`paidOrderId:${currentSessionId}`, orderId);
+
       setIsPaymentConfirmed(true);
+      setLocalProducts([]);
 
       try {
         const channel = new BroadcastChannel('qhome_payment_channel');

@@ -331,6 +331,10 @@ def restock_complete_db(db: Session, session_id: str, products: list):
 
 
 def confirm_payment_db(db: Session, payload):
+    order = db.query(DBOrder).filter(DBOrder.id == payload.order_id).first()
+    if order:
+        order.payment_status = "paid"
+
     confirmation_user_text = (
         f"Saya sudah menyelesaikan pembayaran QRIS untuk pesanan {payload.order_id} "
         f"senilai Rp {payload.total_invoice:,.0f}. Mohon aktifkan kargo pengiriman."
