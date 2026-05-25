@@ -2,13 +2,9 @@ import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
 import {
   CheckCircle2,
-  UserCog,
   Edit2,
-  TrendingUp,
   AlertCircle,
   AlertTriangle,
-  LayoutDashboard,
-  Settings2,
 } from 'lucide-react';
 import RestockPanel from './admin/RestockPanel';
 import SubstitutePanel from './admin/SubstitutePanel';
@@ -328,24 +324,22 @@ export default function AdminPortal({
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl w-fit">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 ${
+            className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-200 ${
               activeTab === 'dashboard'
                 ? 'bg-white shadow-sm text-slate-900'
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <LayoutDashboard className="w-3.5 h-3.5" />
             Dashboard
           </button>
           <button
             onClick={() => setActiveTab('operasional')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 relative ${
+            className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-200 relative ${
               activeTab === 'operasional'
                 ? 'bg-white shadow-sm text-slate-900'
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <Settings2 className="w-3.5 h-3.5" />
             Operasional
             {(restockProducts.length > 0 || substituteProducts.length > 0) && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-[8px] font-extrabold rounded-full flex items-center justify-center">
@@ -365,7 +359,7 @@ export default function AdminPortal({
               <span className="text-xs font-bold text-accent tracking-[0.2em] uppercase block">
                 Manajemen Operasional
               </span>
-              <h1 className="text-3xl font-extrabold text-slate-900 leading-tight">
+              <h1 className="text-3xl font-extrabold text-slate-900 leading-tight uppercase tracking-widest">
                 Penanganan Stok &amp; Substitusi
               </h1>
               <p className="text-[14px] text-slate-500 leading-relaxed">
@@ -374,40 +368,12 @@ export default function AdminPortal({
             </div>
 
             {brief && (
-              <div className="bg-surface-soft border border-hairline rounded-2xl p-4.5 flex gap-3.5 items-start">
-                <div className="w-9 h-9 rounded-xl bg-accent-soft border border-accent-border/40 text-accent flex items-center justify-center flex-shrink-0">
-                  <UserCog className="w-4.5 h-4.5" />
-                </div>
-                <div>
-                  <span className="text-[9.5px] font-extrabold uppercase tracking-widest text-muted-light block mb-0.5">Spesifikasi Brief Klien</span>
-                  <p className="text-[13px] text-ink leading-relaxed italic">"{brief}"</p>
-                </div>
+              <div className="bg-surface-soft border border-hairline rounded-2xl p-5 flex flex-col gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block">Spesifikasi Brief Klien</span>
+                <p className="text-[14px] text-slate-600 leading-relaxed italic">"{brief}"</p>
               </div>
             )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto w-full">
-          {[
-            { id: '01', title: 'Permintaan Restok', count: restockProducts.length, desc: 'Menunggu', colSpan: 'col-span-1' },
-            { id: '02', title: 'Substitusi Usulan', count: substituteProducts.length, desc: 'Ditinjau', colSpan: 'col-span-1' },
-            { id: '03', title: 'Item Siap Kirim', count: `${products.length - restockProducts.length} / ${products.length}`, desc: 'Tersedia', colSpan: 'col-span-1' },
-            { id: '04', title: 'Estimasi RAB', count: `Rp ${finalRAB.toLocaleString('id-ID')}`, desc: 'Total Nilai', colSpan: 'col-span-1' }
-          ].map((stat, idx) => (
-            <div key={idx} className={`group relative flex flex-col justify-between p-7 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300 ${stat.colSpan}`}>
-              <div className="flex items-start justify-between mb-8">
-                <div className="text-4xl font-light text-slate-200 leading-none select-none">
-                  {stat.id}
-                </div>
-                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-50 text-slate-500 border border-slate-100">
-                  {stat.desc}
-                </span>
-              </div>
-              <div className="space-y-3">
-                <p className="text-[13px] text-slate-500 font-semibold tracking-wide">{stat.title}</p>
-                <h3 className="font-extrabold text-slate-900 tracking-tight text-2xl">{stat.count}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           <RestockPanel
@@ -434,7 +400,7 @@ export default function AdminPortal({
         <div className="bg-white border border-hairline rounded-3xl p-6.5 space-y-5">
           <div className="border-b border-hairline pb-4 flex items-center justify-between flex-wrap gap-2">
             <div>
-              <h2 className="text-[16px] font-extrabold text-ink tracking-tight">
+              <h2 className="text-[14px] font-extrabold text-ink uppercase tracking-widest">
                 3. Daftar Evaluasi Rencana Belanja (RAB) Final
               </h2>
               <p className="text-[11.5px] text-muted mt-1">
@@ -565,19 +531,16 @@ export default function AdminPortal({
             </table>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between border-t-2 border-hairline pt-5 gap-3">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
-              <span className="text-[11.5px] font-bold text-ink">Analisis Penyesuaian Harga Diskon Grosir: <span className="text-emerald-600">Optimal</span></span>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-end border-t border-slate-200/60 pt-5 gap-3">
             <div className="text-right">
-              <span className="text-[10px] text-muted-light uppercase tracking-widest font-extrabold block mb-0.5">Grand Total Material (Draft)</span>
-              <span className="text-[20px] font-black text-ink">Rp {finalRAB.toLocaleString('id-ID')}</span>
+              <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold block mb-0.5">Grand Total Material (Draft)</span>
+              <span className="text-[22px] font-black text-slate-900">Rp {finalRAB.toLocaleString('id-ID')}</span>
             </div>
           </div>
         </div>
 
-          </div> {/* end operasional tab content */}
+          {/* end operasional tab content */}
+          </div>
         )} {/* end activeTab === 'operasional' */}
 
       </div>

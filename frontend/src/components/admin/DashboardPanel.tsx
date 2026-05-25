@@ -102,11 +102,8 @@ function StatCard({
   return (
     <div className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex items-start justify-between">
-        <span className={`w-9 h-9 rounded-xl border flex items-center justify-center ${cls}`}>
-          <Icon className="w-4 h-4" />
-        </span>
         {sub && (
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
             {sub}
           </span>
         )}
@@ -175,7 +172,7 @@ export default function DashboardPanel() {
       {/* Header row */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Ringkasan Operasional</h2>
+          <h2 className="text-xl font-extrabold text-slate-900 uppercase tracking-widest">Ringkasan Operasional</h2>
           <p className="text-[12px] text-slate-400 mt-0.5">
             {lastUpdated ? `Diperbarui: ${lastUpdated.toLocaleTimeString('id-ID')}` : ''}
           </p>
@@ -200,11 +197,8 @@ export default function DashboardPanel() {
       {/* Revenue vs COGS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Pemasukan */}
-        <div className="md:col-span-1 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
-            </div>
             <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Pemasukan</span>
           </div>
           <div>
@@ -228,11 +222,8 @@ export default function DashboardPanel() {
         </div>
 
         {/* Pengeluaran (COGS) */}
-        <div className="md:col-span-1 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
-              <TrendingDown className="w-4 h-4 text-red-500" />
-            </div>
             <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Pengeluaran</span>
           </div>
           <div>
@@ -253,11 +244,8 @@ export default function DashboardPanel() {
         </div>
 
         {/* Margin Card */}
-        <div className="md:col-span-1 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-              <BarChart2 className="w-4 h-4 text-blue-600" />
-            </div>
             <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Profitabilitas</span>
           </div>
           <div>
@@ -305,7 +293,6 @@ export default function DashboardPanel() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <Package className="w-4 h-4 text-slate-500" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Kesehatan Stok</span>
           </div>
           <div className="space-y-3">
@@ -344,7 +331,6 @@ export default function DashboardPanel() {
         {/* Top Produk */}
         <div className="md:col-span-2 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-slate-500" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Produk Terlaris</span>
           </div>
           {data.top_products.length === 0 ? (
@@ -379,7 +365,6 @@ export default function DashboardPanel() {
       {data.category_breakdown.length > 0 && (
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-5">
-            <BarChart2 className="w-4 h-4 text-slate-500" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Pendapatan per Kategori</span>
           </div>
           <div className="space-y-3.5">
@@ -402,7 +387,6 @@ export default function DashboardPanel() {
       {/* Recent Orders Table */}
       <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-5">
-          <Truck className="w-4 h-4 text-slate-500" />
           <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Pesanan Terbaru</span>
         </div>
         {data.recent_orders.length === 0 ? (

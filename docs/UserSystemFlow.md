@@ -82,9 +82,11 @@ Setelah kalkulasi selesai:
    * Tombol checkout di Keranjang Belanja B2B **dikunci otomatis**.
    * Banner peringatan menyala merah: *"Butuh Konfirmasi Admin"*.
 2. User mengklik tombol **"Intervensi Admin"**:
-   * Sistem melakukan transisi mulus ke portal persona **Bapak Rudi (Admin)**.
-   * Admin membuka **Portal Admin**, menambahkan pasokan stok material kritis bersangkutan, lalu mengklik setujui (*Approve*).
-   * Setelah seluruh item berstatus habis stok terselesaikan, Admin Portal secara asinkron memanggil endpoint `POST /api/projects/sessions/{session_id}/restock-complete`.
+   * Sistem melakukan transisi mulus berbasis routing URL ke `/admin` yang memuat portal persona **Bapak Rudi (Admin)**.
+   * Portal Admin menyediakan ruang kerja multifungsi dengan dua tab navigasi utama:
+     * **Tab Dashboard**: Menyajikan visualisasi data *Business Intelligence* real-time (total order, total/pending revenue, margin laba kotor material berdasarkan estimasi COGS, leaderboard 5 produk teratas, snapshot kesehatan stok inventaris, serta SLA performa estimasi AI).
+     * **Tab Operasional**: Tempat admin mengevaluasi *RAB Draft*, menyetujui usulan substitusi produk alternatif, serta melakukan restok produk berlabel `[STOK HABIS]` / `[STOK TERBATAS]` dengan menyuplai kuantitas baru ke gudang database.
+   * Setelah seluruh item berstatus habis/kritis terselesaikan (baik lewat restok atau persetujuan substitusi), Admin Portal secara asinkron memanggil endpoint `POST /api/projects/sessions/{session_id}/restock-complete`.
    * Sistem *backend* menyuntikkan pesan otomatis dari agen ke dalam obrolan, menginformasikan klien bahwa stok sudah diatasi.
 3. User kembali ke chat (atau layar otomatis *refresh* via *BroadcastChannel*): keranjang otomatis ter-sinkronisasi ulang, tanda peringatan hilang, dan tombol checkout kini **terbuka**.
 
@@ -117,7 +119,18 @@ User menekan tombol "Lanjutkan ke Pengiriman" untuk masuk ke **Step 2 (Logistics
 
 ## 3. System Flow (Di Balik Layar / Under the Hood)
 
-Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekosistem multi-agent secara dinamis:
+Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekosistem multi-agent secara dinamis dengan dukungan infrastruktur modern:
+
+### Arsitektur Routing Navigasi Berbasis URL (URL-Driven Routing)
+Sistem tidak lagi mengandalkan penyimpanan state in-memory atau sinkronisasi state lokal yang rentan terhadap inkonsistensi saat reload. Navigasi portal sepenuhnya didelegasikan ke routing URL deklaratif (menggunakan `react-router-dom`):
+* `/` atau `/landing`: Halaman muka simulasi & pemilihan persona (Unauthenticated).
+* `/chat`: Kanvas obrolan utama dengan panel live agent activity & stream (Authenticated).
+* `/admin`: Workspace admin Bapak Rudi untuk pemantauan performa & stok (Authenticated).
+* `/order`: Keranjang belanja terpadu & checkout logistik B2B (Authenticated).
+* `/history`: Riwayat pesanan & pengunduhan nota resmi B2B (Authenticated).
+* `/catalog`: Katalog interaktif material konstruksi terintegrasi RAG (Bisa diakses publik / terotentikasi).
+
+Hal ini menjamin integritas alur kerja pelanggan, mendukung bookmarking, navigasi maju/mundur browser (Back/Forward), serta pembagian hak akses (role guards) secara andal.
 
 ### Fase 0: Long-Term Memory & Persistent Chat Context
 1. **Pengambilan Konteks (Database)**: Sebelum simulasi dijalankan, sistem mengambil riwayat sesi dari database (`ChatSession`). Jika ini adalah percakapan lanjutan, kolom `summary` (yang bertindak sebagai memori jangka panjang) dibaca dan disimpan sebagai variabel `history_summary`.
@@ -182,6 +195,14 @@ Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekos
    * `product_count`: Jumlah produk yang direkomendasikan.
    * `brief_length`: Panjang teks input pelanggan (karakter).
    * `pdf_generated`: Inisialisasi awal bernilai `0`.
+
+### Fase 4.1: Penghitungan Metrik & Business Intelligence Dashboard (Admin Dashboard)
+Untuk menyokong **Tab Dashboard** di Admin Portal, FastAPI menyediakan endpoint khusus yang dilayani oleh `get_dashboard_summary(db)` di `chat_service.py` untuk mengagregasi data relasional transaksi secara real-time:
+1. **Aggregasi Pendapatan & Finansial**: Menghitung total order, paid/pending orders, `total_revenue`, `pending_revenue`, serta pemisahan omzet material vs. biaya kurir logistik.
+2. **Estimasi COGS (Cost of Goods Sold) & Margin**: Menghitung pengeluaran pokok estimasi (`base_price` dari master tabel `products` dikalikan kuantitas barang terbayar) untuk menghasilkan taksiran margin keuntungan (`estimated_margin` dan `margin_percent`) secara akurat.
+3. **Analitik Produk Terlaris**: Meringkas data 5 produk teratas (`top_products`) berdasarkan kontribusi nominal penjualan serta volume unit terjual.
+4. **Pemantauan Kesehatan Stok (Stock Health)**: Mendeteksi inventaris yang kritis (`stock_qty < 10`) atau rendah (`10 <= stock_qty < 25`) agar admin tanggap melakukan pengadaan ulang.
+5. **Snapshot KPI / SLA AI**: Menyajikan metrik agregat performa orkestrasi agen pintar (rata-rata waktu tunggu penawaran B2B dan persentase keberhasilan di bawah batas SLA 30 detik).
 
 ### Fase 5: Sinkronisasi Transaksi & API Pemesanan (3NF Database)
 Saat pengguna menyetujui verifikasi ganda dan memproses transaksi resmi, frontend menembak API:

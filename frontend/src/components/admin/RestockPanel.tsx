@@ -44,15 +44,15 @@ export default function RestockPanel({
 }: RestockPanelProps) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-8 flex flex-col space-y-6 shadow-sm hover:shadow-lg transition-shadow duration-300 h-full">
-      <div className="border-b border-slate-100 pb-6 flex items-start justify-between">
-        <div className="space-y-3">
-          <span className="text-[11px] font-bold px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 tracking-widest uppercase">
+      <div className="border-b border-slate-100 pb-5">
+        <div className="space-y-1.5">
+          <span className="text-[9px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-500 tracking-widest uppercase inline-block">
             Operasional Gudang
           </span>
-          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-lg font-black text-slate-900 uppercase tracking-widest leading-snug">
             Permintaan Penambahan Stok
           </h2>
-          <p className="text-[14px] text-slate-500 leading-relaxed max-w-md">
+          <p className="text-[13px] text-slate-500 leading-normal max-w-md">
             Material proyek yang sedang kritis atau habis di gudang utama Sleman. Lakukan restock kuota logistik master.
           </p>
         </div>
