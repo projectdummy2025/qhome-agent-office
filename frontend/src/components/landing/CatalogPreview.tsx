@@ -7,50 +7,46 @@ interface CatalogPreviewProps {
 
 const categoryList = [
   {
-    name: 'Semen & Perekat',
-    description: 'Solusi pengikat dan struktur dengan kualitas yang dapat diandalkan dan sesuai standar teknis.',
+    name: 'Building Material',
+    description: 'Semen instan, bahan pengikat, dan material dasar konstruksi berkualitas tinggi.',
     accent: 'from-amber-100 via-white to-white',
     border: 'border-amber-100',
     categoryId: 'building material',
-    search: 'semen',
   },
   {
-    name: 'Bata & Blok',
-    description: 'Material dinding yang ideal untuk setiap kebutuhan konstruksi hunian dan komersial.',
-    accent: 'from-red-100 via-white to-white',
-    border: 'border-red-100',
-    categoryId: 'building material',
-    search: 'mortar',
-  },
-  {
-    name: 'Besi & Rangka',
-    description: 'Pilihan rangka baja dan struktur untuk kekuatan bangunan yang teruji.',
-    accent: 'from-slate-100 via-white to-white',
-    border: 'border-slate-200',
-    categoryId: 'building material',
-    search: 'rangka',
-  },
-  {
-    name: 'Keramik & Granit',
-    description: 'Finishing premium untuk tampilan yang elegan dan mudah dirawat.',
+    name: 'Floor',
+    description: 'Ubin keramik, granit, dan tile premium untuk estetika lantai terbaik.',
     accent: 'from-blue-100 via-white to-white',
     border: 'border-blue-100',
     categoryId: 'floor',
-    search: 'tile',
   },
   {
-    name: 'Kayu & Plafon',
-    description: 'Material interior dengan sentuhan hangat dan detail yang rapi.',
+    name: 'Furniture',
+    description: 'Kursi, rak, lemari, panel kayu, dan kebutuhan interior fungsional.',
     accent: 'from-emerald-100 via-white to-white',
     border: 'border-emerald-100',
     categoryId: 'furniture',
   },
   {
-    name: 'Sanitasi & MEP',
-    description: 'Solusi instalasi dan sanitasi yang lengkap untuk setiap kebutuhan proyek.',
+    name: 'Sanitary & Plumbing',
+    description: 'Toilet close coupled, shower, wastafel, kran, dan sistem perpipaan lengkap.',
     accent: 'from-cyan-100 via-white to-white',
     border: 'border-cyan-100',
     categoryId: 'sanitary & plumbing',
+  },
+  {
+    name: 'Electrical & Lighting',
+    description: 'Kabel saklar, lampu LED, fitting, dan kelistrikan proyek berkualitas tinggi.',
+    accent: 'from-yellow-100 via-white to-white',
+    border: 'border-yellow-100',
+    categoryId: 'electrical & lighting',
+  },
+  {
+    name: 'Appliance & Household',
+    description: 'Peralatan elektronik rumah tangga, microwave, dan perlengkapan hunian modern.',
+    accent: 'from-purple-100 via-white to-white',
+    border: 'border-purple-100',
+    categoryId: 'appliance & household',
   },
 ];
 
@@ -82,7 +78,7 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ onViewCatalog }) => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.35, delay: index * 0.05 }}
-              onClick={() => onViewCatalog(category.categoryId, category.search)}
+              onClick={() => onViewCatalog(category.categoryId)}
             >
               <div className={`absolute inset-x-0 top-0 h-36 bg-gradient-to-br ${category.accent}`} />
               <div className="relative flex min-h-[230px] flex-col justify-between p-8">

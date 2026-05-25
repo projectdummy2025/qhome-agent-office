@@ -18,9 +18,17 @@ import { getPersonaGreeting } from './PersonaSelect';
 
 function ExpandableText({ text, limit = 250 }: { text: string, limit?: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
   if (text.length <= limit) {
-    return <div className="whitespace-pre-line">{text}</div>;
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="whitespace-pre-line">{text}</div>
+        <div className="text-[11px] font-medium text-muted-light/60 text-left">
+          {wordCount} kata
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -32,25 +40,17 @@ function ExpandableText({ text, limit = 250 }: { text: string, limit?: number })
         <div className={`absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-surface-soft via-surface-soft/50 to-transparent pointer-events-none transition-opacity duration-500 ${!isExpanded ? 'opacity-100' : 'opacity-0'}`} />
       </div>
 
-      {!isExpanded ? (
-        <div className="absolute bottom-1 right-0 bg-gradient-to-l from-surface-soft via-surface-soft via-surface-soft/90 to-transparent pl-14 pr-0.5 py-0.5 flex items-center transition-all duration-300">
-          <button
-            onClick={() => setIsExpanded(true)}
-            className="text-[12.5px] font-bold text-muted hover:text-accent transition-colors focus:outline-none bg-surface-soft px-1"
-          >
-            Selengkapnya
-          </button>
-        </div>
-      ) : (
-        <div className="mt-2 text-right transition-all duration-300">
-          <button
-            onClick={() => setIsExpanded(false)}
-            className="text-[12.5px] font-bold text-muted hover:text-accent transition-colors focus:outline-none"
-          >
-            Tampilkan Lebih Sedikit
-          </button>
-        </div>
-      )}
+      <div className="mt-3 flex items-center justify-between pt-2 border-t border-hairline/30">
+        <span className="text-[11.5px] font-bold text-muted-light/80">
+          {wordCount} kata
+        </span>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="px-4 py-1.5 bg-white border border-hairline rounded-full text-[12px] font-bold text-muted hover:text-accent transition-all focus:outline-none cursor-pointer"
+        >
+          {isExpanded ? 'Tampilkan Lebih Sedikit' : 'Selengkapnya'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -505,7 +505,7 @@ export default function ChatCanvas({
                       <button
                         key={index}
                         onClick={() => setBrief(preset.prompt)}
-                        className="bg-white border border-hairline hover:border-accent/40 rounded-xl p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between h-[135px] group"
+                        className="bg-white border border-hairline hover:border-accent/40 rounded-xl p-5 text-left transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between min-h-[155px] h-auto group"
                       >
                         <span className="font-semibold text-[13px] text-ink group-hover:text-accent transition-colors">
                           {preset.title}

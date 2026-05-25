@@ -40,22 +40,26 @@ function CatalogSkeleton() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-scale-in">
       {Array.from({ length: 10 }).map((_, index) => (
-        <div key={index} className="flex flex-col bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        <div key={index} className="flex flex-col bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
           {/* Shimmer Image Box */}
-          <div className="aspect-square w-full rounded-xl shimmer mb-4" />
-          {/* Shimmer Category Label */}
-          <div className="h-3 w-1/3 rounded-full bg-slate-100 shimmer mb-2" />
-          {/* Shimmer Product Name */}
-          <div className="h-4.5 w-5/6 rounded bg-slate-100 shimmer mb-3" />
-          {/* Shimmer Price Tag */}
-          <div className="h-5 w-1/2 rounded bg-slate-100 shimmer mb-4" />
-          {/* Shimmer Extra Metadata */}
-          <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-50">
-            <div className="h-3 w-1/3 rounded bg-slate-100 shimmer" />
-            <div className="h-3 w-1/4 rounded bg-slate-100 shimmer" />
+          <div className="aspect-square w-full shimmer" />
+          
+          <div className="p-4 pb-0">
+            {/* Shimmer Category Label */}
+            <div className="h-3 w-1/3 rounded-full bg-slate-100 shimmer mb-2" />
+            {/* Shimmer Product Name */}
+            <div className="h-4.5 w-5/6 rounded bg-slate-100 shimmer mb-3" />
           </div>
-          {/* Shimmer Action Button */}
-          <div className="h-10 w-full rounded-full bg-slate-100 shimmer mt-4" />
+
+          <div className="p-4 pt-3.5 mt-auto border-t border-slate-50">
+            {/* Shimmer Price Tag */}
+            <div className="h-5 w-1/2 rounded bg-slate-100 shimmer mb-2.5" />
+            {/* Shimmer Extra Metadata */}
+            <div className="flex gap-2">
+              <div className="h-3 w-1/3 rounded bg-slate-100 shimmer" />
+              <div className="h-3 w-1/4 rounded bg-slate-100 shimmer" />
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -158,6 +162,11 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   };
 
   useEffect(() => {
+    // Scroll ke atas dengan timeout singkat agar melangkahi scroll restoration otomatis browser
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 50);
+
     // Restore layout selections from local storage on startup
     try {
       const savedView = localStorage.getItem('materialCatalog:viewMode');
@@ -170,6 +179,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
       // Catch possible isolated browser errors
     }
     fetchProducts();
+    return () => clearTimeout(timer);
   }, []);
 
   // Debounce search input dynamically for robust UX
@@ -256,39 +266,21 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
         <div className="mb-10 animate-float-up">
           <p className="text-[10.5px] font-extrabold uppercase tracking-[0.3em] text-accent mb-3 font-display">DIREKTORI PRODUK PREMIUM</p>
           <h1 className="text-[34px] font-light text-ink tracking-tight leading-tight mb-2.5 font-display">
-            Katalog Material <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ink to-accent">Lengkap & Stok</span>
+            Katalog Material <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ink to-accent">&amp; Informasi Stok</span>
           </h1>
           <p className="text-[13.5px] text-muted leading-relaxed max-w-2xl">
             Jelajahi portofolio material konstruksi berkualitas tinggi. Gunakan filter presisi untuk menemukan produk terbaik bagi proyek Anda.
           </p>
         </div>
 
-        {/* Unified Glassmorphic Control Bar */}
-        <div className="backdrop-blur-md bg-white/70 border border-slate-100 shadow-sm rounded-3xl p-5 mb-10 flex flex-col md:flex-row md:items-center gap-4 justify-between animate-float-up">
+        {/* Modern Clean Showroom Filters Layout */}
+        <div className="flex flex-col gap-6 mb-10 animate-float-up">
           
-          {/* Category Pill Navigators */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 md:pb-0 min-w-0">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`px-4.5 py-2 rounded-full text-[12px] font-bold transition-all duration-200 whitespace-nowrap focus:outline-none cursor-pointer ${
-                  selectedCat === cat.id 
-                    ? 'bg-accent text-white shadow-md shadow-accent/15 border border-accent' 
-                    : 'bg-white hover:bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 shadow-sm'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Search, Sort & Layout Toggles */}
-          <div className="flex flex-wrap items-center gap-3.5 flex-shrink-0">
-            
+          {/* Search & Actions Row */}
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
             {/* Elegant Search Input */}
-            <div className="relative flex items-center min-w-56">
-              <Search className="absolute left-3.5 w-4 h-4 text-slate-400" />
+            <div className="relative flex items-center flex-1 max-w-md">
+              <Search className="absolute left-4 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Cari material..."
@@ -300,53 +292,75 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                     onSelectProduct(filteredProducts[0]);
                   }
                 }}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200/80 rounded-full text-[12.5px] font-medium text-slate-700 focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all placeholder:text-slate-400 shadow-sm"
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-700 focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all placeholder:text-slate-400 shadow-[0_4px_16px_rgba(0,0,0,0.03)]"
               />
             </div>
 
-            {/* Custom Sort Selector */}
-            <div className="relative">
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value as any)} 
-                aria-label="Urutkan" 
-                className="text-[12px] font-bold text-slate-600 border border-slate-200/85 rounded-full px-4 py-2 bg-white focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent cursor-pointer shadow-sm"
-              >
-                <option value="relevance">Relevansi</option>
-                <option value="price_asc">Harga: Rendah ke Tinggi</option>
-                <option value="price_desc">Harga: Tinggi ke Rendah</option>
-                <option value="name">Nama (A–Z)</option>
-              </select>
+            {/* Sorting & Layout Toggles */}
+            <div className="flex items-center gap-3">
+              {/* Custom Sort Selector */}
+              <div className="relative">
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value as any)} 
+                  aria-label="Urutkan" 
+                  className="text-[12.5px] font-bold text-slate-600 border border-slate-100 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.03)]"
+                >
+                  <option value="relevance">Relevansi</option>
+                  <option value="price_asc">Harga: Rendah ke Tinggi</option>
+                  <option value="price_desc">Harga: Tinggi ke Rendah</option>
+                  <option value="name">Nama (A–Z)</option>
+                </select>
+              </div>
+
+              {/* Vertical Separator */}
+              <div className="h-6 w-px bg-slate-200/60 hidden sm:block" />
+
+              {/* Layout Controls */}
+              <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]">
+                <button 
+                  onClick={fetchProducts}
+                  className="p-2 text-slate-400 hover:text-accent rounded-xl hover:bg-slate-50 transition-all focus:outline-none cursor-pointer"
+                  title="Muat Ulang"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+                
+                <button 
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'list' ? 'text-accent bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="Tampilan Tabel"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                
+                <button 
+                  onClick={() => setViewMode('card')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'card' ? 'text-accent bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="Tampilan Grid"
+                >
+                  <Grid className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+          </div>
 
-            {/* Vertical Separator */}
-            <div className="h-6 w-px bg-slate-200/80 hidden sm:block" />
-
-            {/* Layout Controls */}
-            <div className="flex items-center gap-1.5 bg-slate-100/70 p-1.5 rounded-full border border-slate-200/30">
-              <button 
-                onClick={fetchProducts}
-                className="p-1.5 text-slate-500 hover:text-accent rounded-full hover:bg-white transition-all focus:outline-none cursor-pointer"
-                title="Muat Ulang"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-              </button>
-              
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'list' ? 'text-accent bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title="Tampilan Tabel"
-              >
-                <List className="w-3.5 h-3.5" />
-              </button>
-              
-              <button 
-                onClick={() => setViewMode('card')}
-                className={`p-1.5 rounded-full transition-all cursor-pointer ${viewMode === 'card' ? 'text-accent bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title="Tampilan Grid"
-              >
-                <Grid className="w-3.5 h-3.5" />
-              </button>
+          {/* Category Pill Navigators - Clean & Horizontal Section */}
+          <div className="border-t border-b border-slate-100/80 py-4.5">
+            <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-none min-w-0">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`px-5 py-2.5 rounded-xl text-[12.5px] font-bold transition-all duration-200 whitespace-nowrap focus:outline-none cursor-pointer ${
+                    selectedCat === cat.id 
+                      ? 'bg-accent text-white shadow-lg shadow-accent/15 border border-accent scale-102' 
+                      : 'bg-white hover:bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 shadow-sm hover:scale-101'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -498,17 +512,17 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                 <div 
                   key={product.sku} 
                   onClick={() => onSelectProduct && onSelectProduct(product)}
-                  className={`group flex flex-col justify-between bg-white border border-slate-100 shadow-sm rounded-2xl p-4 hover:-translate-y-1.5 hover:shadow-lg transition-all duration-300 ${onSelectProduct ? 'cursor-pointer' : 'cursor-default'}`}
+                  className={`group flex flex-col justify-between bg-white border border-slate-100/80 rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-accent/30 transition-all duration-300 relative ${onSelectProduct ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                   <div>
                     {/* Material Image Container */}
-                    <div className="relative aspect-square bg-slate-50 overflow-hidden rounded-xl mb-4 border border-slate-50 shadow-inner">
+                    <div className="relative aspect-square bg-slate-50 overflow-hidden border-b border-slate-100/60 shadow-inner">
                       <img 
                         src={product.image_url || PLACEHOLDER_SVG} 
                         alt={product.name}
                         loading="lazy"
                         onError={(e) => { e.currentTarget.src = PLACEHOLDER_SVG; }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
@@ -520,35 +534,24 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                     </div>
 
                     {/* Metadata Content */}
-                    <div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-accent mb-1 block font-display">
+                    <div className="p-4 pb-0">
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 mb-1 block font-display">
                         {product.category}
                       </span>
-                      <h4 className="text-[13px] font-bold text-slate-800 leading-snug group-hover:text-accent transition-colors line-clamp-2 mb-2">
+                      <h4 className="text-[13px] font-bold text-slate-800 leading-snug group-hover:text-accent transition-colors line-clamp-2">
                         {product.name}
                       </h4>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-50">
-                    <span className="text-[14.5px] font-extrabold text-ink block font-display">
-                      Rp {product.base_price.toLocaleString('id-ID')}
-                    </span>
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 mt-1">
-                      <span>{product.coverage_m2} m²/dus</span>
-                      <span>{product.sku.substring(0, 8)}...</span>
+                  <div className="p-4 pt-3.5 mt-4 border-t border-slate-100/60 flex items-end justify-between">
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold block mb-0.5 font-display uppercase tracking-wider">{product.sku.substring(0, 8)}</span>
+                      <span className="text-[14.5px] font-black text-slate-900 font-display">
+                        Rp {product.base_price.toLocaleString('id-ID')}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">{product.coverage_m2} m²/dus</span>
                     </div>
-                    {onSelectProduct && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectProduct(product);
-                        }}
-                        className="mt-4 w-full py-2.5 bg-accent hover:bg-accent-hover active:scale-95 text-white rounded-full text-[10.5px] font-extrabold uppercase tracking-wider transition-all duration-200 text-center shadow-md shadow-accent/10 focus:outline-none cursor-pointer font-display"
-                      >
-                        Pilih Material
-                      </button>
-                    )}
                   </div>
                 </div>
               );
