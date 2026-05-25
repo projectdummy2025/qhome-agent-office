@@ -2,12 +2,9 @@ import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../../config';
 import {
   TrendingUp,
-  TrendingDown,
   ShoppingCart,
-  Package,
   AlertTriangle,
   Clock,
-  Truck,
   BarChart2,
   RefreshCw,
 } from 'lucide-react';
@@ -67,9 +64,6 @@ interface KpiData {
   under_30s_percent: number;
 }
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
-
 const fmtShort = (n: number): string => {
   if (n >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(1)}M`;
   if (n >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(1)} Jt`;
@@ -81,8 +75,6 @@ function StatCard({
   label,
   value,
   sub,
-  icon: Icon,
-  accent,
 }: {
   label: string;
   value: string | number;
@@ -90,15 +82,6 @@ function StatCard({
   icon: React.ElementType;
   accent?: 'green' | 'amber' | 'red' | 'blue' | 'default';
 }) {
-  const colors = {
-    green: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    amber: 'text-amber-600 bg-amber-50 border-amber-100',
-    red: 'text-red-600 bg-red-50 border-red-100',
-    blue: 'text-blue-600 bg-blue-50 border-blue-100',
-    default: 'text-slate-600 bg-slate-50 border-slate-100',
-  };
-  const cls = colors[accent ?? 'default'];
-
   return (
     <div className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex items-start justify-between">
