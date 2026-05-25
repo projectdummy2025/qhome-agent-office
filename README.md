@@ -4,6 +4,12 @@
 > **PENTING: DESKTOP WEB ONLY (MVP SCOPE)**
 > Antarmuka *Live Canvas*, dashboard orkestrasi, dan split-screen portal pada sistem QHome-MAS **difokuskan dan dioptimalkan sepenuhnya untuk tampilan Desktop Web**. Tampilan pada layar HP/smartphone tidak disesuaikan (tidak responsif) karena kebutuhan demonstrasi visual B2B ini dirancang untuk layar monitor desktop.
 
+### Tautan Uji Coba (Live Demo)
+Anda dapat mencoba langsung sistem multi-agent QHome-MAS secara online melalui:
+**[QHome-MAS Live Demo](https://qhomemart.lumbungstack.dev/#/)**
+
+---
+
 QHome-MAS (Multi-Agent System) adalah sistem cerdas **MVP (Minimum Viable Product)** yang dirancang khusus sebagai **Sales & Project Agent** untuk konsultasi material sipil, desain interior, dan manajemen logistik B2B Qhomemart. Sistem ini membuang pendekatan *chatbot* linier konvensional dan menggantinya dengan konsep **"Kantor Konsultasi Digital"**.
 
 Di dalam kantor digital ini, agen-agen kecerdasan buatan beroperasi layaknya **karyawan manusia sesungguhnya**. Mereka memiliki hierarki, melakukan komunikasi berbasis *Laporan Analisis*, menggunakan alat bantu khusus melalui antarmuka *Model Context Protocol (MCP)*, dan direkrut (*hired*) secara dinamis berdasarkan cakupan proyek.
@@ -120,7 +126,7 @@ docker compose logs -f
 | Ubah code frontend / backend | `docker compose up -d --build <service>` |
 | Ubah `.env` | `docker compose up -d backend` |
 | Restart bersih | `docker compose down && docker compose up -d --build` |
-| Reset total (⚠️ hapus data DB) | `docker compose down -v` |
+| Reset total (hapus data DB) | `docker compose down -v` |
 | Cek status / log | `docker compose ps` / `docker compose logs -f` |
 
 ---
