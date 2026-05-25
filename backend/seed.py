@@ -138,7 +138,7 @@ def seed_db():
         chunk_size = 100
         for i in range(0, len(products_to_seed), chunk_size):
             end_idx = min(i + chunk_size, len(products_to_seed))
-            print(f"[{time.strftime('%H:%M:%S')}] Memproses batch {i+1} sampai {end_idx} dari {len(products_to_seed)} produk (Harap sabar, proses AI CPU berjalan)...")
+            print(f"[{time.strftime('%H:%M:%S')}] Memproses batch {i+1} sampai {end_idx} dari {len(products_to_seed)} produk ...")
             chroma_col.add(
                 documents=documents[i:end_idx],
                 metadatas=metadatas[i:end_idx],

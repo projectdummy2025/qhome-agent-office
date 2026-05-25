@@ -100,6 +100,10 @@ def generate_pdf_endpoint(session_id: str, db: Session = Depends(get_db)):
 def get_kpi_summary(db: Session = Depends(get_db)):
     return chat_service.get_kpi_summary_data(db)
 
+@router.get("/dashboard/summary")
+def get_dashboard_summary(db: Session = Depends(get_db)):
+    return chat_service.get_dashboard_summary(db)
+
 @router.get("/products")
 def get_products(db: Session = Depends(get_db)):
     return chat_service.get_all_products(db)

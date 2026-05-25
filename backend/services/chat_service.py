@@ -382,6 +382,117 @@ def confirm_payment_db(db: Session, payload):
     return True
 
 
+def get_dashboard_summary(db: Session):
+    from backend.models.schema import OrderItem as DBOrderItem
+
+    all_orders = db.query(DBOrder).order_by(DBOrder.created_at.desc()).all()
+    paid = [o for o in all_orders if o.payment_status == "paid"]
+    pending = [o for o in all_orders if o.payment_status != "paid"]
+
+    total_revenue = sum(o.total_invoice for o in paid)
+    pending_revenue = sum(o.total_invoice for o in pending)
+    materials_revenue = sum(o.materials_total for o in paid)
+    shipping_revenue = sum(o.shipping_cost for o in paid)
+    avg_order_value = round(total_revenue / len(paid), 0) if paid else 0
+
+    # Estimated COGS: sum(qty * product.base_price) for paid order items
+    paid_ids = {o.id for o in paid}
+    paid_items = (
+        db.query(DBOrderItem)
+        .filter(DBOrderItem.order_id.in_(paid_ids))
+        .all()
+    ) if paid_ids else []
+
+    estimated_cogs = 0.0
+    category_map: dict = {}
+    for item in paid_items:
+        prod = db.query(DBProduct).filter(DBProduct.sku == item.product_sku).first()
+        base = prod.base_price if prod else item.price
+        estimated_cogs += item.qty * base
+        cat = prod.category if prod else "Lainnya"
+        if cat not in category_map:
+            category_map[cat] = {"category": cat, "revenue": 0.0, "order_count": 0}
+        category_map[cat]["revenue"] += item.total
+        category_map[cat]["order_count"] += 1
+
+    estimated_margin = materials_revenue - estimated_cogs
+    margin_percent = round(estimated_margin / materials_revenue * 100, 1) if materials_revenue else 0
+
+    # Top products by revenue
+    sku_map: dict = {}
+    all_items = db.query(DBOrderItem).all()
+    for item in all_items:
+        if item.product_sku not in sku_map:
+            prod = db.query(DBProduct).filter(DBProduct.sku == item.product_sku).first()
+            sku_map[item.product_sku] = {
+                "sku": item.product_sku,
+                "name": prod.name if prod else item.product_sku,
+                "category": prod.category if prod else "Lainnya",
+                "total_sold": 0.0,
+                "qty_sold": 0.0,
+                "order_count": 0,
+            }
+        sku_map[item.product_sku]["total_sold"] += item.total
+        sku_map[item.product_sku]["qty_sold"] += item.qty
+        sku_map[item.product_sku]["order_count"] += 1
+
+    top_products = sorted(sku_map.values(), key=lambda x: x["total_sold"], reverse=True)[:5]
+
+    # Stock health
+    all_products = db.query(DBProduct).all()
+    critical = [p for p in all_products if p.stock_qty < 10]
+    low = [p for p in all_products if 10 <= p.stock_qty < 25]
+
+    # Recent orders
+    recent = all_orders[:8]
+    recent_orders = [
+        {
+            "id": o.id,
+            "client_name": o.client_name or "—",
+            "client_role": o.client_role or "—",
+            "total_invoice": o.total_invoice,
+            "materials_total": o.materials_total,
+            "shipping_cost": o.shipping_cost,
+            "payment_status": o.payment_status,
+            "truck_type": o.truck_type,
+            "delivery_date": o.delivery_date,
+            "created_at": o.created_at.strftime("%d %b %Y") if o.created_at else "—",
+        }
+        for o in recent
+    ]
+
+    # KPI snapshot
+    from backend.models.schema import EstimationKPI
+    kpi_records = db.query(EstimationKPI).all()
+    lead_times = [r.lead_time_seconds for r in kpi_records if r.lead_time_seconds is not None]
+    kpi = {
+        "total_estimations": len(kpi_records),
+        "avg_lead_time_seconds": round(sum(lead_times) / len(lead_times), 1) if lead_times else 0,
+        "under_30s_percent": round(len([lt for lt in lead_times if lt < 30]) / len(lead_times) * 100, 1) if lead_times else 0,
+    }
+
+    return {
+        "total_orders": len(all_orders),
+        "paid_orders": len(paid),
+        "pending_orders": len(pending),
+        "total_revenue": total_revenue,
+        "pending_revenue": pending_revenue,
+        "materials_revenue": materials_revenue,
+        "shipping_revenue": shipping_revenue,
+        "avg_order_value": avg_order_value,
+        "estimated_cogs": round(estimated_cogs, 0),
+        "estimated_margin": round(estimated_margin, 0),
+        "margin_percent": margin_percent,
+        "critical_stock_count": len(critical),
+        "low_stock_count": len(low),
+        "total_products": len(all_products),
+        "recent_orders": recent_orders,
+        "category_breakdown": sorted(category_map.values(), key=lambda x: x["revenue"], reverse=True),
+        "top_products": top_products,
+        "kpi": kpi,
+    }
+
+
 def get_kpi_summary_data(db: Session):
     records = db.query(EstimationKPI).all()
     if not records:

@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import { 
+import {
   CheckCircle2,
-  UserCog, 
+  UserCog,
   Edit2,
   TrendingUp,
   AlertCircle,
-  AlertTriangle
+  AlertTriangle,
+  LayoutDashboard,
+  Settings2,
 } from 'lucide-react';
 import RestockPanel from './admin/RestockPanel';
 import SubstitutePanel from './admin/SubstitutePanel';
+import DashboardPanel from './admin/DashboardPanel';
 
 interface Product {
   sku: string;
@@ -50,6 +53,12 @@ export default function AdminPortal({
 }: AdminPortalProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [masterProducts, setMasterProducts] = useState<MasterProduct[]>([]);
+
+  // Default to dashboard tab; switch to operasional if there are pending items
+  const hasOperasional = initialProducts.length > 0;
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'operasional'>(
+    hasOperasional ? 'operasional' : 'dashboard'
+  );
   
   const [editingSku, setEditingSku] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState<number>(0);
@@ -313,30 +322,68 @@ export default function AdminPortal({
         </div>
       </header>
 
-      <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col px-6 sm:px-8 py-16 space-y-14 animate-scale-in">
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <span className="text-xs font-bold text-accent tracking-[0.2em] uppercase block">
-            Manajemen Operasional
-          </span>
-          <h1 className="text-4xl font-extrabold text-slate-900 leading-tight">
-            Penanganan Stok &amp; Substitusi
-          </h1>
-          <p className="text-[15px] text-slate-500 leading-relaxed max-w-2xl mx-auto pt-2">
-            Sistem logistik pusat untuk menangani persetujuan substitusi alternatif dan permintaan penambahan stok dari gudang secara terpusat.
-          </p>
+      <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col px-6 sm:px-8 py-8 gap-8 animate-scale-in">
+
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl w-fit">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 ${
+              activeTab === 'dashboard'
+                ? 'bg-white shadow-sm text-slate-900'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab('operasional')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 relative ${
+              activeTab === 'operasional'
+                ? 'bg-white shadow-sm text-slate-900'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            Operasional
+            {(restockProducts.length > 0 || substituteProducts.length > 0) && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-[8px] font-extrabold rounded-full flex items-center justify-center">
+                {restockProducts.length + substituteProducts.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {brief && (
-          <div className="bg-surface-soft border border-hairline rounded-2xl p-4.5 flex gap-3.5 items-start">
-            <div className="w-9 h-9 rounded-xl bg-accent-soft border border-accent-border/40 text-accent flex items-center justify-center flex-shrink-0">
-              <UserCog className="w-4.5 h-4.5" />
+        {/* Tab Content */}
+        {activeTab === 'dashboard' && <DashboardPanel />}
+
+        {activeTab === 'operasional' && (
+          <div className="space-y-10">
+            {/* Page Title */}
+            <div className="max-w-2xl space-y-2">
+              <span className="text-xs font-bold text-accent tracking-[0.2em] uppercase block">
+                Manajemen Operasional
+              </span>
+              <h1 className="text-3xl font-extrabold text-slate-900 leading-tight">
+                Penanganan Stok &amp; Substitusi
+              </h1>
+              <p className="text-[14px] text-slate-500 leading-relaxed">
+                Persetujuan substitusi alternatif dan permintaan penambahan stok dari gudang secara terpusat.
+              </p>
             </div>
-            <div>
-              <span className="text-[9.5px] font-extrabold uppercase tracking-widest text-muted-light block mb-0.5">Spesifikasi Brief Klien</span>
-              <p className="text-[13px] text-ink leading-relaxed italic">"{brief}"</p>
-            </div>
-          </div>
-        )}
+
+            {brief && (
+              <div className="bg-surface-soft border border-hairline rounded-2xl p-4.5 flex gap-3.5 items-start">
+                <div className="w-9 h-9 rounded-xl bg-accent-soft border border-accent-border/40 text-accent flex items-center justify-center flex-shrink-0">
+                  <UserCog className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <span className="text-[9.5px] font-extrabold uppercase tracking-widest text-muted-light block mb-0.5">Spesifikasi Brief Klien</span>
+                  <p className="text-[13px] text-ink leading-relaxed italic">"{brief}"</p>
+                </div>
+              </div>
+            )}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto w-full">
           {[
@@ -529,6 +576,9 @@ export default function AdminPortal({
             </div>
           </div>
         </div>
+
+          </div> {/* end operasional tab content */}
+        )} {/* end activeTab === 'operasional' */}
 
       </div>
     </div>
