@@ -3,11 +3,12 @@
 ---
 
 ### Sistem Navigasi Dokumentasi (QHome-MAS)
-* **[Panduan Utama (README)](../README.md)**
-* **[Blueprint Arsitektur (ArchitectureConcept)](ArchitectureConcept.md)**
-* **[Roster Karyawan Digital (AgentRoster)](AgentRoster.md)**
-* **[Panduan Struktur Proyek (ProjectStructure)](ProjectStructure.md)**
-* **[Alur Skenario Sistem (UserSystemFlow)](UserSystemFlow.md)**
+* **[Panduan Utama (README)](file:///home/ahmad/projects/qhomemart-mas-agent/README.md)**
+* **[Blueprint Arsitektur (ArchitectureConcept)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/ArchitectureConcept.md)**
+* **[Roster Karyawan Digital (AgentRoster)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/AgentRoster.md)**
+* **[Panduan Struktur Proyek (ProjectStructure)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/ProjectStructure.md)**
+* **[Alur Skenario Sistem (UserSystemFlow)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/UserSystemFlow.md)**
+* **[Tutorial Penggunaan Mandiri (TutorialUser)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/TutorialUser.md)**
 
 ---
 
@@ -109,7 +110,8 @@ qhomemart-mas-agent/
 │   ├── ArchitectureConcept.md
 │   ├── AgentRoster.md
 │   ├── ProjectStructure.md
-│   └── UserSystemFlow.md
+│   ├── UserSystemFlow.md
+│   └── TutorialUser.md
 │
 ├── .env                      # File rahasia (TIDAK di-commit ke Git)
 ├── .env.example              # Template variabel environment (API Keys)
