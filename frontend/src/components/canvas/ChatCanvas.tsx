@@ -103,6 +103,58 @@ const ThinkingBlock = ({ text }: { text: string }) => {
   );
 };
 
+// Daftar kutipan acak untuk memberikan informasi saat sistem sedang memproses
+const loadingQuotes = [
+  "Sabar ya, material bangunan terbaik sedang kami pilihkan untuk proyek Anda...",
+  "Tahukah Anda? Granit yang bagus tidak hanya kuat, tapi juga memiliki pola yang konsisten.",
+  "Sedang mencocokkan spesifikasi ruangan dengan ketersediaan stok di QHomeMart...",
+  "Kualitas semen sangat menentukan ketahanan bangunan. Kami sedang memilihkan yang terbaik.",
+  "Pemilihan warna cat yang tepat dapat memberikan ilusi ruangan yang lebih luas lho!",
+  "Sedang mengkalkulasi volume material agar tidak terjadi pemborosan budget Anda...",
+  "Pipa PVC dengan ketebalan standar sangat penting untuk instalasi air jangka panjang.",
+  "Mencari kombinasi pencahayaan yang hemat energi namun tetap terang maksimal...",
+  "Menyiapkan rencana estimasi harga yang paling efisien untuk kantong Anda..."
+];
+
+// Komponen sederhana untuk menampilkan kutipan acak secara bergantian agar sistem tidak terlihat error
+function LoadingQuote() {
+  // State untuk menyimpan nomor indeks kutipan yang aktif saat ini
+  const [activeQuote, setActiveQuote] = useState(0);
+  // State untuk mengatur transparansi agar pergantian teks terlihat halus
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Efek samping untuk mengganti kutipan secara otomatis setiap 5 detik
+  useEffect(() => {
+    const quoteTimer = setInterval(() => {
+      // Memudarkan teks yang sedang tampil
+      setIsVisible(false);
+      
+      // Menunggu sebentar sebelum mengganti teks (memberikan waktu untuk animasi pudar)
+      setTimeout(() => {
+        // Membuat angka acak berdasarkan jumlah kutipan yang tersedia
+        const randomId = Math.floor(Math.random() * loadingQuotes.length);
+        // Memperbarui state dengan angka acak yang baru
+        setActiveQuote(randomId);
+        // Memunculkan teks yang baru secara perlahan
+        setIsVisible(true);
+      }, 600); // 600 milidetik memberikan waktu agar animasi pudar selesai
+    }, 5000);
+
+    // Membersihkan timer saat komponen sudah tidak digunakan
+    return () => clearInterval(quoteTimer);
+  }, []);
+
+  return (
+    <div className="min-h-[24px]">
+      <p 
+        className={`text-[13px] text-muted-light italic transition-opacity duration-700 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      >
+        {loadingQuotes[activeQuote]}
+      </p>
+    </div>
+  );
+}
+
 const CollapsibleAgentLogs = ({ logs, onOpenActivityPanel }: { logs: any[], onOpenActivityPanel: () => void }) => {
   if (!logs || logs.length === 0) return null;
 
@@ -424,8 +476,8 @@ export default function ChatCanvas({
         </header>
 
         {/* Chat History */}
-        <main className="flex-1 overflow-y-auto w-full scrollbar-warm">
-          <div className="p-6 md:p-10 space-y-10 w-full max-w-4xl mx-auto pb-10">
+        <main className="flex-1 overflow-y-auto w-full scrollbar-warm px-6">
+          <div className="pt-6 md:pt-10 space-y-10 w-full max-w-3xl mx-auto pb-10">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-12 animate-float-up min-h-[68vh] px-4">
                 <div className="space-y-1">
@@ -479,30 +531,32 @@ export default function ChatCanvas({
                     <div className="w-full mt-6">
                       <div className="max-w-3xl text-[15.5px] text-ink-2 leading-[1.7]">
                         {msg.status !== 'completed' && (
-                          <div className="mb-8 space-y-3 animate-scale-in">
-                            <div className="flex items-center justify-between w-full flex-wrap gap-4 border-b border-hairline/40 pb-3.5 mb-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-5 h-5 rounded-full bg-accent-soft flex items-center justify-center">
-                                  <Loader2 className="w-3 h-3 animate-spin text-accent" />
+                          <div className="mb-8 animate-scale-in">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between w-full flex-wrap gap-4 border-b border-hairline/40 pb-3.5 mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-5 h-5 rounded-full bg-accent-soft flex items-center justify-center">
+                                    <Loader2 className="w-3 h-3 animate-spin text-accent" />
+                                  </div>
+                                  <span className="text-[11.5px] uppercase tracking-[0.15em] text-muted font-normal">
+                                    STAF KANTOR SEDANG BEROPERASI
+                                  </span>
                                 </div>
-                                <span className="text-[11.5px] uppercase tracking-[0.15em] text-muted font-normal">
-                                  STAF KANTOR SEDANG BEROPERASI
-                                </span>
+                                <div className="flex items-center gap-2 bg-accent-soft/40 border border-accent-border/20 px-3 py-1 rounded-full shadow-sm flex-shrink-0">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                                  <span className="text-[10.5px] font-semibold text-accent uppercase tracking-wider">
+                                    {currentAgentOnDuty || 'Chief Supervisor'}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 bg-accent-soft/40 border border-accent-border/20 px-3 py-1 rounded-full shadow-sm flex-shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                                <span className="text-[10.5px] font-semibold text-accent uppercase tracking-wider">
-                                  {currentAgentOnDuty || 'Chief Supervisor'}
-                                </span>
-                              </div>
+                              <p className="text-[14px] text-muted-light leading-relaxed pl-8">
+                                {currentAgentOnDuty ? (
+                                  <>Staf <strong className="font-medium text-ink-2">{currentAgentOnDuty}</strong> sedang memproses perhitungan kebutuhan material, mencocokkan stok pergudangan QHomeMart, serta melakukan kalkulasi volume proyek...</>
+                                ) : (
+                                  <>Manajer <strong className="font-medium text-ink-2">Chief Supervisor</strong> sedang mempersiapkan pembagian tugas estimasi material dan mengoordinasikan staf spesialis...</>
+                                )}
+                              </p>
                             </div>
-                            <p className="text-[14px] text-muted-light leading-relaxed pl-8">
-                              {currentAgentOnDuty ? (
-                                <>Staf <strong className="font-medium text-ink-2">{currentAgentOnDuty}</strong> sedang memproses perhitungan kebutuhan material, mencocokkan stok pergudangan QHomeMart, serta melakukan kalkulasi volume proyek...</>
-                              ) : (
-                                <>Manajer <strong className="font-medium text-ink-2">Chief Supervisor</strong> sedang mempersiapkan pembagian tugas estimasi material dan mengoordinasikan staf spesialis...</>
-                              )}
-                            </p>
                           </div>
                         )}
 
@@ -543,6 +597,16 @@ export default function ChatCanvas({
                 </div>
               ))
             )}
+            
+            {/* Tampilkan LoadingQuote HANYA sesaat setelah user menekan enter dan agen belum memunculkan teks */}
+            {isProcessing && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
+              <div className="flex flex-col items-start animate-float-up w-full mt-6">
+                <div className="max-w-3xl text-[15.5px] leading-[1.7]">
+                  <LoadingQuote />
+                </div>
+              </div>
+            )}
+            
             <div className="h-[140px] w-full shrink-0" ref={messagesEndRef} />
           </div>
         </main>
