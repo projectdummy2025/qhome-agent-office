@@ -53,8 +53,6 @@ const SimulationModal: React.FC<SimulationModalProps> = ({ isOpen, onClose, onSe
   }
 
   const handleSelect = (consultant: typeof consultantList[0]) => {
-    // Update URL query parameters for persona tracking
-    window.history.pushState({}, '', `/chat?persona=${consultant.id}`);
     onSelectPersona(consultant.role);
     onClose();
   };
