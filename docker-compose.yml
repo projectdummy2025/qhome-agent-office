@@ -6,9 +6,9 @@ services:
     container_name: qhome_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: qhome_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
+      POSTGRES_DB: ${POSTGRES_DB:-qhome_db}
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +16,7 @@ services:
     networks:
       - qhome-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d qhome_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-qhome_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -44,10 +44,10 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/qhome_db"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@postgres:5432/${POSTGRES_DB:-qhome_db}"
       CHROMA_HOST: "chromadb"
       CHROMA_PORT: "8000"
-      SEED_ON_STARTUP: "true"
+      SEED_ON_STARTUP: "${SEED_ON_STARTUP:-true}"
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,0 +1,22 @@
+# Data volumes — bisa berukuran sangat besar
+pgdata/
+chroma_data/
+
+# Python runtime
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node.js
+frontend/node_modules/
+frontend/dist/
+
+# Editor & tools
+.git/
+.claude/
+.idea/
+.vscode/
+*.log
