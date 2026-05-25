@@ -103,66 +103,18 @@ const ThinkingBlock = ({ text }: { text: string }) => {
   );
 };
 
-const CollapsibleAgentLogs = ({ logs }: { logs: any[] }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const CollapsibleAgentLogs = ({ logs, onOpenActivityPanel }: { logs: any[], onOpenActivityPanel: () => void }) => {
   if (!logs || logs.length === 0) return null;
 
   return (
     <div className="mb-4 text-[13px]">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onOpenActivityPanel}
         className="flex items-center gap-1.5 text-muted-light hover:text-ink font-medium transition-colors cursor-pointer select-none"
       >
         <span className="text-[13px]">Thinking completed</span>
-        <ChevronRight className={`w-3.5 h-3.5 text-muted-light/60 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
+        <ChevronRight className="w-3.5 h-3.5 text-muted-light/60" />
       </button>
-
-      {isOpen && (
-        <div className="mt-2.5 pl-4 border-l border-hairline/80 py-1 space-y-4 animate-scale-in">
-          {logs.map((log: any, idx: number) => {
-            const agentTitle = log.title || 'Sistem';
-            const logMsg = log.message || '';
-            const parsed = parseThinking(logMsg);
-            const isWorking = log.event === 'working';
-
-            return (
-              <div key={idx} className="text-[12px] leading-relaxed">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className={`font-semibold uppercase tracking-wider text-[10px] ${isWorking ? 'text-accent' : 'text-ink-2'}`}>
-                    {agentTitle}
-                  </span>
-                  {isWorking ? (
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  ) : (
-                    <span className="text-[9px] text-muted-light">selesai</span>
-                  )}
-                </div>
-                <div className="text-muted">
-                  {parsed.thinking && (
-                    <div className="my-1.5 px-3 py-2 bg-surface-soft/80 border border-hairline/60 rounded-xl text-[11px] italic text-muted-light whitespace-pre-line leading-relaxed shadow-sm">
-                      {parsed.thinking}
-                    </div>
-                  )}
-                  <p className="text-[11.5px] font-normal leading-relaxed text-muted-light">
-                    {parsed.content}
-                  </p>
-                  {log.hired && log.hired.length > 0 && (
-                    <div className="mt-2 pl-3 border-l-2 border-hairline/60 space-y-1">
-                      <p className="text-[9px] text-muted-light uppercase tracking-wider mb-1 font-medium">Ditugaskan kepada</p>
-                      {log.hired.map((agent: string) => (
-                        <div key={agent} className="flex items-center gap-2">
-                          <span className="w-1 h-1 rounded-full bg-muted-light/60 flex-shrink-0" />
-                          <span className="text-[10px] font-semibold text-ink-2 uppercase tracking-wide">{agent}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 };
@@ -211,9 +163,17 @@ export default function ChatCanvas({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const activityPanelRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const openActivityPanel = () => {
+    setIsRightSidebarOpen(true);
+    setTimeout(() => {
+      activityPanelRef.current?.scrollTo({ top: activityPanelRef.current.scrollHeight, behavior: 'smooth' });
+    }, 50);
   };
 
   useEffect(() => {
@@ -548,7 +508,7 @@ export default function ChatCanvas({
 
                         {msg.status === 'completed' && (
                           <div className="space-y-8 pt-2 animate-scale-in">
-                            <CollapsibleAgentLogs logs={msg.logs} />
+                            <CollapsibleAgentLogs logs={msg.logs} onOpenActivityPanel={openActivityPanel} />
                             {msg.narrative ? (() => {
                               const parsed = parseThinking(String(msg.narrative));
                               return (
@@ -647,7 +607,7 @@ export default function ChatCanvas({
         </div>
         <div className="mx-6 h-px bg-hairline" />
 
-        <div className="flex-1 overflow-y-auto min-w-[360px] scrollbar-warm">
+        <div ref={activityPanelRef} className="flex-1 overflow-y-auto min-w-[360px] scrollbar-warm">
           {messages.length === 0 || !messages.find(m => m.role === 'system') ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-8 py-24 opacity-40">
               <Brain className="w-8 h-8 text-muted-light animate-pulse mb-3" />
