@@ -41,14 +41,12 @@ export default function App() {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Guard: redirect unauthenticated users away from protected routes,
-  // and redirect authenticated users away from the landing page.
+  // Guard: redirect unauthenticated users away from protected routes.
+  // Logged-in users at '/' fall through to the default ChatCanvas render — no redirect needed.
   useEffect(() => {
     const protectedPaths = ['/chat', '/admin', '/order', '/history'];
     if (!currentUser && protectedPaths.includes(location.pathname)) {
       navigate('/', { replace: true });
-    } else if (currentUser && (location.pathname === '/' || location.pathname === '/landing')) {
-      navigate('/chat', { replace: true });
     }
   }, [currentUser, location.pathname, navigate]);
 
