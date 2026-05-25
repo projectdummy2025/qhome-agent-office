@@ -13,38 +13,30 @@ Untuk memastikan fleksibilitas tinggi tanpa perlu mengompilasi ulang kode untuk 
 
 ---
 
-## 2. Pilihan A: Setup Lokal (Host Development)
+## 2. Pilihan A — Lokal (Development)
 
-### Persyaratan Lokal
-*   Node.js versi 18 atau lebih baru (direkomendasikan Node.js v20+).
-*   `npm` (biasanya sudah terinstal bersama Node.js).
+**Prasyarat**: Node.js 18+ (rekomendasi v20+), backend FastAPI aktif di port `8000`.
 
-### Langkah-Langkah Setup
-1.  **Masuk ke Direktori Frontend & Instal Dependensi**:
-    ```bash
-    cd frontend
-    npm install
-    ```
-2.  **Jalankan Vite Development Server**:
-    ```bash
-    npm run dev
-    ```
-3.  **Akses Aplikasi**:
-    Buka browser Anda dan kunjungi `http://localhost:5173`. Pastikan server backend FastAPI juga aktif di `port 8000` pada terminal terpisah.
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Akses: `http://localhost:5173`
 
 ---
 
-## 3. Pilihan B: Setup Docker (Production-Ready)
+## 3. Pilihan B — Deployment (Docker)
 
-Frontend telah dilengkapi konfigurasi penyajian statis (*static serving*) yang sangat ringan dan siap deploy.
+Dijalankan otomatis sebagai bagian dari `docker compose up --build -d` di root proyek. Akses: `http://localhost:3000`.
 
 ### Berkas Konfigurasi Utama
-*   **`frontend/Dockerfile`**: Menggunakan teknik *Multi-Stage Build*:
-    1.  *Stage 1 (Builder)*: Menggunakan `node:20-alpine` untuk menginstal dependencies (`npm ci`) dan melakukan kompilasi produksi (`npm run build`).
-    2.  *Stage 2 (Runner)*: Menggunakan `nginx:1.25-alpine` super ringan untuk menyajikan berkas HTML/JS/CSS statis pada port `80` (di-expose ke port `3000` pada host).
-*   **`frontend/nginx.conf`**: Konfigurasi server Nginx khusus yang menangani:
-    1.  *SPA Routing Fallback*: Mengarahkan semua rute tidak dikenal ke `index.html` (dukungan React Router).
-    2.  *Reverse Proxy `/api`*: Mengalihkan panggilan API internal secara otomatis ke layanan `http://backend:8000/api`.
-    3.  *SSE Stream Bypass*: Khusus rute Server-Sent Events `/stream`, buffering dinonaktifkan (`proxy_buffering off;`) untuk menjamin live streaming log agen berjalan tanpa terputus.
-*   **`frontend/.dockerignore`**: Memblokir folder `node_modules` lokal, folder build statis `dist` lokal, dan log agar proses *build context* berjalan instan.
+*   **`frontend/Dockerfile`** — *Multi-Stage Build*:
+    1.  *Builder* (`node:20-alpine`): `npm ci` + `npm run build`.
+    2.  *Runner* (`nginx:1.25-alpine`): menyajikan statis di port `80` (mapped ke host `3000`).
+*   **`frontend/nginx.conf`** — menangani:
+    *   *SPA Routing Fallback*: rute tidak dikenal → `index.html`.
+    *   *Reverse Proxy `/api`* → `http://backend:8000/api`.
+    *   *SSE Bypass*: `proxy_buffering off;` untuk streaming log agen.
+*   **`frontend/.dockerignore`**: memblokir `node_modules`, `dist` lokal, dan log.
 

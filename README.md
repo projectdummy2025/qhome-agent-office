@@ -57,174 +57,66 @@ Seluruh peran agen digital berikut dirutekan dan dieksekusi secara terpadu melal
 
 ---
 
-## Panduan Setup & Instalasi Utama (Developer Onboarding)
+## Panduan Setup
 
-Ikuti langkah-langkah di bawah ini untuk menjalankan seluruh sistem QHome-MAS di komputer lokal Anda.
+### Prasyarat
+* **Lokal**: Python 3.10+, Node.js 18+, Docker (untuk PostgreSQL & ChromaDB).
+* **Deployment**: Docker saja.
 
-### Prasyarat Sistem
-* **OS**: Linux / macOS (Windows disarankan menggunakan WSL2).
-* **Python**: Versi 3.10 atau lebih tinggi.
-* **Node.js**: Versi 18 atau lebih tinggi dengan `npm` / `yarn`.
-* **Docker**: Dipasang dan dapat berjalan di latar belakang (untuk ChromaDB & PostgreSQL).
-* **RTK (Rust Token Killer)**: CLI proxy penghemat token wajib dipasang (lihat aturan global).
-
----
-
-### Langkah 1: Kloning & Persiapan Environment
-Salin file template `.env.example` menjadi `.env` di direktori utama:
+### Konfigurasi `.env`
 ```bash
 cp .env.example .env
 ```
-Buka file `.env` dan lengkapi API Key berikut (menggunakan format endpoint *OpenAI-Compatible* via SumoPod):
-* `SUMOPOD_API_KEY`: Kunci akses API utama Anda.
-* `SUMOPOD_API_BASE`: Endpoint base URL (contoh: https://ai.sumopod.com/v1).
-* `SUPERVISOR_MODEL`: Nama model untuk agen manajer (misal: glm-5-turbo).
-* `SUBAGENT_MODEL`: Nama model untuk agen spesialis (misal: gpt-5-nano).
-* `TAVILY_API_KEY`: Kunci akses pencarian web Tavily.
+Isi key berikut di `.env`:
+* `SUMOPOD_API_KEY`, `SUMOPOD_API_BASE` (contoh: `https://ai.sumopod.com/v1`)
+* `SUPERVISOR_MODEL` (mis. `glm-5-turbo`), `SUBAGENT_MODEL` (mis. `gpt-5-nano`)
+* `TAVILY_API_KEY`
 
 ---
 
-## PILIHAN A: Setup Lokal (Development Mode)
+### Pilihan A — Lokal (Development)
 
-Gunakan metode ini jika Anda ingin melakukan perubahan kode secara langsung dan *live debugging* pada mesin lokal Anda.
-
-### Langkah 2.A: Menjalankan Database Pendukung (Docker)
-Putar kontainer database PostgreSQL dan database vektor (ChromaDB) di latar belakang:
 ```bash
+# 1. Nyalakan DB pendukung
 docker compose up -d postgres chromadb
+
+# 2. Backend (terminal 1)
+python3 -m venv venv && source venv/bin/activate
+pip install -r backend/requirements.txt
+python backend/seed.py
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+
+# 3. Frontend (terminal 2)
+cd frontend && npm install && npm run dev
 ```
-
-### Langkah 3.A: Setup & Seeding Backend (Python)
-1. Buka folder root proyek dan buat virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-2. Instal semua dependensi pustaka Python yang dibutuhkan:
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
-3. Lakukan **Seeding Katalog Produk** (menyemai 80+ item produk QHomeMart ke PostgreSQL dan ChromaDB Vector Store):
-   ```bash
-   python backend/seed.py
-   ```
-4. Jalankan server API dengan menggunakan Uvicorn:
-   ```bash
-   uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-   ```
-
-### Langkah 4.A: Setup & Menjalankan Frontend (React)
-1. Buka direktori `frontend` di terminal baru:
-   ```bash
-   cd frontend
-   ```
-2. Instal seluruh dependensi Node.js dan jalankan dev server:
-   ```bash
-   npm install
-   npm run dev
-   ```
-3. Akses aplikasi pada alamat `http://localhost:5173`.
+Akses: `http://localhost:5173`
 
 ---
 
-## PILIHAN B: Setup Full-Container Docker (Production-Ready)
+### Pilihan B — Deployment (Full Docker)
 
-Gunakan metode ini untuk meniru lingkungan production secara instan. Seluruh layanan (PostgreSQL, ChromaDB, Backend, dan Frontend Nginx) akan berjalan dalam kontainer terpisah yang sangat teroptimasi dan aman.
-
-### Langkah 2.B: Jalankan Semua Layanan dengan Satu Perintah
-Cukup jalankan perintah berikut di root folder proyek:
 ```bash
 docker compose up --build -d
 ```
+Akses: `http://localhost:3000` (Nginx reverse proxy meneruskan `/api` ke backend; seeding DB jalan otomatis pada cold-start).
 
-### Langkah 3.B: Verifikasi dan Akses
-1. Pastikan semua kontainer berjalan lancar dan statusnya sehat (*healthy*):
-   ```bash
-   docker compose ps
-   ```
-   *(Backend memiliki sistem cold-start otomatis yang akan menahan diri untuk aktif sampai PostgreSQL dan ChromaDB siap sepenuhnya, lalu melakukan seeding database otomatis lewat `seed.py` sebelum menghidupkan Uvicorn).*
-2. Buka browser Anda dan kunjungi port publik frontend pada alamat **`http://localhost:3000`**.
-3. Komunikasi API backend, streaming log simulasi real-time (Server-Sent Events), dan unduhan PDF akan berjalan otomatis di latar belakang melalui reverse proxy Nginx yang sangat efisien!
+Verifikasi:
+```bash
+docker compose ps
+docker compose logs -f
+```
 
 ---
 
-## Manajemen Container Docker (Setelah Perubahan Code)
-
-Setiap kali ada perubahan kode, gunakan perintah berikut sesuai situasinya:
-
-### Rebuild Service Tertentu (Cara Paling Umum)
-
-Karena kode di-*build* ke dalam image Docker, kamu perlu rebuild dulu setelah ada perubahan:
-
-```bash
-# Hanya rebuild & restart frontend
-docker compose up -d --build frontend
-
-# Hanya rebuild & restart backend
-docker compose up -d --build backend
-
-# Rebuild semua sekaligus
-docker compose up -d --build
-```
-
-### Perubahan File `.env` (Tanpa Rebuild)
-
-Perubahan pada `.env` langsung aktif tanpa perlu rebuild image:
-
-```bash
-docker compose up -d backend
-```
-
-### Stop & Start Ulang Bersih
-
-```bash
-# Stop semua container (data PostgreSQL & ChromaDB tetap aman)
-docker compose down
-
-# Jalankan ulang semua service
-docker compose up -d --build
-```
-
-### Reset Total — ⚠️ Hati-hati, Data Akan Hilang!
-
-```bash
-# Hapus container + semua volume (DATABASE AKAN TERHAPUS!)
-docker compose down -v
-
-# Rebuild dari awal
-docker compose up -d --build
-```
-
-### Command Monitoring yang Berguna
-
-```bash
-# Lihat status semua container
-docker compose ps
-
-# Lihat log realtime semua service
-docker compose logs -f
-
-# Lihat log hanya backend
-docker compose logs -f backend
-
-# Lihat log hanya frontend
-docker compose logs -f frontend
-
-# Restart satu service tanpa rebuild (misal ada hang)
-docker compose restart backend
-```
-
-### Ringkasan Cepat
+### Perintah Docker yang Sering Dipakai
 
 | Situasi | Command |
 |---------|---------|
-| Ubah code frontend | `docker compose up -d --build frontend` |
-| Ubah code backend | `docker compose up -d --build backend` |
-| Ubah file `.env` | `docker compose up -d backend` |
-| Ubah `docker-compose.yml` | `docker compose up -d` |
+| Ubah code frontend / backend | `docker compose up -d --build <service>` |
+| Ubah `.env` | `docker compose up -d backend` |
 | Restart bersih | `docker compose down && docker compose up -d --build` |
-| Cek status | `docker compose ps` |
-| Lihat log | `docker compose logs -f` |
+| Reset total (⚠️ hapus data DB) | `docker compose down -v` |
+| Cek status / log | `docker compose ps` / `docker compose logs -f` |
 
 ---
 

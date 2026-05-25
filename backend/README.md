@@ -14,49 +14,34 @@ Layanan *backend* dirancang secara modular dan performa tinggi menggunakan:
 
 ---
 
-## 2. Pilihan A: Setup Lokal (Host Development)
+## 2. Pilihan A — Lokal (Development)
 
-### Persyaratan Lokal
-*   Python 3.10 atau lebih baru (direkomendasikan Python 3.11/3.12).
-*   PostgreSQL & ChromaDB berjalan di latar belakang (dapat dinyalakan via Docker Compose).
+**Prasyarat**: Python 3.10+, PostgreSQL & ChromaDB aktif (`docker compose up -d postgres chromadb`).
 
-### Langkah-Langkah Setup
-1.  **Buat & Aktifkan Virtual Environment**:
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-2.  **Instal Dependensi**:
-    ```bash
-    pip install -r backend/requirements.txt
-    ```
-3.  **Inisialisasi & Seeding Database**:
-    Jalankan file *seed* untuk memuat produk awal dari CSV (`seed_products.csv`) ke PostgreSQL dan ChromaDB. (Dijalankan dari *root* direktori).
-    ```bash
-    python backend/seed.py
-    ```
-4.  **Jalankan Server Uvicorn**:
-    ```bash
-    uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-    ```
-    API Anda akan aktif di `http://127.0.0.1:8000`. Dokumentasi Swagger interaktif dapat diakses langsung di `/docs`.
+```bash
+# Dari root proyek
+python3 -m venv venv && source venv/bin/activate
+pip install -r backend/requirements.txt
+python backend/seed.py
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+API: `http://127.0.0.1:8000` · Swagger: `/docs`
 
 ---
 
-## 3. Pilihan B: Setup Docker (Production-Ready)
+## 3. Pilihan B — Deployment (Docker)
 
-Backend telah dilengkapi dengan konfigurasi kontainer terisolasi yang sangat ringan dan aman.
+Dijalankan otomatis sebagai bagian dari `docker compose up --build -d` di root proyek.
 
 ### Berkas Konfigurasi Utama
-*   **`backend/Dockerfile`**: Menggunakan teknik *Multi-Stage Build* berbasis `python:3.11-slim` untuk memangkas compiler tools pasca kompilasi dependensi. Kontainer berjalan menggunakan user non-privileged (`appuser`) demi keamanan production.
-*   **`backend/entrypoint.sh`**: Skrip otomatisasi cold start yang berfungsi:
-    1.  Melakukan TCP pinging untuk menunggu layanan database PostgreSQL dan ChromaDB aktif sepenuhnya sebelum API backend dinyalakan.
-    2.  Melakukan seeding database otomatis lewat `seed.py` secara aman jika variabel lingkungan `SEED_ON_STARTUP="true"`.
-*   **`backend/.dockerignore`**: Memblokir berkas temporer (`__pycache__`), virtual environment lokal (`venv`), logs, dan berkas rahasia host `.env` agar tidak ikut ter-copy ke dalam Docker daemon.
+*   **`backend/Dockerfile`**: *Multi-Stage Build* berbasis `python:3.11-slim`, berjalan sebagai user non-privileged (`appuser`).
+*   **`backend/entrypoint.sh`**: Menunggu PostgreSQL & ChromaDB siap (TCP ping), lalu seed otomatis bila `SEED_ON_STARTUP="true"`, baru menyalakan Uvicorn.
+*   **`backend/.dockerignore`**: Memblokir `__pycache__`, `venv`, log, dan `.env` host.
 
-### Variabel Lingkungan Kontainer (Docker Compose)
-Dua variabel lingkungan khusus diinjeksikan pada layer orkestrasi:
-*   `DATABASE_URL`: Diarahkan ke host internal kontainer DB `postgresql://postgres:postgrespassword@postgres:5432/qhome_db`.
-*   `CHROMA_HOST` & `CHROMA_PORT`: Diarahkan ke layanan `chromadb` port `8000`.
-*   `SEED_ON_STARTUP`: Disetel `"true"` untuk memaksa database melakukan seeding otomatis saat pertama kali dideploy (*cold-start*).
+### Variabel Lingkungan (diinjeksi via Docker Compose)
+| Var | Nilai |
+|---|---|
+| `DATABASE_URL` | `postgresql://postgres:postgrespassword@postgres:5432/qhome_db` |
+| `CHROMA_HOST` / `CHROMA_PORT` | `chromadb` / `8000` |
+| `SEED_ON_STARTUP` | `"true"` untuk cold-start otomatis |
 
