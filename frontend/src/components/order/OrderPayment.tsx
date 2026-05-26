@@ -78,7 +78,7 @@ export default function OrderPayment({
         {/* Left Column: Official Invoice Printable Block (span 7) */}
         <div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-3xl shadow-[0_15px_40px_-20px_rgba(0,0,0,0.08)] overflow-hidden flex flex-col">
           <div className="h-[6px] w-full bg-gradient-to-r from-accent to-red-500" />
-          <div ref={invoiceRef} className="p-8 space-y-6">
+          <div ref={invoiceRef} className="p-5 md:p-8 space-y-6">
 
             {/* Invoice Header */}
             <div className="flex justify-between items-start border-b border-slate-200/60 pb-5">
@@ -100,7 +100,7 @@ export default function OrderPayment({
             </div>
 
             {/* Metadata Grid */}
-            <div className="grid grid-cols-2 gap-6 text-sm border-b border-slate-200/60 pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-sm border-b border-slate-200/60 pb-6">
               <div>
                 <p className="text-slate-400 font-extrabold uppercase text-[9px] tracking-widest mb-2">Diterbitkan Untuk</p>
                 <p className="font-extrabold text-slate-800">{currentUser?.name || 'Mitra Korporat'}</p>
@@ -180,7 +180,7 @@ export default function OrderPayment({
         </div>
 
         {/* Right Column: Premium GPN QRIS standee (span 5) */}
-        <div className="lg:col-span-5 bg-white border border-slate-200/80 p-8 rounded-3xl flex flex-col items-center shadow-[0_15px_40px_-20px_rgba(0,0,0,0.08)] relative overflow-hidden">
+        <div className="lg:col-span-5 bg-white border border-slate-200/80 p-5 md:p-8 rounded-3xl flex flex-col items-center shadow-[0_15px_40px_-20px_rgba(0,0,0,0.08)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
 
           {/* Official QRIS simulated physical standee via SVG */}

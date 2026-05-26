@@ -296,7 +296,7 @@ export default function AdminPortal({
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-display text-slate-900">
       <header className="w-full border-b border-slate-200/50 bg-white/70 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-6 sm:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-sm font-extrabold text-slate-900 tracking-wide uppercase">QHomeMart</span>
             <span className="text-xs font-light text-slate-400">/</span>
@@ -318,7 +318,7 @@ export default function AdminPortal({
         </div>
       </header>
 
-      <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col px-6 sm:px-8 py-8 gap-8 animate-scale-in">
+      <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 sm:px-8 py-8 gap-8 animate-scale-in">
 
         {/* Tab Switcher */}
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl w-fit">
@@ -359,7 +359,7 @@ export default function AdminPortal({
               <span className="text-xs font-bold text-accent tracking-[0.2em] uppercase block">
                 Manajemen Operasional
               </span>
-              <h1 className="text-3xl font-extrabold text-slate-900 leading-tight uppercase tracking-widest">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight uppercase tracking-widest">
                 Penanganan Stok &amp; Substitusi
               </h1>
               <p className="text-[14px] text-slate-500 leading-relaxed">
@@ -375,7 +375,7 @@ export default function AdminPortal({
             )}
 
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           <RestockPanel
             restockProducts={restockProducts}
             masterProducts={masterProducts}
@@ -412,7 +412,7 @@ export default function AdminPortal({
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-warm">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-hairline">

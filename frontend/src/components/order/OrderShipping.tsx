@@ -64,9 +64,9 @@ export default function OrderShipping({
                 <button
                   key={truck.id}
                   onClick={() => setSelectedTruck(truck.id)}
-                  className={`w-full flex items-center gap-5 py-5 text-left outline-none transition-all duration-300 cursor-pointer px-4 -mx-4 rounded-3xl ${
-                    isSelected 
-                      ? 'bg-slate-50 border border-slate-200/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]' 
+                  className={`w-full flex items-center gap-3 sm:gap-5 py-5 text-left outline-none transition-all duration-300 cursor-pointer px-3 sm:px-4 -mx-3 sm:-mx-4 rounded-3xl ${
+                    isSelected
+                      ? 'bg-slate-50 border border-slate-200/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]'
                       : 'hover:bg-slate-50/50'
                   }`}
                 >
@@ -101,8 +101,8 @@ export default function OrderShipping({
                     </p>
                   </div>
 
-                  <div className="text-right flex-shrink-0 pl-4 min-w-[140px]">
-                    <span className="text-base font-extrabold text-slate-900 block tracking-tight">
+                  <div className="text-right flex-shrink-0 pl-2 sm:pl-4 min-w-[100px] sm:min-w-[140px]">
+                    <span className="text-sm sm:text-base font-extrabold text-slate-900 block tracking-tight">
                       Rp {cost.toLocaleString('id-ID')}
                     </span>
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block mt-1">ESTIMASI TARIF</span>

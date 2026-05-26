@@ -7,7 +7,7 @@ interface NavigationBarProps {
 const NavigationBar: React.FC<NavigationBarProps> = ({ onViewCatalog }) => {
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 shadow-sm py-3 font-display">
-      <div className="mx-auto max-w-7xl px-6 sm:px-8 flex items-center justify-between">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8 flex items-center justify-between">
         {/* Brand Logo */}
         <div className="flex flex-col select-none cursor-pointer">
           <span className="text-[17px] font-extrabold tracking-tight text-slate-900 leading-none uppercase">

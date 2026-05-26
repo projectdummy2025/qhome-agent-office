@@ -122,76 +122,91 @@ export default function OrderCart({
             return (
               <div 
                 key={prod.sku} 
-                className={`bg-white border border-slate-200/80 rounded-3xl p-5 flex gap-5 items-center hover:shadow-[0_12px_30px_-5px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 ${
+                className={`bg-white border border-slate-200/80 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-5 hover:shadow-[0_12px_30px_-5px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 ${
                   !isApproved ? 'opacity-55 bg-slate-50/50' : ''
                 }`}
               >
-                {!isProposalApproved && (
-                  <div className="flex-shrink-0 pr-1 flex items-center">
-                    <div 
-                      onClick={() => toggleProductApproval(prod.sku)}
-                      className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all duration-250 ${
-                        isApproved 
-                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/10' 
-                          : 'border-slate-350 bg-white hover:border-slate-400'
-                      }`}
-                    >
-                      {isApproved && <Check className="w-4 h-4 stroke-[3]" />}
+                {/* Top Section: Checkbox + Image + Title/SKU */}
+                <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 w-full">
+                  {!isProposalApproved && (
+                    <div className="flex-shrink-0 pt-1.5 sm:pr-1 flex items-center">
+                      <div 
+                        onClick={() => toggleProductApproval(prod.sku)}
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all duration-250 ${
+                          isApproved 
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/10' 
+                            : 'border-slate-300 bg-white hover:border-slate-400'
+                        }`}
+                      >
+                        {isApproved && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Image with fallback container */}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-50 flex-shrink-0 flex items-center justify-center relative group self-start">
+                    <img 
+                      src={getProductImage(prod.name)} 
+                      alt={prod.name} 
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      className={`w-full h-full object-cover transition-opacity duration-300 ${!isApproved ? 'opacity-40' : ''}`}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-400 -z-10">
+                      <ShoppingBag className="w-6 h-6 stroke-[1.5]" />
                     </div>
                   </div>
-                )}
-                
-                {/* Image with fallback container */}
-                <div className="w-20 h-20 rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-50 flex-shrink-0 flex items-center justify-center relative group">
-                  <img 
-                    src={getProductImage(prod.name)} 
-                    alt={prod.name} 
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${!isApproved ? 'opacity-40' : ''}`}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-400 -z-10">
-                    <ShoppingBag className="w-6 h-6 stroke-[1.5]" />
+
+                  {/* Title & SKU details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 mb-1">
+                      <span className={`text-[14px] sm:text-[15px] font-bold text-slate-800 truncate block max-w-full ${
+                        !isApproved ? 'line-through text-slate-400 font-medium' : ''
+                      }`}>
+                        {prod.name}
+                      </span>
+                      {prod.category && (
+                        <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-slate-500 border border-slate-200 bg-slate-50/50 px-2 py-0.5 rounded-md">
+                          {prod.category}
+                        </span>
+                      )}
+                      {!isApproved && (
+                        <span className="text-[8px] sm:text-[9px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-100/50 uppercase tracking-wider">
+                          Ditolak / Ditangguhkan
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[9px] sm:text-[10px] font-mono tracking-widest text-slate-400">SKU: {prod.sku}</p>
+                    
+                    {/* Price and Quantity (Desktop-only, left-aligned under SKU) */}
+                    <div className="hidden sm:flex items-center gap-2 mt-2.5 flex-wrap">
+                      <span className={`text-[11px] font-bold px-3 py-1 rounded-lg border whitespace-nowrap bg-slate-50 text-slate-700 border-slate-200/80 shadow-sm`}>
+                        {prod.qty} unit
+                      </span>
+                      <span className="text-slate-300 text-sm font-light">|</span>
+                      <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">
+                        Rp {prod.price.toLocaleString('id-ID')} / unit
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
-                    <span className={`text-[15px] font-bold text-slate-800 truncate block max-w-sm ${
-                      !isApproved ? 'line-through text-slate-400 font-medium' : ''
-                    }`}>
-                      {prod.name}
-                    </span>
-                    {prod.category && (
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 border border-slate-200 bg-slate-50/50 px-2 py-0.5 rounded-md">
-                        {prod.category}
-                      </span>
-                    )}
-                    {!isApproved && (
-                      <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-100/50 uppercase tracking-wider">
-                        Ditolak / Ditangguhkan
-                      </span>
-                    )}
+                {/* Mobile-only Price, Quantity & Subtotal Section (Vertical Stack, Left Aligned) */}
+                <div className="flex sm:hidden flex-col gap-1.5 pt-3 border-t border-slate-100 mt-1 w-full text-left">
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Kuantitas: <span className="font-bold text-slate-800">{prod.qty} unit</span>
                   </div>
-                  <p className="text-[10px] font-mono tracking-widest text-slate-450">SKU: {prod.sku}</p>
-                  
-                  <div className="flex items-center gap-2 mt-3.5">
-                    <span className={`text-[11px] font-bold px-3 py-1 rounded-lg border ${
-                      !isApproved 
-                        ? 'bg-slate-100 text-slate-400 border-slate-200' 
-                        : 'bg-slate-50 text-slate-700 border-slate-200/80 shadow-sm'
-                    }`}>
-                      {prod.qty} unit
-                    </span>
-                    <span className="text-slate-300 text-sm font-light">|</span>
-                    <span className="text-xs font-semibold text-slate-500">
-                      Rp {prod.price.toLocaleString('id-ID')} / unit
-                    </span>
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Harga Satuan: <span className="font-bold text-slate-800">Rp {prod.price.toLocaleString('id-ID')} / unit</span>
+                  </div>
+                  <div className="text-[11px] font-extrabold text-slate-950 mt-0.5">
+                    Subtotal: <span className="text-sm font-black text-slate-950">Rp {prod.total.toLocaleString('id-ID')}</span>
                   </div>
                 </div>
-                
-                <div className="text-right flex-shrink-0 pl-6 border-l border-slate-200/80 h-12 flex flex-col justify-center min-w-[130px]">
+
+                {/* Desktop-only Subtotal Section */}
+                <div className="hidden sm:flex text-right flex-shrink-0 pl-6 border-l border-slate-200/80 h-12 flex-col justify-center min-w-[140px] self-center">
                   <span className={`text-base font-extrabold text-slate-900 block tracking-tight ${
                     !isApproved ? 'line-through text-slate-400 font-medium' : ''
                   }`}>
@@ -285,7 +300,7 @@ export default function OrderCart({
           )}
           
           <div className="border-t border-slate-100 pt-4 text-center">
-            <p className="text-[11px] font-semibold text-slate-450 leading-relaxed">
+            <p className="text-[11px] font-semibold text-slate-400 leading-relaxed">
               Data tagihan material ini selalu diperbarui secara otomatis sesuai dengan ketersediaan stok di gudang QHomeMart.
             </p>
           </div>

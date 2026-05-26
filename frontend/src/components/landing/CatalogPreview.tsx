@@ -52,15 +52,15 @@ const categoryList = [
 
 const CatalogPreview: React.FC<CatalogPreviewProps> = ({ onViewCatalog }) => {
   return (
-    <section className="py-24 bg-white font-display border-t border-slate-100">
-      <div className="mx-auto max-w-7xl px-6 sm:px-8">
-        
+    <section className="py-16 md:py-24 bg-white font-display border-t border-slate-100">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8">
+
         {/* Section Header */}
-        <div className="text-center mb-16 max-w-2xl mx-auto">
+        <div className="text-center mb-12 md:mb-16 max-w-2xl mx-auto">
           <span className="text-sm font-bold text-accent uppercase tracking-wider block mb-3 font-mono">
             Katalog Unggulan
           </span>
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-4">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-4">
             Katalog Material Pilihan
           </h2>
           <p className="text-sm sm:text-base font-semibold text-slate-500">
@@ -81,7 +81,7 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ onViewCatalog }) => {
               onClick={() => onViewCatalog(category.categoryId)}
             >
               <div className={`absolute inset-x-0 top-0 h-36 bg-gradient-to-br ${category.accent}`} />
-              <div className="relative flex min-h-[230px] flex-col justify-between p-8">
+              <div className="relative flex min-h-[230px] flex-col justify-between p-6 sm:p-8">
                 <div className="space-y-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                     Kategori

@@ -3,7 +3,7 @@ import React from 'react';
 const PageFooter: React.FC = () => {
   return (
     <footer className="bg-slate-50 border-t border-slate-200/80 py-8 font-display">
-      <div className="mx-auto max-w-7xl px-6 sm:px-8">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           <p className="text-sm font-semibold text-slate-400">
             © 2026 QHomeMart. Platform material bangunan profesional.

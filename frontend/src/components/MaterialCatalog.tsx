@@ -239,8 +239,8 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   return (
     <div className="flex flex-col min-h-screen bg-[#fcfdfe] font-sans relative overflow-x-hidden">
 
-      {/* Absolute Ambient Soft Glow Background */}
-      <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-accent/5 to-sage/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+      {/* Absolute Ambient Soft Glow Background — desktop only, agar tidak overlap konten di mobile */}
+      <div className="hidden md:block absolute top-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-accent/5 to-sage/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
       {/* Modern Sticky Glassmorphic Header */}
       <header className="w-full border-b border-slate-100 bg-white/85 backdrop-blur-md sticky top-0 z-50 transition-all">
@@ -265,7 +265,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
         {/* Hero Title & Subtitle */}
         <div className="mb-10 animate-float-up">
           <p className="text-[10.5px] font-extrabold uppercase tracking-[0.3em] text-accent mb-3 font-display">DIREKTORI PRODUK PREMIUM</p>
-          <h1 className="text-[34px] font-light text-ink tracking-tight leading-tight mb-2.5 font-display">
+          <h1 className="text-[26px] md:text-[34px] font-light text-ink tracking-tight leading-tight mb-2.5 font-display">
             Katalog Material <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ink to-accent">&amp; Informasi Stok</span>
           </h1>
           <p className="text-[13.5px] text-muted leading-relaxed max-w-2xl">
@@ -378,7 +378,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
         ) : viewMode === 'list' ? (
 
           /* ── LUXURY EDITORIAL TABLE VIEW ── */
-          <div className="bg-white border border-slate-100 shadow-sm rounded-3xl p-6 overflow-x-auto animate-scale-in">
+          <div className="bg-white border border-slate-100 shadow-sm rounded-3xl p-4 md:p-6 overflow-x-auto scrollbar-warm animate-scale-in">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-slate-100 pb-3">

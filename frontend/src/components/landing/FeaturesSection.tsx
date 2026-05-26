@@ -60,15 +60,15 @@ const FeaturesSection: React.FC = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 bg-slate-50 border-t border-slate-200/50 font-display">
-      <div className="mx-auto max-w-7xl px-6 sm:px-8">
-        
+    <section id="how-it-works" className="py-16 md:py-24 bg-slate-50 border-t border-slate-200/50 font-display">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8">
+
         {/* Social Proof Section */}
-        <div className="mb-28 text-center">
+        <div className="mb-16 md:mb-28 text-center">
           <span className="text-sm font-mono text-slate-500 tracking-wide block mb-10">
             Dipercaya oleh lebih dari 200 perusahaan konstruksi dan firma desain terkemuka
           </span>
-          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-50 hover:opacity-85 transition-opacity duration-300">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 md:gap-16 opacity-50 hover:opacity-85 transition-opacity duration-300">
             {partners.map((partnerName, index) => (
               <div key={index} className="flex items-center gap-2 select-none">
                 <CheckCircle className="h-4 w-4 text-slate-400 shrink-0" />
@@ -81,17 +81,17 @@ const FeaturesSection: React.FC = () => {
         </div>
 
         {/* Bento Grid Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
           <span className="text-sm font-semibold text-accent tracking-wide block mb-4">
             Solusi Terintegrasi Kami
           </span>
-          <h2 className="text-3xl font-bold text-slate-900 leading-tight">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
             Platform Manajemen Material Terpercaya
           </h2>
         </div>
 
         {/* Bento Grid Layout (adapted from sample.tsx) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1400px] mx-auto">
           {features.map((item, index) => (
             <div
               key={index}
@@ -113,7 +113,7 @@ const FeaturesSection: React.FC = () => {
               />
 
               {/* Bento Card Body */}
-              <div className="relative flex flex-1 flex-col justify-between p-8">
+              <div className="relative flex flex-1 flex-col justify-between p-6 md:p-8">
                 <div className="space-y-6">
                   <div className="flex items-start justify-between">
                     <div className="text-4xl font-light text-accent/40 leading-none select-none">

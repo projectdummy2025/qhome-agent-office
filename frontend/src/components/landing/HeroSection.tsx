@@ -20,12 +20,12 @@ interface HeroSectionProps {
 
 const HeroSection: React.FC<HeroSectionProps> = ({ onStartSimulation, onViewCatalog }) => {
   return (
-    <section className="relative overflow-hidden bg-white bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/hero/gridBackground.png')] bg-no-repeat bg-cover bg-center pt-16 pb-28 font-display">
-      
+    <section className="relative overflow-hidden bg-white bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/hero/gridBackground.png')] bg-no-repeat bg-cover bg-center pt-12 md:pt-16 pb-20 md:pb-28 font-display">
+
       {/* Radial soft ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-red-100/20 blur-3xl pointer-events-none z-0"></div>
 
-      <div className="mx-auto max-w-7xl px-6 sm:px-8 relative z-10">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8 relative z-10">
         <div className="text-center max-w-4xl mx-auto flex flex-col items-center">
           
           {/* Announcement style Pill */}

@@ -176,26 +176,26 @@ export default function PersonaSelect({
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-slate-50 via-white to-slate-50 font-sans relative overflow-hidden">
-      {/* Subtle Decorative Ambient Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-100/30 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-amber-100/20 blur-[120px] pointer-events-none" />
+      {/* Subtle Decorative Ambient Background Glows — desktop only agar tidak overlap teks di mobile */}
+      <div className="hidden md:block absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-100/30 blur-[120px] pointer-events-none" />
+      <div className="hidden md:block absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-amber-100/20 blur-[120px] pointer-events-none" />
 
       {/* Sleek Enterprise Top Header Bar */}
       <header className="w-full border-b border-hairline bg-white/70 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-[13px] font-extrabold text-ink tracking-widest uppercase">QHomeMart</span>
-            <span className="text-[11px] font-light text-muted-light">/</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-muted-light mt-0.5">Digital Office</span>
+            <span className="hidden sm:inline text-[11px] font-light text-muted-light">/</span>
+            <span className="hidden sm:inline text-[9px] font-bold uppercase tracking-[0.25em] text-muted-light mt-0.5">Digital Office</span>
           </div>
 
           {/* Header Navigation Menus (Swiss Editorial Segment) */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 sm:gap-8">
             <button
               onClick={() => setLandingTab('simulation')}
-              className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative text-accent`}
+              className={`flex items-baseline text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative text-accent`}
             >
-              <span className="text-[8px] font-mono mr-1 text-accent/80">01 //</span>
+              <span className="hidden sm:inline text-[8px] font-mono mr-1 text-accent/80">01 //</span>
               Simulasi Chat
               {landingTab === 'simulation' && (
                 <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-accent animate-fade-in" />
@@ -203,9 +203,9 @@ export default function PersonaSelect({
             </button>
             <button
               onClick={() => setLandingTab('catalog')}
-              className={`flex items-baseline text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative text-muted hover:text-ink`}
+              className={`flex items-baseline text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 cursor-pointer focus:outline-none py-1 relative text-muted hover:text-ink`}
             >
-              <span className="text-[8px] font-mono mr-1 text-accent/80">02 //</span>
+              <span className="hidden sm:inline text-[8px] font-mono mr-1 text-accent/80">02 //</span>
               Katalog Material
             </button>
           </div>
@@ -213,15 +213,15 @@ export default function PersonaSelect({
       </header>
 
       {/* Main Content Area — Editorial Layout aligned with max-w-[1400px] */}
-      <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-12 relative z-10 justify-start">
+      <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-8 md:py-12 relative z-10 justify-start">
         <div className="flex-1 flex flex-col justify-start animate-scale-in max-w-3xl w-full">
 
           {/* Eyebrow + Headline */}
-          <div className="mb-10">
+          <div className="mb-8 md:mb-10">
             <p className="text-[10.5px] font-bold uppercase tracking-[0.3em] text-accent mb-4">
               QHomeMart Enterprise Workspace
             </p>
-            <h1 className="text-[42px] font-light text-ink tracking-tight leading-[1.05] mb-5">
+            <h1 className="text-[30px] sm:text-[36px] md:text-[42px] font-light text-ink tracking-tight leading-[1.05] mb-5">
               Portal Estimasi &<br />
               <span className="font-extrabold text-ink">Procurement</span>{' '}
               <span className="text-accent font-light">Grosir</span>
@@ -253,7 +253,7 @@ export default function PersonaSelect({
                       setActivePortal('chat');
                     }
                   }}
-                  className="w-full flex items-start gap-6 py-5 text-left group outline-none hover:bg-surface-soft/40 transition-colors duration-200 cursor-pointer px-4 -mx-4 rounded-full"
+                  className="w-full flex items-start gap-4 sm:gap-6 py-5 text-left group outline-none hover:bg-surface-soft/40 transition-colors duration-200 cursor-pointer px-3 sm:px-4 -mx-3 sm:-mx-4 rounded-full"
                 >
                   {/* Index number */}
                   <span className="text-[12px] font-bold text-muted-light w-5 flex-shrink-0 group-hover:text-accent transition-colors tabular-nums mt-2.5">

@@ -28,15 +28,15 @@ export default function OrderHistory({
         </div>
       </header>
 
-      <div className="w-full max-w-[1000px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-10">
-        <div className="mb-8 border-b border-hairline/60 pb-5 flex items-end justify-between">
+      <div className="w-full max-w-[1400px] mx-auto flex-1 flex flex-col px-6 md:px-12 py-10">
+        <div className="mb-8 border-b border-hairline/60 pb-5 flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-[28px] font-light tracking-tight text-ink">
+            <h1 className="text-[22px] md:text-[28px] font-light tracking-tight text-ink">
               Riwayat <span className="font-extrabold">Pesanan & Estimasi</span>
             </h1>
             <p className="text-[13px] text-muted mt-1.5 font-medium">Daftar arsip sesi konsultasi dan dokumen nota PDF Anda.</p>
           </div>
-          <div className="w-12 h-12 bg-white rounded-full border border-hairline flex items-center justify-center shadow-sm">
+          <div className="w-12 h-12 bg-white rounded-full border border-hairline flex items-center justify-center shadow-sm flex-shrink-0">
             <Clock className="w-5 h-5 text-accent" />
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function OrderHistory({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {chatHistory.map((session, idx) => {
               let titleDisplay = session.title || "";
               titleDisplay = titleDisplay.replace(/<think>[\s\S]*?<\/think>/gi, "");

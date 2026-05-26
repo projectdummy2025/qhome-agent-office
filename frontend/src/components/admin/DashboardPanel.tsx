@@ -153,9 +153,9 @@ export default function DashboardPanel() {
   return (
     <div className="space-y-8 animate-scale-in">
       {/* Header row */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 uppercase tracking-widest">Ringkasan Operasional</h2>
+          <h2 className="text-lg md:text-xl font-extrabold text-slate-900 uppercase tracking-widest">Ringkasan Operasional</h2>
           <p className="text-[12px] text-slate-400 mt-0.5">
             {lastUpdated ? `Diperbarui: ${lastUpdated.toLocaleTimeString('id-ID')}` : ''}
           </p>
@@ -170,7 +170,7 @@ export default function DashboardPanel() {
       </div>
 
       {/* KPI Cards Row 1 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total Pesanan" value={data.total_orders} sub="Semua Status" icon={ShoppingCart} />
         <StatCard label="Pesanan Lunas" value={data.paid_orders} sub="Terkonfirmasi" icon={TrendingUp} accent="green" />
         <StatCard label="Menunggu Bayar" value={data.pending_orders} sub="Belum Lunas" icon={Clock} accent="amber" />
@@ -178,7 +178,7 @@ export default function DashboardPanel() {
       </div>
 
       {/* Revenue vs COGS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Pemasukan */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2">
@@ -375,7 +375,7 @@ export default function DashboardPanel() {
         {data.recent_orders.length === 0 ? (
           <p className="text-[12px] text-slate-400 italic">Belum ada pesanan masuk.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-warm">
             <table className="w-full text-left min-w-[640px]">
               <thead>
                 <tr className="border-b border-slate-100">

@@ -72,7 +72,7 @@ const SimulationModal: React.FC<SimulationModalProps> = ({ isOpen, onClose, onSe
         </button>
 
         {/* Header Block */}
-        <div className="px-8 pt-10 pb-8 text-center border-b border-slate-100 bg-slate-50/30 flex flex-col items-center">
+        <div className="px-5 sm:px-8 pt-8 sm:pt-10 pb-6 sm:pb-8 text-center border-b border-slate-100 bg-slate-50/30 flex flex-col items-center">
           <div className="mb-2 bg-accent/10 border border-accent/25 text-[10px] tracking-[0.2em] uppercase font-bold text-accent px-3 py-1 rounded-full w-max select-none">
             Simulasi Proyek
           </div>
@@ -85,7 +85,7 @@ const SimulationModal: React.FC<SimulationModalProps> = ({ isOpen, onClose, onSe
         </div>
 
         {/* Grid Section */}
-        <div className="p-8 overflow-y-auto">
+        <div className="p-5 sm:p-8 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {consultantList.map((consultant) => {
               return (

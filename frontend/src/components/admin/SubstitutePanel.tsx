@@ -35,7 +35,7 @@ export default function SubstitutePanel({
   parseQtyNumber
 }: SubstitutePanelProps) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-8 flex flex-col space-y-6 shadow-sm hover:shadow-lg transition-shadow duration-300 h-full">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-8 flex flex-col space-y-6 shadow-sm hover:shadow-lg transition-shadow duration-300 h-full">
       <div className="border-b border-slate-100 pb-5">
         <div className="space-y-1.5">
           <span className="text-[9px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-500 tracking-widest uppercase inline-block">
@@ -69,7 +69,7 @@ export default function SubstitutePanel({
             return (
               <div 
                 key={p.sku} 
-                className={`group relative border rounded-2xl p-7 space-y-6 transition-all duration-300 ${
+                className={`group relative border rounded-2xl p-5 sm:p-7 space-y-5 sm:space-y-6 transition-all duration-300 ${
                   isApproved
                     ? 'border-emerald-200 bg-emerald-50/50'
                     : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-md'
@@ -91,7 +91,7 @@ export default function SubstitutePanel({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-6 py-5 border-t border-b border-slate-100/80">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 py-5 border-t border-b border-slate-100/80">
                   <div className="space-y-1.5">
                     <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Harga Satuan</span>
                     <span className="text-[15px] font-extrabold text-slate-700">Rp {p.price.toLocaleString('id-ID')}</span>
@@ -108,15 +108,15 @@ export default function SubstitutePanel({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
                   <span className="text-[11.5px] text-slate-500 font-medium italic">
                     Spesifikasi setara, stok siap kirim.
                   </span>
-                  
+
                   {!isApproved && (
-                    <button 
+                    <button
                       onClick={() => handleApproveSubstitution(p.sku)}
-                      className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-extrabold uppercase tracking-widest cursor-pointer transition-all shadow-sm hover:shadow-md"
+                      className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-extrabold uppercase tracking-widest cursor-pointer transition-all shadow-sm hover:shadow-md w-full sm:w-auto"
                     >
                       SETUJUI SUBSTITUSI
                     </button>

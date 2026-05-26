@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import { ArrowLeft, Check, ShieldAlert, Info, ShoppingBag, Download } from 'lucide-react';
+import { Check, ShieldAlert, Info, ShoppingBag, Download } from 'lucide-react';
 import OrderCart from './order/OrderCart';
 import OrderShipping from './order/OrderShipping';
 import OrderPayment from './order/OrderPayment';
