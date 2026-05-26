@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
-import { 
-  Search, 
-  Package, 
-  Layers, 
-  RefreshCw, 
+import {
+  Search,
+  Package,
+  Layers,
+  RefreshCw,
   Grid,
   List
 } from 'lucide-react';
@@ -43,7 +43,7 @@ function CatalogSkeleton() {
         <div key={index} className="flex flex-col bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
           {/* Shimmer Image Box */}
           <div className="aspect-square w-full shimmer" />
-          
+
           <div className="p-4 pb-0">
             {/* Shimmer Category Label */}
             <div className="h-3 w-1/3 rounded-full bg-slate-100 shimmer mb-2" />
@@ -71,7 +71,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
 
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<DBProduct[]>([]);
-  const [categories, setCategories] = useState<{id:string,name:string}[]>(CATEGORIES);
+  const [categories, setCategories] = useState<{ id: string, name: string }[]>(CATEGORIES);
   const [loading, setLoading] = useState(true);
 
   // Initialize state from search parameters
@@ -143,12 +143,12 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
       }));
       setProducts(mappedData);
       setFilteredProducts(mappedData);
-      
+
       // Derive dynamic categories directly from products to prevent taxonomic issues
       const uniq = Array.from(new Set(mappedData.map((x: any) => (x.category || 'lainnya') as string))).filter(Boolean) as string[];
-      const nice = uniq.map((id: string) => ({ 
-        id, 
-        name: String(id).split(/\s|&|\/|_/).map((w: any) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') 
+      const nice = uniq.map((id: string) => ({
+        id,
+        name: String(id).split(/\s|&|\/|_/).map((w: any) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
       }));
       setCategories([{ id: 'all', name: 'Semua' }, ...nice]);
     } catch (e) {
@@ -199,8 +199,8 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
     }
     if (debouncedSearch !== '') {
       const query = debouncedSearch.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(query) || 
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(query) ||
         p.sku.toLowerCase().includes(query) ||
         p.category.toLowerCase().includes(query)
       );
@@ -229,7 +229,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
   // Calculate pagination boundaries
   const totalItems = filteredProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  
+
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [totalPages]);
@@ -238,7 +238,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
 
   return (
     <div className="flex flex-col min-h-screen bg-[#fcfdfe] font-sans relative overflow-x-hidden">
-      
+
       {/* Absolute Ambient Soft Glow Background */}
       <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-accent/5 to-sage/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
@@ -250,11 +250,11 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
             <span className="text-[11px] font-light text-slate-300">/</span>
             <span className="text-[9.5px] font-bold uppercase tracking-[0.25em] text-slate-400 mt-0.5 font-display">Showroom</span>
           </div>
-          <button 
+          <button
             onClick={onBack}
             className="text-[10px] font-extrabold uppercase tracking-widest text-slate-600 hover:text-accent border border-slate-200 hover:border-accent/40 bg-white px-5 py-2.5 rounded-full transition-all active:scale-95 shadow-sm hover:shadow focus:outline-none cursor-pointer"
           >
-            KEMBALI KE CANVAS
+            KEMBAL
           </button>
         </div>
       </header>
@@ -275,7 +275,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
 
         {/* Modern Clean Showroom Filters Layout */}
         <div className="flex flex-col gap-6 mb-10 animate-float-up">
-          
+
           {/* Search & Actions Row */}
           <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
             {/* Elegant Search Input */}
@@ -300,10 +300,10 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
             <div className="flex items-center gap-3">
               {/* Custom Sort Selector */}
               <div className="relative">
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value as any)} 
-                  aria-label="Urutkan" 
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  aria-label="Urutkan"
                   className="text-[12.5px] font-bold text-slate-600 border border-slate-100 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.03)]"
                 >
                   <option value="relevance">Relevansi</option>
@@ -318,23 +318,23 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
 
               {/* Layout Controls */}
               <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]">
-                <button 
+                <button
                   onClick={fetchProducts}
                   className="p-2 text-slate-400 hover:text-accent rounded-xl hover:bg-slate-50 transition-all focus:outline-none cursor-pointer"
                   title="Muat Ulang"
                 >
                   <RefreshCw className="w-4 h-4" />
                 </button>
-                
-                <button 
+
+                <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'list' ? 'text-accent bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
                   title="Tampilan Tabel"
                 >
                   <List className="w-4 h-4" />
                 </button>
-                
-                <button 
+
+                <button
                   onClick={() => setViewMode('card')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'card' ? 'text-accent bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
                   title="Tampilan Grid"
@@ -352,11 +352,10 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`px-5 py-2.5 rounded-xl text-[12.5px] font-bold transition-all duration-200 whitespace-nowrap focus:outline-none cursor-pointer ${
-                    selectedCat === cat.id 
-                      ? 'bg-accent text-white shadow-lg shadow-accent/15 border border-accent scale-102' 
-                      : 'bg-white hover:bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 shadow-sm hover:scale-101'
-                  }`}
+                  className={`px-5 py-2.5 rounded-xl text-[12.5px] font-bold transition-all duration-200 whitespace-nowrap focus:outline-none cursor-pointer ${selectedCat === cat.id
+                    ? 'bg-accent text-white shadow-lg shadow-accent/15 border border-accent scale-102'
+                    : 'bg-white hover:bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 shadow-sm hover:scale-101'
+                    }`}
                 >
                   {cat.name}
                 </button>
@@ -377,7 +376,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
             </p>
           </div>
         ) : viewMode === 'list' ? (
-          
+
           /* ── LUXURY EDITORIAL TABLE VIEW ── */
           <div className="bg-white border border-slate-100 shadow-sm rounded-3xl p-6 overflow-x-auto animate-scale-in">
             <table className="w-full text-left border-collapse min-w-[700px]">
@@ -394,7 +393,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                   let badgeStyle = 'bg-emerald-50 text-emerald-600 border-emerald-500/10';
                   let dotStyle = 'bg-emerald-500';
                   let stockText = `${product.stock_qty} pcs`;
-                  
+
                   if (product.stock_qty === 0) {
                     badgeStyle = 'bg-rose-50 text-rose-600 border-rose-500/10';
                     dotStyle = 'bg-rose-500';
@@ -405,15 +404,15 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                   }
 
                   return (
-                    <tr 
-                      key={product.sku} 
+                    <tr
+                      key={product.sku}
                       onClick={() => onSelectProduct && onSelectProduct(product)}
                       className={`hover:bg-slate-50/50 transition-colors group ${onSelectProduct ? 'cursor-pointer' : ''}`}
                     >
                       {/* Product identity */}
                       <td className="py-4.5 pr-4 flex items-center gap-4">
-                        <img 
-                          src={product.image_url || PLACEHOLDER_SVG} 
+                        <img
+                          src={product.image_url || PLACEHOLDER_SVG}
                           alt={product.name}
                           loading="lazy"
                           onError={(e) => { e.currentTarget.src = PLACEHOLDER_SVG; }}
@@ -455,7 +454,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
                           Rp {product.base_price.toLocaleString('id-ID')}
                         </span>
                         {onSelectProduct && (
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onSelectProduct(product);
@@ -477,9 +476,9 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
               <span className="text-[11.5px] text-slate-400 font-semibold">{totalItems} material total · menampilkan {((currentPage - 1) * pageSize + 1)} - {Math.min(currentPage * pageSize, totalItems)}</span>
               <div className="flex items-center gap-2">
                 <label className="text-[11.5px] text-slate-400 font-semibold">Tampilkan per halaman:</label>
-                <select 
-                  value={pageSize} 
-                  onChange={(e) => setPageSize(Number(e.target.value))} 
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
                   className="text-[11px] font-bold text-slate-600 border border-slate-200/80 rounded-full px-3 py-1.5 bg-white focus:outline-none cursor-pointer shadow-sm"
                 >
                   <option value={10}>10</option>
@@ -491,14 +490,14 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
           </div>
 
         ) : (
-          
+
           /* ── PREMIUM ELEVATED GRID VIEW ── */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-scale-in">
             {pagedProducts.map((product) => {
               let badgeStyle = 'bg-emerald-50 text-emerald-600 border-emerald-500/10';
               let dotStyle = 'bg-emerald-500';
               let stockText = `${product.stock_qty} pcs`;
-              
+
               if (product.stock_qty === 0) {
                 badgeStyle = 'bg-rose-50 text-rose-600 border-rose-500/10';
                 dotStyle = 'bg-rose-500';
@@ -509,23 +508,23 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
               }
 
               return (
-                <div 
-                  key={product.sku} 
+                <div
+                  key={product.sku}
                   onClick={() => onSelectProduct && onSelectProduct(product)}
                   className={`group flex flex-col justify-between bg-white border border-slate-100/80 rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-accent/30 transition-all duration-300 relative ${onSelectProduct ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                   <div>
                     {/* Material Image Container */}
                     <div className="relative aspect-square bg-slate-50 overflow-hidden border-b border-slate-100/60 shadow-inner">
-                      <img 
-                        src={product.image_url || PLACEHOLDER_SVG} 
+                      <img
+                        src={product.image_url || PLACEHOLDER_SVG}
                         alt={product.name}
                         loading="lazy"
                         onError={(e) => { e.currentTarget.src = PLACEHOLDER_SVG; }}
                         className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
+
                       {/* Interactive Stock Badge on top of card */}
                       <div className={`absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border bg-white ${badgeStyle} shadow-sm font-display`}>
                         <span className={`w-1 h-1 rounded-full ${dotStyle}`} />
@@ -563,9 +562,9 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
         {totalItems > pageSize && (
           <div className="flex items-center justify-between border-t border-slate-100 pt-6 mt-10">
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setCurrentPage((s) => Math.max(1, s - 1))} 
-                disabled={currentPage === 1} 
+              <button
+                onClick={() => setCurrentPage((s) => Math.max(1, s - 1))}
+                disabled={currentPage === 1}
                 className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed shadow-sm bg-white text-slate-600"
               >
                 KEMBALI
@@ -573,9 +572,9 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
               <span className="text-[12px] font-bold text-slate-500 px-2 font-display">
                 Halaman {currentPage} / {totalPages}
               </span>
-              <button 
-                onClick={() => setCurrentPage((s) => Math.min(totalPages, s + 1))} 
-                disabled={currentPage === totalPages} 
+              <button
+                onClick={() => setCurrentPage((s) => Math.min(totalPages, s + 1))}
+                disabled={currentPage === totalPages}
                 className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed shadow-sm bg-white text-slate-600"
               >
                 LANJUT

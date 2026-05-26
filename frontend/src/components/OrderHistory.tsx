@@ -23,7 +23,7 @@ export default function OrderHistory({
             className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-wider text-muted hover:text-ink transition-colors cursor-pointer focus:outline-none"
           >
             <ArrowLeft className="w-4 h-4" />
-            Kembali
+            KEMBALI
           </button>
         </div>
       </header>

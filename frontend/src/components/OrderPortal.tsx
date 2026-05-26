@@ -156,7 +156,7 @@ export default function OrderPortal({
         const paymentMsg = data.find((m: any) =>
           m.role === 'system' &&
           (m.content.includes("Pembayaran QRIS Diterima") ||
-           m.content.includes("Pembayaran QRIS dikonfirmasi"))
+            m.content.includes("Pembayaran QRIS dikonfirmasi"))
         );
         if (paymentMsg) {
           const match = paymentMsg.content.match(/ORD-[A-Z0-9]+/i);
@@ -371,12 +371,11 @@ export default function OrderPortal({
                 <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">{currentUser.roleDisplay}</span>
               </div>
             )}
-            <button 
+            <button
               onClick={onBack}
               className="text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-slate-900 transition-all duration-200 focus:outline-none cursor-pointer border border-slate-200 hover:border-slate-800 px-5 py-2 rounded-full flex items-center gap-1.5 bg-white shadow-sm hover:shadow active:scale-[0.98]"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Kembali ke Chat
+              KEMBALI
             </button>
           </div>
         </div>
@@ -399,7 +398,7 @@ export default function OrderPortal({
                 Seluruh barang belanjaan pada sesi ini telah berhasil dibeli, lunas terbayar, dan telah masuk ke antrean pengiriman logistik pergudangan terdistribusi QHomeMart.
               </p>
             </div>
-            
+
             {orderId && (
               <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full shadow-sm space-y-3.5 text-left">
                 <div className="flex justify-between items-center text-xs">
@@ -415,11 +414,11 @@ export default function OrderPortal({
             )}
 
             <div className="flex flex-col sm:flex-row gap-4 w-full justify-center pt-2">
-              <button 
+              <button
                 onClick={onBack}
                 className="flex-1 w-full px-6 py-3.5 bg-slate-950 hover:bg-black text-white rounded-full text-[11px] font-bold tracking-widest uppercase transition-all shadow-md active:scale-[0.98] cursor-pointer text-center justify-center flex items-center"
               >
-                Kembali ke Chat Utama
+                KEMBALI
               </button>
               {currentSessionId && (
                 <button
@@ -441,11 +440,11 @@ export default function OrderPortal({
             <p className="text-sm font-semibold text-slate-500 max-w-sm mt-1.5 mb-6 leading-relaxed">
               Belum ada data estimasi material proyek yang dikurasi oleh asisten digital untuk sesi aktif ini.
             </p>
-            <button 
+            <button
               onClick={onBack}
               className="px-6 py-2.5 bg-slate-950 hover:bg-black text-white rounded-full text-[11px] font-bold tracking-widest uppercase transition-all shadow-md active:scale-[0.98]"
             >
-              Kembali ke Chat Utama
+              KEMBALI
             </button>
           </div>
         ) : (
@@ -576,13 +575,13 @@ export default function OrderPortal({
                 </div>
               </div>
               <div className="bg-neutral-50 px-8 py-5 border-t border-hairline flex items-center justify-end gap-3.5">
-                <button 
+                <button
                   onClick={() => setIsDoubleVerificationOpen(false)}
                   className="px-5 py-2 hover:bg-neutral-100 border border-hairline/60 rounded-full text-[11px] font-bold tracking-wider text-muted uppercase cursor-pointer focus:outline-none"
                 >
                   Batalkan
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setIsDoubleVerificationOpen(false);
                     handleSubmitOrder();

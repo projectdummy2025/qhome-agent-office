@@ -206,12 +206,39 @@ export default function ChatCanvas({
   handleHire,
   activeAgents
 }: ChatCanvasProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    () => typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredSession, setHoveredSession] = useState<any | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [brief, setBrief] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < 768
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobileViewport = () => isMobile;
+
+  const openLeftSidebar = () => {
+    setIsSidebarOpen(true);
+    if (isMobileViewport()) setIsRightSidebarOpen(false);
+  };
+
+  const toggleRightSidebar = () => {
+    if (isRightSidebarOpen) {
+      setIsRightSidebarOpen(false);
+      return;
+    }
+    setIsRightSidebarOpen(true);
+    if (isMobileViewport()) setIsSidebarOpen(false);
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -251,8 +278,24 @@ export default function ChatCanvas({
 
   return (
     <div className="flex h-screen bg-canvas font-sans overflow-hidden">
-      {/* Left Sidebar — Premium Studio List */}
-      <div className={`bg-canvas border-r border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[260px]' : 'w-0 overflow-hidden border-none'}`}>
+      {/* Mobile Backdrop — Left Sidebar (fade in/out, tetap mounted agar transisi halus) */}
+      <div
+        className={`fixed inset-0 bg-ink/40 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300 ease-in-out ${
+          isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
+      {/* Left Sidebar — Mobile: fixed drawer dengan translate-x slide; Desktop: in-flow width animation */}
+      <div
+        className={`bg-canvas border-r border-hairline flex flex-col h-full transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 w-[280px] z-40 shadow-2xl
+          md:relative md:inset-auto md:translate-x-0 md:shadow-none md:flex-shrink-0
+          ${isSidebarOpen
+            ? 'translate-x-0 md:w-[260px]'
+            : '-translate-x-full md:w-0 md:border-none md:overflow-hidden'
+          }`}
+      >
         {/* Header Sidebar — Ultra Minimalis (Harmonis dengan Sidebar Kanan) */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[260px]">
           <div className="flex items-center gap-3">
@@ -401,23 +444,23 @@ export default function ChatCanvas({
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col relative h-full min-w-0 bg-canvas">
         {/* Header */}
-        <header className="px-6 py-4 bg-canvas/90 backdrop-blur-xl flex justify-between items-center sticky top-0 z-20">
-          <div className="flex items-center gap-3">
+        <header className="px-4 py-3 md:px-6 md:py-4 bg-canvas/90 backdrop-blur-xl flex justify-between items-center sticky top-0 z-20">
+          <div className="flex items-center gap-3 min-w-0">
             {!isSidebarOpen && (
               <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group mr-2"
+                onClick={openLeftSidebar}
+                className="w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm bg-white border-hairline text-muted hover:text-ink hover:border-accent group mr-2 flex-shrink-0"
                 title="Buka Riwayat Estimasi"
               >
                 <PanelLeftOpen className="w-5 h-5 transition-transform group-hover:scale-110 text-accent" />
               </button>
             )}
             {currentUser && (
-              <div className="flex items-center gap-2.5 bg-white/80 border border-hairline px-3.5 py-1.5 rounded-full shadow-sm animate-scale-in">
-                <div className="flex items-center gap-2 text-left">
-                  <span className="text-[11.5px] font-bold text-ink leading-none">{currentUser.name}</span>
-                  <span className="text-[9px] font-light text-muted-light">/</span>
-                  <span className="text-[9px] uppercase tracking-wider text-muted-light font-bold leading-none mt-0.5">{currentUser.roleDisplay}</span>
+              <div className="flex items-center gap-2.5 bg-white/80 border border-hairline px-3.5 py-1.5 rounded-full shadow-sm animate-scale-in min-w-0">
+                <div className="flex items-center gap-2 text-left min-w-0">
+                  <span className="text-[11.5px] font-bold text-ink leading-none truncate max-w-[120px] sm:max-w-none">{currentUser.name}</span>
+                  <span className="hidden sm:inline text-[9px] font-light text-muted-light">/</span>
+                  <span className="hidden sm:inline-block text-[9px] uppercase tracking-wider text-muted-light font-bold leading-none mt-0.5">{currentUser.roleDisplay}</span>
                 </div>
                 <div className="w-px h-4 bg-hairline mx-1.5" />
                 <button
@@ -462,10 +505,10 @@ export default function ChatCanvas({
             </button>
 
             <button
-              onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+              onClick={toggleRightSidebar}
               className={`w-10 h-10 rounded-full border transition-all flex items-center justify-center shadow-sm ${
-                isRightSidebarOpen 
-                  ? 'bg-accent/10 border-accent/40 text-accent' 
+                isRightSidebarOpen
+                  ? 'bg-accent/10 border-accent/40 text-accent'
                   : 'bg-white border-hairline text-muted hover:text-ink hover:border-accent'
               } group cursor-pointer`}
               title={isRightSidebarOpen ? "Tutup Log Proses MAS" : "Buka Log Proses MAS"}
@@ -479,7 +522,7 @@ export default function ChatCanvas({
         <main className="flex-1 overflow-y-auto w-full scrollbar-warm px-6">
           <div className="pt-6 md:pt-10 space-y-10 w-full max-w-3xl mx-auto pb-10">
             {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-12 animate-float-up min-h-[68vh] px-4">
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-8 md:space-y-12 animate-float-up min-h-[55vh] md:min-h-[68vh] px-4">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent">
                     KONSOLIDASI MATERIAL & REKAYASA ESTIMASI
@@ -488,7 +531,7 @@ export default function ChatCanvas({
                 </div>
 
                 <div className="space-y-4 max-w-2xl">
-                  <h2 className="text-[28px] font-light text-ink leading-tight tracking-wide">
+                  <h2 className="text-[22px] md:text-[28px] font-light text-ink leading-tight tracking-wide">
                     {getPersonaGreeting(currentUser.role).title}
                   </h2>
                   <p className="text-[14px] text-muted leading-relaxed max-w-xl mx-auto font-normal">
@@ -619,7 +662,9 @@ export default function ChatCanvas({
                 ref={textareaRef}
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
-                placeholder="Sampaikan spesifikasi area, dimensi ruang, atau kebutuhan material proyek Anda..."
+                placeholder={isMobile
+                  ? "Spesifikasi material proyek..."
+                  : "Sampaikan spesifikasi area, dimensi ruang, atau kebutuhan material proyek Anda..."}
                 disabled={isProcessing}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -656,9 +701,25 @@ export default function ChatCanvas({
         </div>
       </div>
 
-      {/* Right Sidebar — Blueprint Timeline */}
-      <div className={`bg-canvas border-l border-hairline flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${isRightSidebarOpen ? 'w-[360px]' : 'w-0 overflow-hidden border-none'}`}>
-        <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[360px]">
+      {/* Mobile Backdrop — Right Sidebar (fade in/out, tetap mounted agar transisi halus) */}
+      <div
+        className={`fixed inset-0 bg-ink/40 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300 ease-in-out ${
+          isRightSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsRightSidebarOpen(false)}
+      />
+
+      {/* Right Sidebar — Mobile: fixed drawer dengan translate-x slide dari kanan; Desktop: in-flow width animation */}
+      <div
+        className={`bg-canvas border-l border-hairline flex flex-col h-full transition-all duration-300 ease-in-out
+          fixed inset-y-0 right-0 w-[320px] z-40 shadow-2xl
+          md:relative md:inset-auto md:translate-x-0 md:shadow-none md:flex-shrink-0
+          ${isRightSidebarOpen
+            ? 'translate-x-0 md:w-[360px]'
+            : 'translate-x-full md:w-0 md:border-none md:overflow-hidden'
+          }`}
+      >
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between min-w-[320px] md:min-w-[360px]">
           <div className="flex items-center gap-3">
             <UserCog className="w-4 h-4 text-accent" />
             <span className="text-[11px] font-semibold text-muted-light tracking-[0.18em] uppercase">
@@ -671,7 +732,7 @@ export default function ChatCanvas({
         </div>
         <div className="mx-6 h-px bg-hairline" />
 
-        <div ref={activityPanelRef} className="flex-1 overflow-y-auto min-w-[360px] scrollbar-warm">
+        <div ref={activityPanelRef} className="flex-1 overflow-y-auto min-w-[320px] md:min-w-[360px] scrollbar-warm">
           {messages.length === 0 || !messages.find(m => m.role === 'system') ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-8 py-24 opacity-40">
               <Brain className="w-8 h-8 text-muted-light animate-pulse mb-3" />
@@ -747,10 +808,10 @@ export default function ChatCanvas({
         </div>
       </div>
 
-      {/* Floating Hover Card (Tooltip) */}
+      {/* Floating Hover Card (Tooltip) — desktop only, hover tidak reliable di touch device */}
       {hoveredSession && (
         <div
-          className="fixed w-[280px] bg-white border border-hairline rounded-[18px] shadow-2xl p-4.5 z-[9999] animate-scale-in flex flex-col pointer-events-none"
+          className="hidden md:flex fixed w-[280px] bg-white border border-hairline rounded-[18px] shadow-2xl p-4.5 z-[9999] animate-scale-in flex-col pointer-events-none"
           style={{
             left: `${tooltipPos.x}px`,
             top: `${tooltipPos.y}px`

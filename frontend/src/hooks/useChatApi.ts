@@ -7,7 +7,9 @@ export function useChatApi(currentUser: any) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeAgents, setActiveAgents] = useState<string[]>([]);
   const [currentAgentOnDuty, setCurrentAgentOnDuty] = useState<string | null>(null);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(
+    () => typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  );
 
   // Load initial session ID from local storage (or null if not set)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {

@@ -74,12 +74,12 @@ export default function OrderPayment({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        
+
         {/* Left Column: Official Invoice Printable Block (span 7) */}
         <div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-3xl shadow-[0_15px_40px_-20px_rgba(0,0,0,0.08)] overflow-hidden flex flex-col">
           <div className="h-[6px] w-full bg-gradient-to-r from-accent to-red-500" />
           <div ref={invoiceRef} className="p-8 space-y-6">
-            
+
             {/* Invoice Header */}
             <div className="flex justify-between items-start border-b border-slate-200/60 pb-5">
               <div>
@@ -87,11 +87,10 @@ export default function OrderPayment({
                 <p className="text-[10px] font-mono tracking-wider text-slate-400 mt-1">PT QHomeMart Indonesia (Procurement Div)</p>
               </div>
               <div className="text-right">
-                <span className={`inline-block text-[9.5px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full mb-2 ${
-                  isPaymentConfirmed 
-                    ? 'text-emerald-700 bg-emerald-50 border-emerald-100' 
+                <span className={`inline-block text-[9.5px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full mb-2 ${isPaymentConfirmed
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
                     : 'text-amber-700 bg-amber-50 border-amber-100'
-                }`}>
+                  }`}>
                   {isPaymentConfirmed ? 'PEMBAYARAN QRIS SELESAI' : 'PENDING QRIS PAYMENT'}
                 </span>
                 <p className="text-[11.5px] font-mono text-slate-800 font-extrabold">
@@ -112,7 +111,7 @@ export default function OrderPayment({
                 <p className="text-slate-400 font-extrabold uppercase text-[9px] tracking-widest mb-2">Rincian Armada Logistik</p>
                 <p className="font-extrabold text-slate-850">{activeTruck.name}</p>
                 <p className="text-slate-500 mt-1 text-[11px] font-bold">
-                  {deliveryDate 
+                  {deliveryDate
                     ? new Date(deliveryDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                     : '-'}
                 </p>
@@ -183,47 +182,47 @@ export default function OrderPayment({
         {/* Right Column: Premium GPN QRIS standee (span 5) */}
         <div className="lg:col-span-5 bg-white border border-slate-200/80 p-8 rounded-3xl flex flex-col items-center shadow-[0_15px_40px_-20px_rgba(0,0,0,0.08)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
-          
+
           {/* Official QRIS simulated physical standee via SVG */}
           <div className="mb-6 flex justify-center w-full">
             <svg width="220" height="290" viewBox="0 0 220 290" className="shadow-xl rounded-2xl overflow-hidden border border-slate-200/80 bg-white">
               {/* QRIS Red Header */}
               <rect x="0" y="0" width="220" height="52" fill="#E11D48" />
               <text x="110" y="34" fill="#ffffff" fontSize="20" fontWeight="900" textAnchor="middle" letterSpacing="2.5" fontFamily="sans-serif">QRIS</text>
-              
+
               <rect x="0" y="52" width="220" height="238" fill="#ffffff" />
-              
+
               {/* Red border for QR area */}
               <rect x="25" y="66" width="170" height="170" fill="none" stroke="#E11D48" strokeWidth="2.5" rx="5" />
-              
+
               {/* QR Code Pixel Matrix Stand */}
               <path d="M35 76h30v30H35zm0 10h10v10H35zm10 0h10v10H45zm40-10h10v10H85zm20 0h20v10h-20zm30 0h30v30h-30zm10 10h10v10h-10zm10 0h10v10h-10zM35 126h10v20H35zm20-10h10v10H55zm20 0h10v20H75zm20-10h10v10H95zm10 10h15v10H105zm30-10h10v20h-10zm20 0h10v10h-10zm15 10h10v20h-10zM35 166h35v10H35zm50-10h10v10H85zm20 10h10v10h-10zm15-10h20v10h-20zm30 0h10v20h-10zm-95 30h10v15H85zm20-10h20v10h-20zm30 10h10v10h-10zm15-10h10v20h-10z" fill="#171717" />
-              
+
               {/* 4 classic QR corners */}
               <rect x="40" y="81" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
               <rect x="47" y="88" width="6" height="6" fill="#171717" />
-              
+
               <rect x="160" y="81" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
               <rect x="167" y="88" width="6" height="6" fill="#171717" />
-              
+
               <rect x="40" y="201" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
               <rect x="47" y="208" width="6" height="6" fill="#171717" />
-              
+
               <rect x="160" y="201" width="20" height="20" fill="none" stroke="#171717" strokeWidth="4" />
               <rect x="167" y="208" width="6" height="6" fill="#171717" />
- 
+
               {/* Mid-bottom merchant text labels */}
               <text x="110" y="253" fill="#6B7280" fontSize="8.5" fontWeight="bold" textAnchor="middle" letterSpacing="0.8" fontFamily="monospace">NMID: ID102026889271</text>
               <text x="110" y="271" fill="#E11D48" fontSize="10.5" fontWeight="900" textAnchor="middle" letterSpacing="0.8" fontFamily="sans-serif">QHOMEMART PROCURE</text>
             </svg>
           </div>
- 
+
           {/* QRIS Tutorial list */}
           <div className="w-full space-y-4">
             <p className="text-[10px] font-extrabold text-slate-800 uppercase tracking-widest text-center border-b border-slate-200 pb-2.5">
               PANDUAN PROSEDUR PEMBAYARAN
             </p>
-            
+
             <ol className="text-xs font-semibold text-slate-500 space-y-3.5 list-decimal pl-4.5">
               <li>Buka aplikasi <strong>m-Banking</strong> (BCA, Mandiri, dll.) atau <strong>e-Wallet</strong> (Gopay, OVO, ShopeePay) pada ponsel Anda.</li>
               <li>Klik opsi <strong>Scan / QRIS / Bayar</strong>.</li>
@@ -231,7 +230,7 @@ export default function OrderPayment({
               <li>Pastikan nama merchant tertera <strong>QHOMEMART PROCURE</strong> dengan total tagihan tepat <strong>Rp {totalInvoice.toLocaleString('id-ID')}</strong>.</li>
               <li>Masukkan PIN transaksi Anda untuk menyelesaikan pembayaran kargo logistik.</li>
             </ol>
- 
+
             <div className={`rounded-2xl p-5 mt-4 text-center border transition-all ${isPaymentConfirmed ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-slate-50 border-slate-200/80 shadow-inner'}`}>
               {isPaymentConfirmed ? (
                 <p className="text-sm text-emerald-700 font-extrabold">
@@ -248,9 +247,9 @@ export default function OrderPayment({
                     className="w-full py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold tracking-widest uppercase transition-all duration-200 disabled:opacity-60 cursor-pointer focus:outline-none flex items-center justify-center gap-2 shadow-md shadow-emerald-600/10 hover:shadow-lg"
                   >
                     {isConfirming ? (
-                      <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20"/></svg>
+                      <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" /></svg>
                     ) : (
-                      <svg className="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      <svg className="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     )}
                     {isConfirming ? 'Memproses...' : 'Konfirmasi Sudah Bayar'}
                   </button>
@@ -260,14 +259,14 @@ export default function OrderPayment({
           </div>
         </div>
       </div>
- 
+
       {!isPaymentConfirmed && (
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 border-t border-slate-200/80 pt-8">
-          <button 
+          <button
             onClick={onBack}
             className="px-8 py-3.5 bg-slate-950 hover:bg-black text-white rounded-full text-[11px] font-bold tracking-widest hover:shadow-md transition-all duration-200 cursor-pointer uppercase focus:outline-none active:scale-[0.98]"
           >
-            Kembali ke Obrolan
+            KEMBALI ke Obrolan
           </button>
           <button
             onClick={() => {

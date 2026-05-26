@@ -1,9 +1,5 @@
 # QHome-MAS: Autonomous B2B Sales & Project Agent
 
-> [!WARNING]
-> **PENTING: DESKTOP WEB ONLY (MVP SCOPE)**
-> Antarmuka *Live Canvas*, dashboard orkestrasi, dan split-screen portal pada sistem QHome-MAS **difokuskan dan dioptimalkan sepenuhnya untuk tampilan Desktop Web**. Tampilan pada layar HP/smartphone tidak disesuaikan (tidak responsif) karena kebutuhan demonstrasi visual B2B ini dirancang untuk layar monitor desktop.
-
 ### Tautan Uji Coba (Live Demo)
 Anda dapat mencoba langsung sistem multi-agent QHome-MAS secara online melalui:
 **[QHome-MAS Live Demo](https://qhomemart.lumbungstack.dev/#/)**
