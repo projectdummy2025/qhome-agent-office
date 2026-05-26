@@ -187,6 +187,7 @@ interface ChatCanvasProps {
   handleNewChat: () => void;
   handleHire: (brief: string) => void;
   activeAgents: string[];
+  isChatFrozen: boolean;
 }
 
 export default function ChatCanvas({
@@ -204,7 +205,8 @@ export default function ChatCanvas({
   handleSelectSession,
   handleNewChat,
   handleHire,
-  activeAgents
+  activeAgents,
+  isChatFrozen
 }: ChatCanvasProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(
     () => typeof window !== 'undefined' ? window.innerWidth >= 768 : true
@@ -657,6 +659,16 @@ export default function ChatCanvas({
         {/* Prompt Console */}
         <div className="absolute bottom-0 w-full bg-gradient-to-t from-canvas via-canvas/95 to-transparent pt-12 pb-7 px-6 z-10">
           <div className="max-w-3xl mx-auto">
+            {isChatFrozen ? (
+              <div className="text-center animate-scale-in py-2">
+                <p className="text-[12px] font-bold text-emerald-700 leading-tight">
+                  Terima kasih, sesi ini telah selesai
+                </p>
+                <p className="text-[11px] text-emerald-600/70 leading-snug mt-1">
+                  Pembayaran berhasil dikonfirmasi. Untuk konsultasi baru, silakan buat obrolan baru.
+                </p>
+              </div>
+            ) : (
             <div className="relative flex items-end bg-white border border-hairline rounded-[26px] pl-6 pr-2.5 py-2.5 shadow-sm focus-within:border-accent/50 focus-within:shadow-md transition-all gap-3">
               <textarea
                 ref={textareaRef}
@@ -697,6 +709,7 @@ export default function ChatCanvas({
                 )}
               </button>
             </div>
+            )}
           </div>
         </div>
       </div>

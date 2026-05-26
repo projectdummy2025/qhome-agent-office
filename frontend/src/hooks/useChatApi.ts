@@ -10,6 +10,7 @@ export function useChatApi(currentUser: any) {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(
     () => typeof window !== 'undefined' ? window.innerWidth >= 768 : true
   );
+  const [isChatFrozen, setIsChatFrozen] = useState(false);
 
   // Load initial session ID from local storage (or null if not set)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
@@ -22,6 +23,16 @@ export function useChatApi(currentUser: any) {
       localStorage.setItem('currentSessionId', currentSessionId);
     } else {
       localStorage.removeItem('currentSessionId');
+    }
+  }, [currentSessionId]);
+
+  // Check if current session's payment is confirmed (chat should be frozen)
+  useEffect(() => {
+    if (currentSessionId) {
+      const paidId = localStorage.getItem(`paidOrderId:${currentSessionId}`);
+      setIsChatFrozen(!!paidId);
+    } else {
+      setIsChatFrozen(false);
     }
   }, [currentSessionId]);
 
@@ -67,6 +78,10 @@ export function useChatApi(currentUser: any) {
     setIsProcessing(false);
     setCurrentAgentOnDuty(null);
     setActiveAgents([]);
+
+    // Check frozen state for the selected session
+    const paidId = localStorage.getItem(`paidOrderId:${session.id}`);
+    setIsChatFrozen(!!paidId);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${session.id}/messages`);
@@ -177,6 +192,8 @@ export function useChatApi(currentUser: any) {
     currentAgentOnDuty,
     isRightSidebarOpen,
     setIsRightSidebarOpen,
+    isChatFrozen,
+    setIsChatFrozen,
     fetchHistory,
     handleSelectSession,
     handleNewChat,

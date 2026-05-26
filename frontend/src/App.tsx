@@ -88,6 +88,8 @@ export default function App() {
 
         if (evtType === 'payment_confirmed' && sid) {
           if (sid === chatApi.currentSessionId) {
+            // Freeze the chat for this session
+            chatApi.setIsChatFrozen(true);
             try {
               const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
               const data = await res.json();
@@ -273,6 +275,7 @@ export default function App() {
       handleNewChat={chatApi.handleNewChat}
       handleHire={chatApi.handleHire}
       activeAgents={chatApi.activeAgents}
+      isChatFrozen={chatApi.isChatFrozen}
     />
   );
 }
