@@ -333,7 +333,17 @@ def restock_complete_db(db: Session, session_id: str, products: list):
 def confirm_payment_db(db: Session, payload):
     order = db.query(DBOrder).filter(DBOrder.id == payload.order_id).first()
     if order:
+        if order.payment_status == "paid":
+            # Hindari pengurangan stok ganda jika fungsi dipanggil ulang
+            return True
         order.payment_status = "paid"
+        
+        # Kurangi stok untuk setiap item dalam order
+        for item in order.items:
+            product = db.query(DBProduct).filter(DBProduct.sku == item.product_sku).first()
+            if product:
+                # Kurangi stok, pastikan tidak bernilai negatif
+                product.stock_qty = max(0, product.stock_qty - int(item.qty))
 
     confirmation_user_text = (
         f"Saya sudah menyelesaikan pembayaran QRIS untuk pesanan {payload.order_id} "
