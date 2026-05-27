@@ -45,16 +45,23 @@ def paint_consultant(state: AgentState):
             f"Klien meminta instruksi terbaru: '{brief}'.\n"
             "Daftar produk cat (building material) kandidat yang tersedia beserta stok riilnya di gudang:\n"
             f"{candidates_formatted}\n\n"
+            "PERHATIAN PENTING - CEK TERLEBIH DAHULU:\n"
+            "1. Apakah klien secara eksplisit menyebut produk cat TERTENTU dalam brief? "
+            "Contoh: 'Nippon Paint Spotless sebanyak 8 pail', 'Dulux Weathershield 5 pail', dsb.\n"
+            "   - Jika YA dan produk tersebut ADA di daftar kandidat: pilih SKU produk tersebut.\n"
+            "   - Jika YA dan produk tersebut TIDAK ada di daftar kandidat: set 'explicit_paint' dengan nama persis sesuai brief, SKU 'OOS-PAINT', harga 0, dan kuantitas sesuai brief.\n"
+            "2. JANGAN PERNAH memilih produk semen (SKU BM-055 atau BM-001, atau produk dengan kata 'Semen'/'Cement' di namanya) sebagai cat utama, meskipun kategorinya sama-sama 'building material'.\n\n"
             "Tugas Anda:\n"
             "1. Ekstrak luas area dinding pengecatan (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya. Jika menyebutkan ukuran kamar (misal 3x4 meter dengan tinggi 3 meter), hitung luas keliling dikali tinggi (2*(3+4)*3 = 42 m2). Jika tidak ada spesifikasi ukuran, asumsikan luas dinding 12 m2.\n"
             "2. Hitung jumlah pail cat yang dibutuhkan: (luas_area * 2) / coverage_m2 (karena double-coat/2 lapis).\n"
-            "3. Pilih produk terbaik dari daftar kandidat di atas yang memiliki STOK mencukupi kebutuhan tersebut.\n"
-            "4. Jika tidak ada produk dengan stok mencukupi, pilih kandidat pertama yang paling relevan.\n\n"
+            "3. Pilih produk CAT (bukan semen) terbaik dari daftar kandidat di atas yang memiliki STOK mencukupi kebutuhan tersebut.\n"
+            "4. Jika tidak ada produk CAT dengan stok mencukupi, pilih kandidat CAT pertama yang paling relevan.\n\n"
             "Format output HANYA JSON:\n"
             "{\n"
-            '  "selected_sku": "SKU produk yang dipilih",\n'
+            '  "selected_sku": "SKU produk yang dipilih (harus produk cat, BUKAN semen)",\n'
             '  "reasoning": "1 kalimat alasan estetis & ketersediaan stok memilih produk ini",\n'
-            '  "area_m2": float\n'
+            '  "area_m2": float,\n'
+            '  "explicit_paint": null atau {"sku": "OOS-PAINT", "name": "nama produk persis sesuai brief", "qty": integer, "unit": "Pail", "price": 0}\n'
             "}"
         )
         response = _llm_invoke_with_retry(groq_specialist, prompt)
@@ -71,44 +78,75 @@ def paint_consultant(state: AgentState):
                 else {
                     "selected_sku": candidates[0]["sku"],
                     "reasoning": response.content.strip(),
-                    "area_m2": 12.0
+                    "area_m2": 12.0,
+                    "explicit_paint": None,
                 }
             )
             selected_sku = res_json.get("selected_sku", candidates[0]["sku"])
             area_m2 = float(res_json.get("area_m2", 12.0))
             reasoning = res_json.get("reasoning", response.content.strip())
+            explicit_paint = res_json.get("explicit_paint")
         except Exception:
             selected_sku = candidates[0]["sku"]
             area_m2 = 12.0
             reasoning = response.content.strip()
+            explicit_paint = None
 
         selected_product = next((c for c in candidates if c["sku"] == selected_sku), candidates[0])
 
-        calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
-        qty = calc["pails_needed"]
-        unit = "Pail"
+        # If LLM returned an explicit paint product not in DB, use it directly
+        if explicit_paint:
+            paint_qty = explicit_paint.get("qty", 1)
+            paint_unit = explicit_paint.get("unit", "Pail")
+            paint_name = explicit_paint.get("name", "Cat Khusus")
+            calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
+            content = (
+                f"{reasoning}. Klien secara eksplisit meminta {paint_name} sebanyak {paint_qty} {paint_unit}. "
+                f"Produk ini belum terdaftar di katalog, menunggu konfirmasi harga dari tim pengadaan. "
+                f"Tambahan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar juga dibutuhkan."
+            )
+            product_data = [
+                {
+                    "sku": "OOS-PAINT",
+                    "name": f"{paint_name} (Estimasi Internet)",
+                    "price": 0,
+                    "qty": f"{paint_qty} {paint_unit}",
+                    "total": 0,
+                },
+                {
+                    "sku": "OOS-PRIMER",
+                    "name": "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)",
+                    "price": 0,
+                    "qty": f"{calc['primer_pails_needed']} Pail (Est)",
+                    "total": 0,
+                }
+            ]
+        else:
+            calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
+            qty = calc["pails_needed"]
+            unit = "Pail"
 
-        content = (
-            f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
-            f"dibutuhkan {qty} pail cat utama dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar."
-        )
-        product_data = [
-            {
-                "sku": selected_product["sku"],
-                "name": selected_product["name"],
-                "price": selected_product["base_price"],
-                "coverage": selected_product["coverage_m2"],
-                "qty": f"{qty} {unit} (Est)",
-                "total": selected_product["base_price"] * qty,
-            },
-            {
-                "sku": "OOS-PRIMER",
-                "name": "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)",
-                "price": 0,
-                "qty": f"{calc['primer_pails_needed']} Pail (Est)",
-                "total": 0,
-            }
-        ]
+            content = (
+                f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
+                f"dibutuhkan {qty} pail cat utama dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar."
+            )
+            product_data = [
+                {
+                    "sku": selected_product["sku"],
+                    "name": selected_product["name"],
+                    "price": selected_product["base_price"],
+                    "coverage": selected_product["coverage_m2"],
+                    "qty": f"{qty} {unit} (Est)",
+                    "total": selected_product["base_price"] * qty,
+                },
+                {
+                    "sku": "OOS-PRIMER",
+                    "name": "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)",
+                    "price": 0,
+                    "qty": f"{calc['primer_pails_needed']} Pail (Est)",
+                    "total": 0,
+                }
+            ]
     except Exception as e:
         content = f"Maaf, saya tidak menemukan cat interior yang spesifik sesuai permintaan. Detail {str(e)}"
         product_data = [{

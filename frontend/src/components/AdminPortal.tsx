@@ -75,8 +75,13 @@ export default function AdminPortal({
 
   const checkAndNotifyCompletion = async (currentProducts: Product[]) => {
     if (!currentSessionId) return;
-    const remainingRestock = currentProducts.filter(p => 
-      p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0
+    const remainingRestock = currentProducts.filter(p =>
+      p.name.includes('[STOK HABIS]') ||
+      p.name.includes('[STOK TERBATAS]') ||
+      p.name.includes('Estimasi Internet') ||
+      p.name.includes('Menunggu Validasi') ||
+      p.sku?.startsWith('OOS-') ||
+      p.price === 0
     );
     
     if (remainingRestock.length === 0) {
@@ -283,8 +288,13 @@ export default function AdminPortal({
     setEditingSku(null);
   };
 
-  const restockProducts = products.filter(p => 
-    p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0
+  const restockProducts = products.filter(p =>
+    p.name.includes('[STOK HABIS]') ||
+    p.name.includes('[STOK TERBATAS]') ||
+    p.name.includes('Estimasi Internet') ||
+    p.name.includes('Menunggu Validasi') ||
+    p.sku?.startsWith('OOS-') ||
+    p.price === 0
   );
 
   const substituteProducts = products.filter(p => 

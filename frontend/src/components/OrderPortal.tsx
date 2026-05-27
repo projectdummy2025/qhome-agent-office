@@ -352,7 +352,14 @@ export default function OrderPortal({
     }
   };
 
-  const warningItem = approvedItems.find(p => p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0);
+  const warningItem = approvedItems.find(p =>
+    p.name.includes('[STOK HABIS]') ||
+    p.name.includes('[STOK TERBATAS]') ||
+    p.name.includes('Estimasi Internet') ||
+    p.name.includes('Menunggu Validasi') ||
+    p.sku?.startsWith('OOS-') ||
+    p.price === 0
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/30 font-sans text-slate-900">

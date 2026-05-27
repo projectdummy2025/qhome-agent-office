@@ -45,6 +45,12 @@ def tile_estimator(state: AgentState):
             f"Klien meminta instruksi terbaru: '{brief}'.\n"
             "Daftar produk ubin lantai (floor) kandidat yang tersedia beserta stok riilnya di gudang:\n"
             f"{candidates_formatted}\n\n"
+            "PERHATIAN PENTING - CEK TERLEBIH DAHULU:\n"
+            "Apakah klien secara eksplisit menyebut produk semen perekat/semen instan TERTENTU dalam brief? "
+            "Contoh: 'SikaCeram-200 sebanyak 12 sak', 'Semen Instan QHome #1 sebanyak 8 sak', dsb.\n"
+            "- Jika YA dan produk tersebut adalah 'Semen Instan QHome #1' atau varian QHome #1: gunakan SKU 'BM-001' dengan kuantitas yang disebutkan di brief.\n"
+            "- Jika YA dan produk tersebut TIDAK terdaftar di daftar kandidat (misal SikaCeram-200): gunakan SKU 'OOS-CEMENT-<nama_singkat>' dengan harga 0 dan kuantitas sesuai brief.\n"
+            "- Jika TIDAK ada permintaan produk spesifik: lanjutkan dengan kalkulasi area normal.\n\n"
             "Tugas Anda:\n"
             "1. Ekstrak luas area lantai (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya. Jika tidak ditentukan, asumsikan 10 m2.\n"
             "2. Tentukan pola pemasangan: 'standard' (wastage 5%) atau 'vintage' (wastage 10%).\n"
@@ -56,7 +62,8 @@ def tile_estimator(state: AgentState):
             '  "selected_sku": "SKU produk yang dipilih",\n'
             '  "reasoning": "1 kalimat alasan estetis & ketersediaan stok memilih produk ini",\n'
             '  "area_m2": float,\n'
-            '  "pattern": "standard" atau "vintage"\n'
+            '  "pattern": "standard" atau "vintage",\n'
+            '  "explicit_cement": null atau {"sku": "SKU-nya", "name": "nama produk persis sesuai brief", "qty": integer, "unit": "Sak/Bag/dll", "price": harga_atau_0}\n'
             "}"
         )
         response = _llm_invoke_with_retry(gemini_specialist, prompt)
@@ -75,6 +82,7 @@ def tile_estimator(state: AgentState):
                     "reasoning": response.content.strip(),
                     "area_m2": 10.0,
                     "pattern": "standard",
+                    "explicit_cement": None,
                 }
             )
             selected_sku = res_json.get("selected_sku", candidates[0]["sku"])
@@ -82,12 +90,14 @@ def tile_estimator(state: AgentState):
             pattern = res_json.get("pattern", "standard")
             wastage = 10.0 if pattern == "vintage" else 5.0
             reasoning = res_json.get("reasoning", response.content.strip())
+            explicit_cement = res_json.get("explicit_cement")
         except Exception:
             selected_sku = candidates[0]["sku"]
             area_m2 = 10.0
             wastage = 5.0
             pattern = "standard"
             reasoning = response.content.strip()
+            explicit_cement = None
 
         selected_product = next((c for c in candidates if c["sku"] == selected_sku), candidates[0])
         
@@ -110,21 +120,37 @@ def tile_estimator(state: AgentState):
                 "qty": f"{qty} {unit} (Est)",
                 "total": selected_product["base_price"] * qty,
             },
-            {
+        ]
+
+        if explicit_cement:
+            cement_sku = explicit_cement.get("sku", "OOS-CEMENT")
+            cement_name = explicit_cement.get("name", "Semen Perekat Khusus")
+            cement_qty = explicit_cement.get("qty", calc["cement_sacks_needed"])
+            cement_unit = explicit_cement.get("unit", "Sak")
+            cement_price = explicit_cement.get("price", 0)
+            product_data.append({
+                "sku": cement_sku,
+                "name": cement_name if cement_price > 0 else f"{cement_name} (Estimasi Internet)",
+                "price": cement_price,
+                "qty": f"{cement_qty} {cement_unit}",
+                "total": cement_price * cement_qty,
+            })
+        else:
+            product_data.append({
                 "sku": "OOS-CEMENT",
                 "name": "Semen Perekat Instan (Menunggu Konfirmasi)",
                 "price": 0,
                 "qty": f"{calc['cement_sacks_needed']} Sak (Est)",
                 "total": 0,
-            },
-            {
-                "sku": "OOS-GROUT",
-                "name": "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)",
-                "price": 0,
-                "qty": f"{calc['grout_bags_needed']} Bag (Est)",
-                "total": 0,
-            }
-        ]
+            })
+
+        product_data.append({
+            "sku": "OOS-GROUT",
+            "name": "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)",
+            "price": 0,
+            "qty": f"{calc['grout_bags_needed']} Bag (Est)",
+            "total": 0,
+        })
     except Exception as e:
         content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"
         product_data = [{

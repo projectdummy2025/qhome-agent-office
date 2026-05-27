@@ -173,6 +173,29 @@ export function useChatApi(currentUser: any) {
             }
             return newMessages;
           });
+
+          // Deteksi produk OOS/terbatas dan notifikasi Admin Portal (Pak Rudi)
+          const oosProducts = (data.products || []).filter((p: any) =>
+            p.name?.includes('[STOK HABIS]') ||
+            p.name?.includes('[STOK TERBATAS]') ||
+            p.name?.includes('Estimasi Internet') ||
+            p.name?.includes('Menunggu Validasi') ||
+            p.sku?.startsWith('OOS-') ||
+            p.price === 0
+          );
+          if (oosProducts.length > 0) {
+            try {
+              const notifChannel = new BroadcastChannel('qhome_payment_channel');
+              notifChannel.postMessage({
+                event: 'admin_intervention_needed',
+                sessionId: dataInfo.session_id,
+                oosCount: oosProducts.length,
+              });
+              notifChannel.close();
+            } catch (broadcastErr) {
+              console.error('Gagal mengirim notifikasi intervensi admin:', broadcastErr);
+            }
+          }
         }
       };
     } catch (e) {

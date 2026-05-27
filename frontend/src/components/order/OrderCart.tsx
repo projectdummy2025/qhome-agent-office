@@ -250,7 +250,14 @@ export default function OrderCart({
                 if (approvedItems.length > 0) {
                   await syncApprovedItemsToSession(approvedItems);
                   
-                  const warningItems = approvedItems.filter(p => p.name.includes('[STOK HABIS]') || p.name.includes('[STOK TERBATAS]') || p.price === 0);
+                  const warningItems = approvedItems.filter(p =>
+                    p.name.includes('[STOK HABIS]') ||
+                    p.name.includes('[STOK TERBATAS]') ||
+                    p.name.includes('Estimasi Internet') ||
+                    p.name.includes('Menunggu Validasi') ||
+                    p.sku?.startsWith('OOS-') ||
+                    p.price === 0
+                  );
                   if (warningItems.length > 0) {
                     await sendRestockRequestToAdmin(warningItems, approvedItems);
                   }

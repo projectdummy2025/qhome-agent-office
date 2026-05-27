@@ -124,6 +124,24 @@ export default function App() {
             }
           }
         }
+
+        // admin_intervention_needed: ada produk OOS/terbatas — notifikasi ke admin portal
+        if (evtType === 'admin_intervention_needed' && sid) {
+          // Jika yang menerima adalah role admin → muat sesi & navigasi ke /admin
+          const storedUser = localStorage.getItem('currentUser');
+          const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+          if (parsedUser?.role === 'admin') {
+            try {
+              chatApi.setCurrentSessionId(sid);
+              const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
+              const data = await res.json();
+              chatApi.setMessages(data);
+              navigate('/admin', { replace: false });
+            } catch (err) {
+              console.error('Failed to load session for admin intervention:', err);
+            }
+          }
+        }
       };
       return () => {
         channel.close();

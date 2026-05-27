@@ -363,8 +363,12 @@ def synthesizer(state: AgentState):
         f"Klien memiliki permintaan/instruksi terbaru berikut:\n'{brief}'\n\n"
         f"Modul spesialis telah memberikan rekomendasi berikut:{agent_reports_text}\n\n"
         "Buatlah 2-3 paragraf narasi profesional bergaya Asisten Belanja Teknis Supermarket Bahan Bangunan QHomeMart "
-        "(tanpa sapaan salam, langsung to the point) yang merangkum estimasi kebutuhan material ini, kesesuaian teknisnya, "
-        "dan mengapa ulasan produk yang dipilih (sebut nama produknya) sangat tepat untuk kebutuhan proyek klien. "
+        "(tanpa sapaan salam, langsung to the point) yang merangkum estimasi kebutuhan material ini berdasarkan laporan spesialis di atas. "
+        "PENTING — Ikuti aturan berikut dengan ketat:\n"
+        "1. Hanya sampaikan fakta yang tercantum dalam laporan spesialis. Jangan tambahkan klaim teknis, spesifikasi produk, atau jaminan kualitas yang tidak disebutkan dalam laporan.\n"
+        "2. Jika ada produk dengan label [STOK TERBATAS] atau [STOK HABIS], sebutkan secara eksplisit bahwa produk tersebut perlu diproses lebih lanjut oleh Admin Gudang dan belum dapat dikonfirmasi pengadaannya.\n"
+        "3. Jika ada produk dengan estimasi harga internet (label 'Estimasi Internet'), nyatakan bahwa harga tersebut adalah estimasi pasar dan memerlukan konfirmasi harga resmi dari pemasok.\n"
+        "4. DILARANG membuat klaim tentang jalur distribusi, TDS, SDS, atau proses pengadaan yang belum terjadi secara nyata dalam sistem.\n"
         "Jangan buat rincian harga karena akan ditampilkan terpisah. Format output harus teks paragraf biasa."
     )
 
