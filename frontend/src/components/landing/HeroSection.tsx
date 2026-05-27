@@ -99,10 +99,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onStartSimulation, onViewCata
               <div className="w-3 h-3 rounded-full bg-amber-400"></div>
               <div className="w-3 h-3 rounded-full bg-green-400"></div>
             </div>
-            <div className="rounded bg-white px-4 py-1 text-[11px] text-slate-400 font-mono border border-slate-200/60 w-80 text-center truncate">
+            <div className="rounded bg-white px-4 py-1 text-[11px] text-slate-400 font-mono border border-slate-200/60 flex-1 max-w-[180px] sm:max-w-xs text-center truncate">
               qhomemart.co.id/workspace/chat
             </div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+            <span className="hidden sm:inline-block text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono">
               Static Preview
             </span>
           </div>
@@ -192,34 +192,34 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onStartSimulation, onViewCata
             {/* Main Chat Area Mockup */}
             <div className="flex-1 flex flex-col relative h-full min-w-0 bg-white">
               {/* Chat Header */}
-              <header className="px-6 py-4 bg-white border-b border-slate-200 flex justify-between items-center sticky top-0 z-20">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2.5 bg-white border border-slate-200 px-3.5 py-1.5 rounded-full shadow-sm">
+              <header className="px-4 py-3 md:px-6 md:py-4 bg-white border-b border-slate-200 flex justify-between items-center sticky top-0 z-20">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-2.5 bg-white border border-slate-200 px-3.5 py-1.5 rounded-full shadow-sm min-w-0">
                     <span className="text-[11px] select-none">👤</span>
-                    <div className="flex items-center gap-2 text-left">
-                      <span className="text-[9.5px] font-bold text-slate-900 leading-none">Ibu Amalia</span>
-                      <span className="text-[7.5px] font-light text-slate-300">/</span>
-                      <span className="text-[7.5px] uppercase tracking-wider text-slate-500 font-bold leading-none">
+                    <div className="flex items-center gap-2 text-left min-w-0">
+                      <span className="text-[9.5px] font-bold text-slate-900 leading-none truncate max-w-[85px] sm:max-w-none">Ibu Amalia</span>
+                      <span className="hidden sm:inline text-[7.5px] font-light text-slate-300">/</span>
+                      <span className="hidden sm:inline-block text-[7.5px] uppercase tracking-wider text-slate-500 font-bold leading-none mt-0.5">
                         Senior Architect & Designer
                       </span>
                     </div>
                     <div className="w-px h-4 bg-slate-200 mx-1.5" />
-                    <span className="text-[9px] font-bold text-red-500">Keluar</span>
+                    <span className="text-[9px] font-bold text-red-500 cursor-pointer flex-shrink-0">Keluar</span>
                   </div>
                 </div>
 
                 {/* Right side navigation icons */}
-                <div className="flex items-center gap-2.5 ml-auto">
-                  <div className="w-10 h-10 rounded-full border flex items-center justify-center shadow-sm bg-white border-slate-200 text-slate-400">
+                <div className="flex items-center gap-1.5 sm:gap-2.5 ml-auto flex-shrink-0">
+                  <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shadow-sm bg-white border-slate-200 text-slate-400">
                     <Clock className="w-3.5 h-3.5 text-accent" />
                   </div>
-                  <div className="w-10 h-10 rounded-full border flex items-center justify-center shadow-sm bg-white border-slate-200 text-slate-400 relative">
+                  <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shadow-sm bg-white border-slate-200 text-slate-400 relative">
                     <ShoppingBag className="w-3.5 h-3.5 text-accent" />
-                    <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-sm">
+                    <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-bold rounded-full w-4 h-4 sm:w-4.5 sm:h-4.5 flex items-center justify-center shadow-sm">
                       3
                     </span>
                   </div>
-                  <div className="w-10 h-10 rounded-full border flex items-center justify-center shadow-sm bg-accent/10 border-accent/40 text-accent">
+                  <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shadow-sm bg-accent/10 border-accent/40 text-accent">
                     <UserCog className="w-3.5 h-3.5" />
                   </div>
                 </div>
