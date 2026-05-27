@@ -80,7 +80,7 @@ export default function AdminPortal({
       p.name.includes('[STOK TERBATAS]') ||
       p.name.includes('Estimasi Internet') ||
       p.name.includes('Menunggu Validasi') ||
-      p.sku?.startsWith('OOS-') ||
+      p.name.includes('Menunggu Konfirmasi') ||
       p.price === 0
     );
     
@@ -137,14 +137,10 @@ export default function AdminPortal({
 
   useEffect(() => {
     fetchMasterProducts();
-    fetchSessionProducts();
-  }, [currentSessionId]);
-
-  useEffect(() => {
-    if (initialProducts && initialProducts.length > 0) {
-      setProducts(initialProducts);
+    if (initialProducts.length === 0) {
+      fetchSessionProducts();
     }
-  }, [initialProducts]);
+  }, [currentSessionId]);
 
   const parseQtyNumber = (qtyStr: string | number): number => {
     if (typeof qtyStr === 'number') return qtyStr;
@@ -167,13 +163,17 @@ export default function AdminPortal({
     const qtyToAdd = addedQtys[sku] || 50;
     setRestockLoading(prev => ({ ...prev, [sku]: true }));
     try {
-      const res = await fetch(`${API_BASE_URL}/api/projects/products/${sku}/restock`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ added_qty: qtyToAdd })
-      });
-      
-      if (res.ok) {
+      const isOos = sku.startsWith('OOS-');
+      if (!isOos) {
+        const res = await fetch(`${API_BASE_URL}/api/projects/products/${sku}/restock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ added_qty: qtyToAdd })
+        });
+        if (!res.ok) throw new Error('Restock failed');
+      }
+
+      {
         const masterItem = masterProducts.find(mp => mp.sku === sku);
         const originalPrice = masterItem ? masterItem.base_price : 0;
         const originalName = masterItem ? masterItem.name : '';
@@ -182,8 +182,11 @@ export default function AdminPortal({
         const updatedProducts = products.map(p => {
           if (p.sku === sku) {
             const cleanName = p.name
-              .replace('[STOK HABIS] ', '')
-              .replace('[STOK TERBATAS] ', '');
+              .replace(/\[STOK HABIS\]\s*/g, '')
+              .replace(/\[STOK TERBATAS\]\s*/g, '')
+              .replace(/\s*\(Estimasi Internet[^)]*\)/g, '')
+              .replace(/\s*\(Menunggu [^)]*\)/g, '')
+              .trim();
             
             const num = parseQtyNumber(p.qty);
             const unit = getQtyUnit(p.qty);
@@ -293,7 +296,7 @@ export default function AdminPortal({
     p.name.includes('[STOK TERBATAS]') ||
     p.name.includes('Estimasi Internet') ||
     p.name.includes('Menunggu Validasi') ||
-    p.sku?.startsWith('OOS-') ||
+    p.name.includes('Menunggu Konfirmasi') ||
     p.price === 0
   );
 

@@ -180,6 +180,28 @@ export default function OrderPortal({
       .catch(err => console.error(err));
   }, [currentSessionId]);
 
+  useEffect(() => {
+    if (!currentSessionId) return;
+    const channel = new BroadcastChannel('qhome_payment_channel');
+    channel.onmessage = async (event) => {
+      const { event: evtType, sessionId: sid } = event.data || {};
+      if (evtType === 'restock_complete' && sid === currentSessionId) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${currentSessionId}/messages`);
+          const messages = await res.json();
+          const systemMsgs = messages.filter((m: any) => m.role === 'system' && m.products?.length > 0);
+          if (systemMsgs.length > 0) {
+            const freshProducts = systemMsgs[systemMsgs.length - 1].products;
+            setLocalProducts(freshProducts.map((p: any) => ({ ...p, approved: true })));
+          }
+        } catch (err) {
+          console.error('Failed to reload products on restock_complete:', err);
+        }
+      }
+    };
+    return () => channel.close();
+  }, [currentSessionId]);
+
   const approvedItems = localProducts.filter(p => p.approved !== false);
 
   const toggleProductApproval = (sku: string) => {
@@ -352,14 +374,10 @@ export default function OrderPortal({
     }
   };
 
-  const warningItem = approvedItems.find(p =>
-    p.name.includes('[STOK HABIS]') ||
-    p.name.includes('[STOK TERBATAS]') ||
-    p.name.includes('Estimasi Internet') ||
-    p.name.includes('Menunggu Validasi') ||
-    p.sku?.startsWith('OOS-') ||
-    p.price === 0
-  );
+  const isOosProduct = (p: Product) =>
+    /\[STOK HABIS\]|\[STOK TERBATAS\]|\(Estimasi Internet|\(Menunggu /.test(p.name) || p.price === 0;
+
+  const warningItem = approvedItems.find(isOosProduct);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/30 font-sans text-slate-900">

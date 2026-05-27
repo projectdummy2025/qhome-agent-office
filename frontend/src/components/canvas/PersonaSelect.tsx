@@ -61,66 +61,66 @@ export const getPersonaGreeting = (role: string) => {
     case 'architect':
       return {
         title: "Halo Ibu Amalia, mari ciptakan estetika ruang yang mewah.",
-        subtitle: "Simulasi fokus pada visual estetika, moodboard premium, and keselarasan desain ruang.",
+        subtitle: "Simulasi fokus pada visual estetika, moodboard premium, dan keselarasan desain ruang.",
         presets: [
           {
             title: "Granit Carrara Ruang Keluarga",
-            desc: "Kurasi visual & keselarasan ubin granit premium bermotif marmer Carrara (glossy) seluas 35 m² untuk konsep interior modern klasik.",
-            prompt: "Rancang konsep interior dan moodboard visual terperinci untuk area ruang tamu utama seluas 35 m² dengan mengusung gaya Modern Klasik Kontemporer yang mewah. Fokus utama adalah mengombinasikan ubin lantai granit premium bermotif marmer Carrara White berukuran 60x60 cm (misalnya Sandimas Tile Polished 60x60 #8 atau sejenisnya) yang memiliki finishing polished/glossy tinggi untuk memaksimalkan pantulan cahaya alami dari jendela besar di sisi barat. Evaluasi keselarasan warna abu-abu urat marmer (veining) pada lantai dengan rencana aplikasi cat tembok interior bertekstur halus warna beige hangat (warm sand) sebagai warna dasar dinding. Tambahkan opsi panel kayu Walnut gelap di sudut ruangan sebagai titik aksen visual (focal point). Berikan ulasan arsitektural komprehensif mengenai transisi visual antar material ini untuk menciptakan suasana ruang yang lapang, anggun, namun tetap terasa hangat."
+            desc: "Kurasi ubin granit polished 60x60 cm seluas 35 m² untuk konsep interior modern klasik.",
+            prompt: "Rekomendasikan ubin granit polished 60x60 cm dari katalog untuk ruang tamu 35 m² bergaya modern klasik. Pilihkan produk yang tersedia di stok dan cocok secara estetika."
           },
           {
-            title: "Accent Wall Panel Kamar Utama",
-            desc: "Integrasi visual panel dinding kayu fluted 3D warna Walnut gelap seluas 20 m² dengan sistem pencahayaan LED tersembunyi.",
-            prompt: "Rancang detail arsitektural dan skema estetika untuk dinding aksen (headboard wall) kamar tidur utama seluas 20 m² menggunakan panel kayu fluted 3D (misalnya dari brand Taco atau Duma, seperti Panel Series-5) berwarna Walnut gelap yang hangat. Konsep ini bertujuan untuk menghadirkan kedalaman tekstur tiga dimensi dan menyembunyikan instalasi kabel terintegrasi secara elegan. Harap padukan panel kayu ini dengan skema pencahayaan linier LED tersembunyi (warm white 2700K) di celah atas panel untuk menonjolkan bayangan vertikal yang dramatis. Analisis keselarasan kontras antara tekstur kayu yang pekat dan bergaris tegas ini dengan ubin lantai granit bertekstur matte bernuansa abu-abu muda di bawahnya, serta rekomendasikan elemen furnitur pengisi (seperti nakas melayang) yang serasi untuk melengkapi moodboard kamar tidur bergaya luxury minimalist ini."
+            title: "Cat Dinding Kamar Tidur",
+            desc: "Pilih cat interior premium untuk dinding kamar tidur 20 m² bergaya minimalis hangat.",
+            prompt: "Rekomendasikan cat interior premium dari katalog untuk dinding kamar tidur seluas 20 m² dengan konsep minimalis hangat. Pilihkan produk yang tersedia di stok."
           },
           {
-            title: "Skema Cat Minimalis Hangat",
-            desc: "Perpaduan warna cat tembok interior matte beige hangat dan putih bersih seluas 18 m² untuk ruang makan bertema Japandi.",
-            prompt: "Buat panduan palet warna dan spesifikasi estetika cat dinding interior untuk area ruang makan berkonsep Japandi Minimalis seluas 18 m² (dimensi 4.5m x 4m, tinggi dinding 3.2m). Rekomendasikan kombinasi cat premium ramah lingkungan dengan tingkat kilap matte/sheen yang rendah untuk meredam refleksi cahaya yang berlebihan, menggabungkan warna dasar beige hangat (warm sand/earthy beige) untuk tiga sisi dinding utama, dan aksen warna putih bersih (pure alabaster white) pada area lis profil plafon, kusen, dan satu sisi dinding partisi untuk menciptakan kontras bayangan yang dinamis. Evaluasi bagaimana kombinasi cat interior ini berinteraksi dengan pencahayaan buatan menggunakan lampu gantung anyaman bambu berwarna kekuningan, serta jelaskan bagaimana transisi warna ini mendukung suasana makan keluarga yang tenang, hangat, dan alami."
+            title: "Ubin Lantai Ruang Makan",
+            desc: "Pilih ubin lantai matte 50x50 cm untuk ruang makan 18 m² bertema Japandi.",
+            prompt: "Rekomendasikan ubin lantai matte 50x50 cm dari katalog untuk ruang makan 18 m² bertema Japandi. Pilihkan produk yang tersedia di stok."
           }
         ]
       };
     case 'contractor':
       return {
         title: "Halo Bapak Joko, mari hitung volume material & anggaran.",
-        subtitle: "Simulasi fokus pada kalkulator semen nat pendukung, wastage ubin, and efisiensi anggaran lapangan.",
+        subtitle: "Simulasi fokus pada kalkulator semen nat pendukung, wastage ubin, dan efisiensi anggaran lapangan.",
         presets: [
           {
             title: "RAB Ubin & Perekat Semen Nat",
-            desc: "Estimasi presisi ubin granit 60x60 cm pola diagonal untuk lantai 40 m² dengan wastage 10% dan kebutuhan semen perekat instan.",
-            prompt: "Lakukan kalkulasi teknis terperinci dan susun Rencana Anggaran Biaya (RAB) terperinci untuk pekerjaan lantai ruang serbaguna seluas 40 m² menggunakan ubin granit berukuran 60x60 cm (misalnya Tile Polished 60x60 #11). Berhubung ubin akan dipasang dengan pola diagonal yang memiliki tingkat kerumitan potong tinggi di sepanjang tepi dinding, terapkan margin toleransi kerusakan/sisa pemotongan (wastage margin) sebesar 10% dari luas bersih. Hitung secara akurat: (1) Total dus ubin granit yang harus dipesan (asumsikan 1 dus berisi 4 keping ubin / 1.44 m²), (2) Jumlah kebutuhan sak semen perekat instan heavy-duty (misalnya Semen Instan QHome dari brand MortarOne atau CemPro dengan daya sebar standar per sak 40 kg untuk ketebalan 3 mm), dan (3) Kebutuhan pengisi nat (tile grout) anti-jamur dan fleksibel untuk mencegah retak akibat pemuaian. Sertakan langkah-langkah pencegahan teknis di lapangan guna menghindari risiko ubin kopong (popping) di kemudian hari akibat kelembapan tanah atau pergerakan struktur bangunan."
+            desc: "Estimasi ubin granit 60x60 cm pola diagonal untuk lantai 40 m² dengan wastage 10% dan kebutuhan semen perekat.",
+            prompt: "Hitung kebutuhan ubin granit 60x60 cm untuk lantai 40 m² pola diagonal dengan wastage 10%, lengkap dengan semen perekat dan nat. Gunakan produk yang tersedia di katalog QHomeMart."
           },
           {
             title: "Volume Panel Dinding & Perekat",
-            desc: "Hitung volume WPC Wood Panel seluas 25 m² dikurangi bukaan pintu, lengkap dengan sealant konstruksi dan paku beton mini.",
-            prompt: "Hitung kebutuhan material secara presisi untuk pemasangan panel dinding kayu WPC (Wood Plastic Composite, misalnya Panel Series-5 Taco atau Duma) pada dinding partisi kantor berukuran lebar 8 meter dan tinggi 3.2 meter (luas total bruto 25.6 m²). Perhitungan harus dikurangi dengan celah bukaan pintu geser kaca berukuran 1.8 meter x 2.1 meter. Tentukan: (1) Jumlah lembaran panel WPC yang harus dibeli jika spesifikasi per lembar panel memiliki lebar efektif 15 cm dan panjang 3 meter, dengan menambahkan wastage margin standar contractor sebesar 5% untuk potongan sisa di bagian atas, (2) Jumlah botol perekat sealant konstruksi heavy-duty (max-strength adhesive) yang dibutuhkan jika asumsi 1 botol sealant dapat mengelem area seluas 2 m², dan (3) Kebutuhan paku beton mini/sekrup klip pengunci stainless steel untuk pemasangan rangka bracket besi hollow di belakangnya agar struktur panel terpasang kokoh tanpa risiko melengkung akibat perubahan suhu ruangan."
+            desc: "Hitung kebutuhan panel kayu WPC untuk dinding 25 m² lengkap dengan perekat.",
+            prompt: "Hitung kebutuhan panel kayu WPC untuk dinding seluas 25 m² lengkap dengan perekat konstruksi. Gunakan produk yang tersedia di katalog QHomeMart."
           },
           {
             title: "Perhitungan Cat Tembok & Sealer",
-            desc: "Estimasi volume cat interior dan cat dasar alkali primer untuk dinding acian baru seluas 60 m² (sistem 2 lapis).",
-            prompt: "Lakukan estimasi kebutuhan volume cat secara komprehensif untuk menutupi bidang dinding tembok interior baru seluas 60 m² (luas bersih setelah dikurangi area jendela dan pintu). Dinding dalam kondisi acian semen baru yang berpotensi memiliki kadar alkali tinggi. Spesifikasi pengecatan wajib menggunakan sistem multi-lapisan: (1) 1 lapis cat dasar penahan garam alkali (alkali-resisting primer/sealer) untuk mencegah pengkristalan alkali semen dan kelembaban parah, serta (2) 2 lapis cat tembok interior premium (misalnya dari brand Jotaplast atau sejenisnya). Hitung dengan presisi kebutuhan masing-masing cairan dalam satuan liter atau Pail (asumsi 1 Pail = 20 Liter, 1 Galon = 2.5 Liter atau 5 kg), dengan asumsi daya sebar cat dasar adalah 10 m²/liter per lapis dan daya sebar cat akhir adalah 12 m²/liter per lapis. Berikan rekomendasi waktu jeda pengeringan antar lapisan (curing time) yang optimal di iklim tropis lembab untuk memastikan daya rekat maksimal cat tembok tersebut."
+            desc: "Estimasi cat interior dan cat dasar alkali primer untuk dinding 60 m² sistem 2 lapis.",
+            prompt: "Hitung kebutuhan cat interior dan cat dasar alkali sealer untuk dinding seluas 60 m² dengan sistem 2 lapis. Gunakan produk cat yang tersedia di katalog QHomeMart."
           }
         ]
       };
     case 'retailer':
       return {
         title: "Halo Ibu Santi, mari cek ketersediaan stok pergudangan.",
-        subtitle: "Simulasi fokus pada kuantitas stok volume besar, substitusi alternatif barang, and logistik.",
+        subtitle: "Simulasi fokus pada kuantitas stok volume besar, substitusi alternatif barang, dan logistik.",
         presets: [
           {
             title: "Bulk Order Ubin Granit Aula",
-            desc: "Pengadaan ubin granit lantai 80 m² dalam satu single-batch produksi untuk menjamin kesamaan warna (tonality) dengan harga tier khusus.",
-            prompt: "Verifikasi ketersediaan stok pergudangan terdistribusi QHomeMart untuk pengadaan grosir (bulk procurement) ubin granit lantai ukuran 60x60 cm (misalnya Tile Polished 60x60 #8 Sandimas atau Tile Matte 50x50 #12 TileCo) guna merenovasi lantai aula serbaguna seluas 80 m². Berhubung area lantai sangat luas, pembeli menegaskan syarat mutlak bahwa seluruh ubin granit harus berasal dari single-batch produksi yang sama (tonality matching) untuk menghindari perbedaan gradasi warna sekecil apa pun di area terbuka. Tolong cari produk dari brand lokal berkualitas tinggi yang memiliki stok terjamin minimal 65 dus di gudang utama. Berikan rincian perhitungan harga khusus untuk tier mitra utama (volume discount), masa garansi pecah selama proses pengiriman, dan buatkan draf surat penawaran harga resmi (proforma invoice) yang mencakup diskon volume khusus pengadaan institusi."
+            desc: "Pengadaan ubin granit lantai 80 m² dalam satu batch untuk menjamin kesamaan warna.",
+            prompt: "Cek ketersediaan dan hitung kebutuhan ubin granit 60x60 cm untuk lantai aula 80 m². Gunakan produk yang tersedia di katalog QHomeMart dengan stok mencukupi."
           },
           {
             title: "Pengadaan Cat Proyek Perumahan",
-            desc: "Pengadaan cat interior volume besar untuk 5 unit rumah (total 200 m²) dengan skema harga khusus di atas Rp 50 Juta.",
-            prompt: "Lakukan audit ketersediaan stok inventaris dan formulasikan penawaran harga grosir untuk pengadaan cat tembok interior premium dalam jumlah besar guna menutupi dinding interior 5 unit rumah baru di kompleks perumahan kelas menengah (total luas permukaan dinding pengecatan bruto mencapai 200 m²). Tentukan kebutuhan total cat akhir (misalnya cat akhir dari brand Jotaplast atau sejenisnya) and cat dasar sealer alkali primer dalam satuan Pail besar (20 kg). Pastikan stok kode warna yang sama (tinting code) tersedia melimpah di gudang utama atau gudang cabang Sleman dan Bantul untuk menghindari keterlambatan proyek. Susun skema penawaran harga dengan diskon kemitraan bertingkat (volume discount tier) karena nilai transaksi diproyeksikan melebihi Rp 50 juta rupiah, lengkap dengan opsi ketentuan termin pembayaran kredit (term of payment) selama 30 hari (TOP 30) untuk kontraktor terdaftar."
+            desc: "Pengadaan cat interior untuk 5 unit rumah total 200 m² dengan harga volume.",
+            prompt: "Hitung kebutuhan cat interior untuk 5 unit rumah dengan total dinding 200 m². Gunakan produk cat yang tersedia di katalog QHomeMart."
           },
           {
             title: "Konsolidasi Material Kayu & Cat",
-            desc: "Konsolidasi pengiriman campuran panel kayu WPC 20 m² dan cat 10 m² dalam satu armada Colt Diesel Double (CDD) terintegrasi.",
-            prompt: "Konsolidasikan rantai pengiriman logistik dan rencanakan distribusi kargo terpadu untuk pesanan campuran multi-material proyek komersil: panel kayu WPC (furniture) seluas 20 m² (berat estimasi 250 kg) dan cat tembok interior beserta cat dasar (building material) seluas 10 m² (berat estimasi 80 kg). Tolong verifikasi ketersediaan stok kedua material tersebut secara real-time di Gudang Pusat QHomeMart Yogyakarta. Hitung total berat kargo keseluruhan, tentukan kubikasi volume barang, dan susun rute pengiriman logistik yang paling efisien menggunakan armada truk Colt Diesel Double (CDD) agar kedua material dapat dikirimkan dalam satu perjalanan tanpa risiko kerusakan cat bocor atau panel kayu patah terhimpit. Jadwalkan waktu tiba yang sinkron di lokasi proyek pada pagi hari sebelum jam operasional pekerja bangunan dimulai."
+            desc: "Pengadaan panel kayu WPC 20 m² dan cat dinding 60 m² dalam satu pesanan.",
+            prompt: "Hitung kebutuhan panel kayu WPC untuk 20 m² dan cat interior untuk 60 m² dalam satu pesanan. Gunakan produk yang tersedia di katalog QHomeMart."
           }
         ]
       };

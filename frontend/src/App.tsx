@@ -106,24 +106,7 @@ export default function App() {
           }
         }
 
-        // restock_complete: reload messages only — do NOT navigate (still on admin page)
-        if (evtType === 'restock_complete' && sid) {
-          if (sid === chatApi.currentSessionId) {
-            try {
-              const res = await fetch(`${API_BASE_URL}/api/projects/sessions/${sid}/messages`);
-              const data = await res.json();
-              chatApi.setMessages(prev => {
-                const lastMsg = prev[prev.length - 1];
-                if (lastMsg && lastMsg.status === 'processing') {
-                  return [...data, lastMsg];
-                }
-                return data;
-              });
-            } catch (err) {
-              console.error('Failed to reload messages on broadcasted restock completion:', err);
-            }
-          }
-        }
+        // restock_complete: AdminPortal manages its own state — no reload needed here
 
         // admin_intervention_needed: ada produk OOS/terbatas — notifikasi ke admin portal
         if (evtType === 'admin_intervention_needed' && sid) {
