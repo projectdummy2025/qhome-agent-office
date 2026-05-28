@@ -178,7 +178,7 @@ def _get_candidates_with_stock(query_text: str, category: str, limit: int = 5) -
                     "name": meta.get("name"),
                     "base_price": meta.get("price"),
                     "coverage_m2": meta.get("coverage"),
-                    "stock_qty": 50,
+                    "stock_qty": 0,
                     "desc": desc
                 })
         return candidates

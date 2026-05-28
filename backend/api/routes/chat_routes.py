@@ -167,13 +167,27 @@ def get_order(order_id: str, db: Session = Depends(get_db)):
 
 class RestockPayload(BaseModel):
     added_qty: int = 50
+    product_name: Optional[str] = None
+    base_price: Optional[float] = None
+    category: Optional[str] = None
 
 @router.post("/products/{sku}/restock")
 def restock_product(sku: str, payload: RestockPayload, db: Session = Depends(get_db)):
-    p = chat_service.restock_product_db(db, sku, payload.added_qty)
-    if not p:
-        return JSONResponse(status_code=404, content={"error": "Produk tidak ditemukan"})
-    return {"status": "success", "sku": sku, "new_stock": p.stock_qty}
+    result = chat_service.restock_product_db(
+        db,
+        sku,
+        payload.added_qty,
+        product_name=payload.product_name,
+        base_price=payload.base_price,
+        category=payload.category,
+    )
+    if result is None:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "SKU tidak dikenali atau tidak memiliki rekomendasi stok yang valid"},
+        )
+    p, created = result
+    return {"status": "success", "sku": sku, "new_stock": p.stock_qty, "created": created}
 
 class UpdateProductsPayload(BaseModel):
     products: List[dict]

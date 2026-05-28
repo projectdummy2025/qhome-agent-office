@@ -316,7 +316,7 @@ def restock_researcher(state: AgentState) -> dict:
     
     # Step 2: Jika tidak ada OOS, return state as-is (optimisasi latensi)
     if not oos_products:
-        return state
+        return {"reports": reports, "session_id": session_id}
     
 
     

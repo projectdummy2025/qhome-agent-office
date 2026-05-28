@@ -237,13 +237,58 @@ def save_order(db: Session, payload):
     return order_id
 
 
-def restock_product_db(db: Session, sku: str, added_qty: int):
+_COVERAGE_DEFAULTS = {
+    "floor": 1.44,
+    "wall": 1.0,
+    "wood": 2.88,
+    "paint": 8.0,
+    "stone": 0.5,
+    "material_pendukung": 1.0,
+}
+
+
+def restock_product_db(
+    db: Session,
+    sku: str,
+    added_qty: int,
+    product_name: str = None,
+    base_price: float = None,
+    category: str = None,
+):
     p = db.query(DBProduct).filter(DBProduct.sku == sku).first()
+    created = False
     if not p:
-        return None
+        from backend.models.schema import StockRecommendation
+        rec = (
+            db.query(StockRecommendation)
+            .filter(StockRecommendation.suggested_sku == sku)
+            .order_by(StockRecommendation.created_at.desc())
+            .first()
+        )
+
+        if not sku.startswith("OOS-") and rec is None:
+            return None
+
+        name = product_name or (rec.product_name if rec else None) or sku
+        price = base_price if base_price is not None else (rec.estimated_price if rec else None)
+        if price is None or price <= 0:
+            return None
+        cat = category or "material_pendukung"
+        coverage = _COVERAGE_DEFAULTS.get(cat, 1.0)
+        p = DBProduct(
+            sku=sku,
+            name=name,
+            category=cat,
+            base_price=price,
+            coverage_m2=coverage,
+            stock_qty=0,
+        )
+        db.add(p)
+        db.flush()
+        created = True
     p.stock_qty += added_qty
     db.commit()
-    return p
+    return p, created
 
 
 def update_session_products_db(db: Session, session_id: str, products: list):

@@ -11,7 +11,7 @@ from backend.agents.shared import (
 def paint_consultant(state: AgentState):
     """Paint Consultant"""
     if "paint" not in state.get("hired_agents", []):
-        return state
+        return {"reports": [r for r in state.get("reports", []) if r.get("agent") != "Paint Consultant"]}
     brief = state.get("brief", "")
     try:
         reuse_result = _should_reuse_product(brief, "Paint Consultant", state)

@@ -209,6 +209,7 @@ export default function App() {
           }, 300);
         }}
         onUpdateProducts={(newProducts) => {
+
           chatApi.setMessages(prev => {
             const updated = [...prev];
             const lastSysIdx = updated.map(m => m.role).lastIndexOf('system');
@@ -273,7 +274,7 @@ export default function App() {
       isRightSidebarOpen={chatApi.isRightSidebarOpen}
       setIsRightSidebarOpen={chatApi.setIsRightSidebarOpen}
       handleSelectSession={chatApi.handleSelectSession}
-      handleNewChat={chatApi.handleNewChat}
+      handleNewChat={() => { chatApi.handleNewChat(); setCartItems([]); }}
       handleHire={chatApi.handleHire}
       activeAgents={chatApi.activeAgents}
       isChatFrozen={chatApi.isChatFrozen}

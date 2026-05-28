@@ -110,7 +110,7 @@ def chief_supervisor(state: AgentState):
 def market_researcher(state: AgentState):
     """Market Research Analyst"""
     if "researcher" not in state.get("hired_agents", []):
-        return state
+        return {"reports": [r for r in state.get("reports", []) if r.get("agent") != "Market Analyst"]}
     brief = state.get("brief", "")
 
     try:
@@ -263,8 +263,16 @@ def inventory_administrator(state: AgentState):
                                     f"- {db_product.name} (SKU: {db_product.sku}): {status}"
                                 )
                         else:
+                            clean_prod_name = prod_name
+                            for pfx in ["[STOK HABIS]", "[STOK TERBATAS]", "[STOK KURANG]"]:
+                                clean_prod_name = clean_prod_name.replace(pfx, "").strip()
+                            existing_sku = (prod.get("sku") or "").strip()
+                            if not existing_sku.startswith("OOS-"):
+                                slug = re.sub(r"[^A-Za-z0-9]+", "-", clean_prod_name).strip("-").upper()[:24] or "UNKNOWN"
+                                prod["sku"] = f"OOS-{slug}"
+                            prod["name"] = f"[STOK HABIS] {clean_prod_name}"
                             stock_report_lines.append(
-                                f"- {prod_name}: Produk ditemukan di katalog namun belum terdaftar di sistem gudang. Perlu konfirmasi manual."
+                                f"- {prod_name}: Produk belum terdaftar di sistem gudang — ditandai untuk pengadaan."
                             )
                     updated_prods.append(prod)
                 r_copy["product"] = updated_prods

@@ -22,7 +22,7 @@ async def run_agent_simulation(brief: str, session_id: str, history_summary: str
         from backend.agents.agent_graph import app_graph
         
         config = {"configurable": {"thread_id": session_id}}
-        async for output in app_graph.astream({"brief": brief, "history_summary": history_summary}, config=config, stream_mode="updates"):
+        async for output in app_graph.astream({"brief": brief, "history_summary": history_summary, "session_id": session_id}, config=config, stream_mode="updates"):
             for node_name, state_update in output.items():
                 if node_name == "supervisor":
                     hired = state_update.get("hired_agents", [])

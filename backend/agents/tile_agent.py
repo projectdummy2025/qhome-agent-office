@@ -11,7 +11,7 @@ from backend.agents.shared import (
 def tile_estimator(state: AgentState):
     """Tile Estimator"""
     if "tile" not in state.get("hired_agents", []):
-        return state
+        return {"reports": [r for r in state.get("reports", []) if r.get("agent") != "Tile Estimator"]}
     brief = state.get("brief", "")
     try:
         reuse_result = _should_reuse_product(brief, "Tile Estimator", state)

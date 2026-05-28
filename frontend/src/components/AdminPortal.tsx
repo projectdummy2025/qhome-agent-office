@@ -163,71 +163,99 @@ export default function AdminPortal({
     const qtyToAdd = addedQtys[sku] || 50;
     setRestockLoading(prev => ({ ...prev, [sku]: true }));
     try {
-      const isOos = sku.startsWith('OOS-');
-      if (!isOos) {
-        const res = await fetch(`${API_BASE_URL}/api/projects/products/${sku}/restock`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ added_qty: qtyToAdd })
-        });
-        if (!res.ok) throw new Error('Restock failed');
+      const masterItem = masterProducts.find(mp => mp.sku === sku);
+      const originalPrice = masterItem ? masterItem.base_price : 0;
+      const originalName = masterItem ? masterItem.name : '';
+      const category = masterItem ? masterItem.category : '';
+
+      const sessionProduct = products.find(p => p.sku === sku);
+      const cleanNameForApi = sessionProduct
+        ? sessionProduct.name
+            .replace(/\[STOK HABIS\]\s*/g, '')
+            .replace(/\[STOK TERBATAS\]\s*/g, '')
+            .replace(/\s*\(Estimasi Internet[^)]*\)/g, '')
+            .replace(/\s*\(Menunggu [^)]*\)/g, '')
+            .trim()
+        : '';
+
+      const res = await fetch(`${API_BASE_URL}/api/projects/products/${sku}/restock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          added_qty: qtyToAdd,
+          product_name: originalName || cleanNameForApi || sku,
+          base_price: originalPrice || sessionProduct?.price || 0,
+          category: category || 'material_pendukung',
+        })
+      });
+      if (res.status === 404) {
+        const body = await res.json().catch(() => ({}));
+        alert(body.error || `SKU ${sku} ditolak: tidak dikenali atau belum punya rekomendasi stok.`);
+        return;
       }
+      if (!res.ok) throw new Error('Restock failed');
+      const apiResult = await res.json().catch(() => ({}));
 
-      {
-        const masterItem = masterProducts.find(mp => mp.sku === sku);
-        const originalPrice = masterItem ? masterItem.base_price : 0;
-        const originalName = masterItem ? masterItem.name : '';
-        const category = masterItem ? masterItem.category : '';
+      const updatedProducts = products.map(p => {
+        if (p.sku === sku) {
+          const cleanName = p.name
+            .replace(/\[STOK HABIS\]\s*/g, '')
+            .replace(/\[STOK TERBATAS\]\s*/g, '')
+            .replace(/\s*\(Estimasi Internet[^)]*\)/g, '')
+            .replace(/\s*\(Menunggu [^)]*\)/g, '')
+            .trim();
 
-        const updatedProducts = products.map(p => {
-          if (p.sku === sku) {
-            const cleanName = p.name
-              .replace(/\[STOK HABIS\]\s*/g, '')
-              .replace(/\[STOK TERBATAS\]\s*/g, '')
-              .replace(/\s*\(Estimasi Internet[^)]*\)/g, '')
-              .replace(/\s*\(Menunggu [^)]*\)/g, '')
-              .trim();
-            
-            const num = parseQtyNumber(p.qty);
-            const unit = getQtyUnit(p.qty);
-            const finalPrice = originalPrice || p.price || 250000;
+          const num = parseQtyNumber(p.qty);
+          const unit = getQtyUnit(p.qty);
+          const finalPrice = originalPrice || p.price || 250000;
 
-            return {
-              ...p,
-              name: cleanName || originalName || p.name,
-              price: finalPrice,
-              qty: `${num} ${unit}`,
-              total: finalPrice * num,
-              status: 'ready'
-            };
-          }
-          return p;
-        });
+          return {
+            ...p,
+            name: cleanName || originalName || p.name,
+            price: finalPrice,
+            qty: `${num} ${unit}`,
+            total: finalPrice * num,
+            status: 'ready'
+          };
+        }
+        return p;
+      });
 
-        const finalProducts = updatedProducts.filter(p => {
-          const isSub = p.qty.toString().includes('(Substitusi)') || p.name.includes('(Substitusi)') || p.name.includes('Substitusi');
-          const itemCategory = getProductCategory(p.sku);
-          
-          if (isSub && itemCategory === category && p.sku !== sku) {
-            return false;
-          }
-          return true;
-        });
+      const finalProducts = updatedProducts.filter(p => {
+        const isSub = p.qty.toString().includes('(Substitusi)') || p.name.includes('(Substitusi)') || p.name.includes('Substitusi');
+        const itemCategory = getProductCategory(p.sku);
 
-        setProducts(finalProducts);
-        onUpdateProducts(finalProducts);
-        await persistToDb(finalProducts);
-        await checkAndNotifyCompletion(finalProducts);
+        if (isSub && itemCategory === category && p.sku !== sku) {
+          return false;
+        }
+        return true;
+      });
 
-        setMasterProducts(prev => prev.map(mp => 
-          mp.sku === sku ? { ...mp, stock_qty: mp.stock_qty + qtyToAdd } : mp
-        ));
+      setProducts(finalProducts);
+      onUpdateProducts(finalProducts);
+      await persistToDb(finalProducts);
+      await checkAndNotifyCompletion(finalProducts);
 
-        setRestockSuccess(prev => ({ ...prev, [sku]: true }));
-        setTimeout(() => {
-          setRestockSuccess(prev => ({ ...prev, [sku]: false }));
-        }, 3000);
-      }
+      setMasterProducts(prev => {
+        const exists = prev.some(mp => mp.sku === sku);
+        if (exists) {
+          return prev.map(mp => mp.sku === sku ? { ...mp, stock_qty: apiResult.new_stock ?? (mp.stock_qty + qtyToAdd) } : mp);
+        }
+        return [...prev, {
+          sku,
+          name: originalName || cleanNameForApi || sku,
+          category: category || 'material_pendukung',
+          base_price: originalPrice || sessionProduct?.price || 0,
+          coverage_m2: 1,
+          stock_qty: apiResult.new_stock ?? qtyToAdd,
+          image_url: '',
+        }];
+      });
+
+      setRestockSuccess(prev => ({ ...prev, [sku]: true }));
+      setTimeout(() => {
+        setRestockSuccess(prev => ({ ...prev, [sku]: false }));
+      }, 3000);
     } catch (err) {
       console.error("Error restocking product:", err);
     } finally {

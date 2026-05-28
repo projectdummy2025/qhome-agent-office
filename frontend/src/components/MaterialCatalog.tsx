@@ -254,7 +254,7 @@ export default function MaterialCatalog({ onBack, onSelectProduct }: MaterialCat
             onClick={onBack}
             className="text-[10px] font-extrabold uppercase tracking-widest text-slate-600 hover:text-accent border border-slate-200 hover:border-accent/40 bg-white px-5 py-2.5 rounded-full transition-all active:scale-95 shadow-sm hover:shadow focus:outline-none cursor-pointer"
           >
-            KEMBAL
+            KEMBALI KE PROYEK
           </button>
         </div>
       </header>
