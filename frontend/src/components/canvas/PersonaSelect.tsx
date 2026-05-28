@@ -66,17 +66,17 @@ export const getPersonaGreeting = (role: string) => {
           {
             title: "Granit Carrara Ruang Keluarga",
             desc: "Kurasi ubin granit polished 60x60 cm seluas 35 m² untuk konsep interior modern klasik.",
-            prompt: "Rekomendasikan ubin granit polished 60x60 cm dari katalog untuk ruang tamu 35 m² bergaya modern klasik. Pilihkan produk yang tersedia di stok dan cocok secara estetika."
+            prompt: "Rekomendasikan ubin granit polished 60x60 cm bermotif Carrara dari katalog untuk ruang tamu 35 m² bergaya modern klasik. Pilihkan produk yang tersedia di stok dan cocok secara estetika."
           },
           {
-            title: "Cat Dinding Kamar Tidur",
-            desc: "Pilih cat interior premium untuk dinding kamar tidur 20 m² bergaya minimalis hangat.",
-            prompt: "Rekomendasikan cat interior premium dari katalog untuk dinding kamar tidur seluas 20 m² dengan konsep minimalis hangat. Pilihkan produk yang tersedia di stok."
+            title: "Estetika Lampu Gantung Hias",
+            desc: "Pilih lampu gantung hias minimalis untuk mempercantik area ruang makan bertema Japandi.",
+            prompt: "Rekomendasikan lampu gantung hias minimalis dan lampu LED dari katalog untuk pencahayaan ruang makan berkonsep Japandi. Pilihkan produk yang tersedia di stok."
           },
           {
-            title: "Ubin Lantai Ruang Makan",
-            desc: "Pilih ubin lantai matte 50x50 cm untuk ruang makan 18 m² bertema Japandi.",
-            prompt: "Rekomendasikan ubin lantai matte 50x50 cm dari katalog untuk ruang makan 18 m² bertema Japandi. Pilihkan produk yang tersedia di stok."
+            title: "Saniter Wastafel Kamar Mandi",
+            desc: "Kurasi wastafel gantung porselen dan kran air estetik untuk kamar mandi tamu minimalis.",
+            prompt: "Rekomendasikan wastafel gantung porselen dan kran air leher angsa meja dari katalog untuk kamar mandi tamu berdesain minimalis mewah. Pilihkan produk yang tersedia di stok."
           }
         ]
       };
@@ -88,17 +88,17 @@ export const getPersonaGreeting = (role: string) => {
           {
             title: "RAB Ubin & Perekat Semen Nat",
             desc: "Estimasi ubin granit 60x60 cm pola diagonal untuk lantai 40 m² dengan wastage 10% dan kebutuhan semen perekat.",
-            prompt: "Hitung kebutuhan ubin granit 60x60 cm untuk lantai 40 m² pola diagonal dengan wastage 10%, lengkap dengan semen perekat dan nat. Gunakan produk yang tersedia di katalog QHomeMart."
+            prompt: "Hitung kebutuhan ubin granit 60x60 cm untuk lantai 40 m² pola diagonal dengan wastage 10%, lengkap dengan semen perekat mortar MU dan pengisi nat AM. Gunakan produk yang tersedia di katalog QHomeMart."
           },
           {
-            title: "Volume Panel Dinding & Perekat",
-            desc: "Hitung kebutuhan panel kayu WPC untuk dinding 25 m² lengkap dengan perekat.",
-            prompt: "Hitung kebutuhan panel kayu WPC untuk dinding seluas 25 m² lengkap dengan perekat konstruksi. Gunakan produk yang tersedia di katalog QHomeMart."
+            title: "RAB Lantai SPC Wood Motif",
+            desc: "Hitung kebutuhan ubin SPC motif kayu tebal 4mm untuk kamar tidur 25 m² beserta underlayer.",
+            prompt: "Hitung kebutuhan lantai SPC Flooring Wood Motif untuk lantai kamar tidur seluas 25 m² lengkap dengan underlayer foam dan perkiraan wastage 5%. Gunakan produk yang tersedia di katalog QHomeMart."
           },
           {
-            title: "Perhitungan Cat Tembok & Sealer",
-            desc: "Estimasi cat interior dan cat dasar alkali primer untuk dinding 60 m² sistem 2 lapis.",
-            prompt: "Hitung kebutuhan cat interior dan cat dasar alkali sealer untuk dinding seluas 60 m² dengan sistem 2 lapis. Gunakan produk cat yang tersedia di katalog QHomeMart."
+            title: "Waterproofing Dak Beton & Kamar Mandi",
+            desc: "Estimasi pelapis kedap air 2 komponen Sika Top untuk area basah seluas 30 m².",
+            prompt: "Hitung kebutuhan Sika Top Waterproofing pelapis kedap air 2 komponen untuk lantai dak beton atau kamar mandi seluas 30 m² lengkap dengan floor drain stainless steel. Gunakan produk yang tersedia di katalog QHomeMart."
           }
         ]
       };
@@ -113,14 +113,14 @@ export const getPersonaGreeting = (role: string) => {
             prompt: "Cek ketersediaan dan hitung kebutuhan ubin granit 60x60 cm untuk lantai aula 80 m². Gunakan produk yang tersedia di katalog QHomeMart dengan stok mencukupi."
           },
           {
-            title: "Pengadaan Cat Proyek Perumahan",
-            desc: "Pengadaan cat interior untuk 5 unit rumah total 200 m² dengan harga volume.",
-            prompt: "Hitung kebutuhan cat interior untuk 5 unit rumah dengan total dinding 200 m². Gunakan produk cat yang tersedia di katalog QHomeMart."
+            title: "Elektronik Dapur Apartemen",
+            desc: "Pengadaan kompor tanam gas Modena dan cooker hood sebanyak 15 unit untuk dapur apartemen.",
+            prompt: "Hitung kebutuhan dan cek stok kompor tanam gas 2 tungku Modena serta Cooker Hood Slim untuk 15 unit dapur apartemen. Tampilkan estimasi harga total grosir."
           },
           {
-            title: "Konsolidasi Material Kayu & Cat",
-            desc: "Pengadaan panel kayu WPC 20 m² dan cat dinding 60 m² dalam satu pesanan.",
-            prompt: "Hitung kebutuhan panel kayu WPC untuk 20 m² dan cat interior untuk 60 m² dalam satu pesanan. Gunakan produk yang tersedia di katalog QHomeMart."
+            title: "Konsolidasi Semen & Waterproofing",
+            desc: "Pengadaan Semen Portland Tiga Roda 100 sak dan Sika Top Waterproofing 20 set.",
+            prompt: "Hitung kebutuhan Semen Portland Tiga Roda 40kg sebanyak 100 sak dan Sika Top Waterproofing sebanyak 20 set dalam satu pesanan logistik. Tunjukkan estimasi total berat dan biayanya."
           }
         ]
       };
@@ -137,8 +137,8 @@ export const getPersonaGreeting = (role: string) => {
           },
           {
             title: "Integrasi Kolaborasi Staf (RAB)",
-            desc: "Delegasi tugas simultan ke staf Ubin, Kayu, dan Cat untuk estimasi komprehensif ruang kantor 100 m².",
-            prompt: "Uji koordinasi antar staf secara simultan: hitung ubin granit lantai untuk area 60 m2, panel dinding kayu WPC untuk partisi 25 m2, dan cat interior Jotaplast untuk dinding seluas 40 m2 dalam satu sesi estimasi terpadu."
+            desc: "Delegasi tugas simultan ke staf Ubin, Sanitary, dan Kelistrikan untuk estimasi kantor 100 m².",
+            prompt: "Uji koordinasi antar staf secara simultan: hitung ubin granit lantai Roman 60x60 untuk area 60 m2, kloset duduk Toto dan wastafel gantung untuk toilet, serta lampu LED downlight Philips 12W sebanyak 15 titik dalam satu sesi estimasi terpadu."
           },
           {
             title: "Override Diskon Volume",

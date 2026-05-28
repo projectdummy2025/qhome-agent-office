@@ -164,7 +164,7 @@ const CollapsibleAgentLogs = ({ logs, onOpenActivityPanel }: { logs: any[], onOp
         onClick={onOpenActivityPanel}
         className="flex items-center gap-1.5 text-muted-light hover:text-ink font-medium transition-colors cursor-pointer select-none"
       >
-        <span className="text-[13px]">Thinking completed</span>
+        <span className="text-[13px]">Analisis Staf Selesai</span>
         <ChevronRight className="w-3.5 h-3.5 text-muted-light/60" />
       </button>
     </div>
