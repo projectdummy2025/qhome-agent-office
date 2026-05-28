@@ -77,19 +77,6 @@ const renderMarkdown = (text: string) => {
   return html;
 };
 
-// Deteksi apakah suatu blok teks adalah tabel markdown
-const isMarkdownTable = (text: string): boolean => {
-  const lines = text.trim().split('\n').filter(l => l.trim());
-  if (lines.length < 2) return false;
-  // Semua baris harus mengandung pipe
-  const allHavePipes = lines.every(l => l.includes('|'));
-  if (!allHavePipes) return false;
-  // Baris ke-2 harus berupa separator (---|---|---)
-  const secondLine = lines[1].trim();
-  const isSeparator = /^[\s|:\-]+$/.test(secondLine);
-  return isSeparator;
-};
-
 // Render tabel markdown ke HTML
 const renderMarkdownTable = (text: string): string => {
   const lines = text.trim().split('\n').filter(l => l.trim());
