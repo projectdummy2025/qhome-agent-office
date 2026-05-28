@@ -396,14 +396,19 @@ def confirm_payment_db(db: Session, payload):
     )
 
     agent_narrative = (
-        f"**Pembayaran QRIS Diterima — Kargo Diaktifkan**\n\n"
-        f"Terima kasih banyak, **{payload.client_name}**! Kami sangat mengapresiasi kepercayaan dan kerja sama Anda dalam transaksi kemitraan ini.\n\n"
-        f"Sistem kami telah berhasil memverifikasi pembayaran QRIS untuk pesanan **{payload.order_id}** dengan rincian berikut:\n\n"
-        f"- **Total Pembayaran:** Rp {payload.total_invoice:,.0f}\n"
-        f"- **Jumlah Item:** {payload.items_count} jenis material bangunan\n"
-        f"- **Status Pengiriman:** Kargo diaktifkan & dijadwalkan untuk dispatch segera\n\n"
-        f"Tim logistik di pergudangan pusat QHomeMart telah menerima instruksi otomatis ini dan sedang mempersiapkan armada untuk pengiriman langsung ke lokasi proyek Anda. Anda dapat mengunduh Nota Pembelian & Dokumen Kargo resmi berformat PDF kapan saja melalui portal pesanan.\n\n"
-        f"Jika ada hal lain yang perlu disesuaikan atau ada tambahan material, jangan ragu untuk memberi tahu saya. Senang bisa membantu Anda mewujudkan proyek terbaik Anda! 😊"
+        f"### KONFIRMASI PEMBAYARAN & AKTIVASI LOGISTIK\n\n"
+        f"Yth. **{payload.client_name}**,\n\n"
+        f"Terima kasih atas kerja sama Anda. Pembayaran untuk pesanan **{payload.order_id}** telah kami terima dan verifikasi dengan sukses. Berikut rincian transaksi:\n\n"
+        f"| Parameter Transaksi | Rincian Status |\n"
+        f"| :--- | :--- |\n"
+        f"| **ID Pesanan** | `{payload.order_id}` |\n"
+        f"| **Metode Pembayaran** | QRIS (Verifikasi Otomatis - Lunas) |\n"
+        f"| **Nilai Transaksi** | **Rp {payload.total_invoice:,.0f}** |\n"
+        f"| **Volume Material** | {payload.items_count} jenis produk terdaftar |\n"
+        f"| **Status Logistik** | Kargo Aktif (Jadwal Pengiriman Berjalan) |\n\n"
+        f"**Rencana Tindak Lanjut:**\n"
+        f"Sistem pergudangan pusat QHomeMart telah menerbitkan instruksi penyiapan barang dan alokasi armada truk logistik. Anda dapat mengunduh dokumen Nota Pembelian resmi berformat PDF langsung melalui portal ini.\n\n"
+        f"Apabila terdapat penyesuaian lapangan atau kebutuhan material tambahan, silakan hubungi kami kembali. Senang dapat membantu kesuksesan proyek Anda! 🙏😊"
     )
 
     user_msg = ChatMessage(
