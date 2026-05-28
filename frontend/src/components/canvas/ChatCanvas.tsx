@@ -70,8 +70,65 @@ const parseThinking = (text: string) => {
 const renderMarkdown = (text: string) => {
   if (!text) return "";
   let html = text;
+  // Inline code (backticks) — harus sebelum bold/italic agar tidak bentrok
+  html = html.replace(/`([^`]+)`/g, '<code class="text-[13px] font-mono bg-surface-soft border border-hairline px-1.5 py-0.5 rounded text-accent font-semibold">$1</code>');
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em class="italic text-accent font-medium bg-accent-soft/40 px-1.5 py-0.5 rounded">$1</em>');
+  return html;
+};
+
+// Deteksi apakah suatu blok teks adalah tabel markdown
+const isMarkdownTable = (text: string): boolean => {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return false;
+  // Semua baris harus mengandung pipe
+  const allHavePipes = lines.every(l => l.includes('|'));
+  if (!allHavePipes) return false;
+  // Baris ke-2 harus berupa separator (---|---|---)
+  const secondLine = lines[1].trim();
+  const isSeparator = /^[\s|:\-]+$/.test(secondLine);
+  return isSeparator;
+};
+
+// Render tabel markdown ke HTML
+const renderMarkdownTable = (text: string): string => {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return renderMarkdown(text);
+
+  const parseRow = (line: string): string[] => {
+    return line
+      .replace(/^\|/, '')
+      .replace(/\|$/, '')
+      .split('|')
+      .map(cell => cell.trim());
+  };
+
+  const headerCells = parseRow(lines[0]);
+  // lines[1] adalah separator, skip
+  const bodyRows = lines.slice(2).map(line => parseRow(line));
+
+  let html = '<div class="overflow-x-auto my-2 rounded-xl border border-hairline shadow-sm">';
+  html += '<table class="w-full text-[13.5px] border-collapse">';
+
+  // Header
+  html += '<thead><tr class="bg-surface-soft border-b border-hairline">';
+  headerCells.forEach(cell => {
+    html += `<th class="px-4 py-2.5 text-left text-[11.5px] font-bold uppercase tracking-wider text-muted-light">${renderMarkdown(cell)}</th>`;
+  });
+  html += '</tr></thead>';
+
+  // Body
+  html += '<tbody>';
+  bodyRows.forEach((row, rowIdx) => {
+    const bgClass = rowIdx % 2 === 0 ? 'bg-white' : 'bg-surface-soft/50';
+    html += `<tr class="${bgClass} border-b border-hairline/50 last:border-b-0">`;
+    row.forEach(cell => {
+      html += `<td class="px-4 py-2.5 text-ink-2 font-medium">${renderMarkdown(cell)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
   return html;
 };
 
@@ -613,22 +670,131 @@ export default function ChatCanvas({
                               return (
                                 <div className="space-y-5 prose prose-stone max-w-none">
                                   {parsed.thinking && <ThinkingBlock text={parsed.thinking} />}
-                                  {parsed.content.split('\n\n').map((para: string, idx: number) => {
-                                    if (para.trim().startsWith('-')) {
-                                      const listItems = para.split('\n').filter(l => l.trim().startsWith('-'));
-                                      return (
-                                        <ul key={idx} className="list-none space-y-2 pl-0">
-                                          {listItems.map((li, liIdx) => (
-                                            <li key={liIdx} className="flex items-start gap-3">
-                                              <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 flex-shrink-0"></span>
-                                              <span dangerouslySetInnerHTML={{ __html: renderMarkdown(li.replace(/^- /, '')) }} />
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      );
+                                  {(() => {
+                                    // Gabungkan kembali konten lalu pisahkan menjadi blok-blok
+                                    // yang memperhitungkan tabel (tabel bisa span beberapa baris tanpa \n\n)
+                                    const blocks: { type: 'table' | 'heading' | 'list' | 'numbered-list' | 'paragraph'; content: string }[] = [];
+                                    const lines = parsed.content.split('\n');
+                                    let i = 0;
+                                    
+                                    while (i < lines.length) {
+                                      const line = lines[i];
+                                      const trimmed = line.trim();
+
+                                      // Skip baris kosong
+                                      if (!trimmed) { i++; continue; }
+
+                                      // Deteksi awal tabel: baris dengan pipe DAN baris berikutnya adalah separator
+                                      if (trimmed.includes('|') && i + 1 < lines.length && /^[\s|:\-]+$/.test(lines[i + 1].trim())) {
+                                        const tableLines: string[] = [line];
+                                        i++;
+                                        while (i < lines.length && lines[i].trim().includes('|')) {
+                                          tableLines.push(lines[i]);
+                                          i++;
+                                        }
+                                        blocks.push({ type: 'table', content: tableLines.join('\n') });
+                                        continue;
+                                      }
+
+                                      // Deteksi heading
+                                      if (trimmed.startsWith('#')) {
+                                        blocks.push({ type: 'heading', content: trimmed });
+                                        i++;
+                                        continue;
+                                      }
+
+                                      // Deteksi bullet list
+                                      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                                        const listLines: string[] = [line];
+                                        i++;
+                                        while (i < lines.length && (lines[i].trim().startsWith('- ') || lines[i].trim().startsWith('* '))) {
+                                          listLines.push(lines[i]);
+                                          i++;
+                                        }
+                                        blocks.push({ type: 'list', content: listLines.join('\n') });
+                                        continue;
+                                      }
+
+                                      // Deteksi numbered list (1. 2. 3.)
+                                      if (/^\d+[.)]\s/.test(trimmed)) {
+                                        const listLines: string[] = [line];
+                                        i++;
+                                        while (i < lines.length && /^\d+[.)]\s/.test(lines[i].trim())) {
+                                          listLines.push(lines[i]);
+                                          i++;
+                                        }
+                                        blocks.push({ type: 'numbered-list', content: listLines.join('\n') });
+                                        continue;
+                                      }
+
+                                      // Paragraf biasa — kumpulkan baris sampai baris kosong atau elemen khusus
+                                      const paraLines: string[] = [line];
+                                      i++;
+                                      while (i < lines.length) {
+                                        const nextTrimmed = lines[i].trim();
+                                        if (!nextTrimmed || nextTrimmed.startsWith('#') || nextTrimmed.startsWith('- ') || nextTrimmed.startsWith('* ') || /^\d+[.)]\s/.test(nextTrimmed)) break;
+                                        // Cek apakah baris ini + berikutnya memulai tabel
+                                        if (nextTrimmed.includes('|') && i + 1 < lines.length && /^[\s|:\-]+$/.test(lines[i + 1].trim())) break;
+                                        paraLines.push(lines[i]);
+                                        i++;
+                                      }
+                                      blocks.push({ type: 'paragraph', content: paraLines.join('\n') });
                                     }
-                                    return <p key={idx} dangerouslySetInnerHTML={{ __html: renderMarkdown(para) }} />;
-                                  })}
+
+                                    return blocks.map((block, idx) => {
+                                      if (block.type === 'table') {
+                                        return <div key={idx} dangerouslySetInnerHTML={{ __html: renderMarkdownTable(block.content) }} />;
+                                      }
+                                      if (block.type === 'heading') {
+                                        const match = block.content.match(/^(#{1,6})\s+(.*)$/);
+                                        if (match) {
+                                          const level = match[1].length;
+                                          const headingText = match[2];
+                                          const headingClasses: Record<number, string> = {
+                                            1: 'text-[20px] font-bold text-ink mt-6 mb-3',
+                                            2: 'text-[18px] font-bold text-ink mt-5 mb-2.5',
+                                            3: 'text-[16px] font-bold text-ink mt-4 mb-2',
+                                            4: 'text-[15px] font-semibold text-ink mt-3 mb-1.5',
+                                            5: 'text-[14px] font-semibold text-muted mt-2 mb-1',
+                                            6: 'text-[13px] font-semibold text-muted-light mt-2 mb-1',
+                                          };
+                                          return (
+                                            <div key={idx} className={headingClasses[level] || headingClasses[3]}>
+                                              <span dangerouslySetInnerHTML={{ __html: renderMarkdown(headingText) }} />
+                                            </div>
+                                          );
+                                        }
+                                        return <p key={idx} dangerouslySetInnerHTML={{ __html: renderMarkdown(block.content) }} />;
+                                      }
+                                      if (block.type === 'list') {
+                                        const items = block.content.split('\n').filter(l => l.trim().startsWith('-') || l.trim().startsWith('*'));
+                                        return (
+                                          <ul key={idx} className="list-none space-y-2 pl-0">
+                                            {items.map((li, liIdx) => (
+                                              <li key={liIdx} className="flex items-start gap-3">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 flex-shrink-0"></span>
+                                                <span dangerouslySetInnerHTML={{ __html: renderMarkdown(li.replace(/^\s*[-*]\s/, '')) }} />
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        );
+                                      }
+                                      if (block.type === 'numbered-list') {
+                                        const items = block.content.split('\n').filter(l => /^\s*\d+[.)]\s/.test(l));
+                                        return (
+                                          <ol key={idx} className="list-none space-y-2 pl-0 counter-reset-none">
+                                            {items.map((li, liIdx) => (
+                                              <li key={liIdx} className="flex items-start gap-3">
+                                                <span className="text-[13px] font-bold text-accent mt-0.5 flex-shrink-0 min-w-[20px]">{liIdx + 1}.</span>
+                                                <span dangerouslySetInnerHTML={{ __html: renderMarkdown(li.replace(/^\s*\d+[.)]\s/, '')) }} />
+                                              </li>
+                                            ))}
+                                          </ol>
+                                        );
+                                      }
+                                      return <p key={idx} dangerouslySetInnerHTML={{ __html: renderMarkdown(block.content) }} />;
+                                    });
+                                  })()}
                                 </div>
                               );
                             })() : (
