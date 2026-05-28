@@ -85,32 +85,35 @@ export default function OrderCart({
 
         {/* Critical Stock Warning Banner */}
         {warningItem && (
-          <div className="bg-gradient-to-r from-red-50/70 to-amber-50/40 border border-red-200/50 backdrop-blur-sm rounded-3xl p-5 flex items-start gap-4 shadow-md">
-            <div className="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center flex-shrink-0 text-red-600">
-              <AlertTriangle className="w-5 h-5 animate-pulse" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-red-700 block mb-1">
-                Peringatan Stok Kritis
-              </span>
-              <p className="text-[13px] text-slate-700 leading-relaxed font-bold">
-                Permintaan material <strong className="font-extrabold text-slate-900">{warningItem.name}</strong> mendekati batas alokasi gudang utama {currentUser?.city || 'Sleman'}.
-              </p>
-              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-semibold">
-                Dibutuhkan verifikasi administrator untuk penambahan stok instan. Anda dapat berganti peran ke Bapak Rudi untuk penambahan kuota stok atau menyetujui draf proposal sekarang.
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button 
-                  onClick={switchToAdminRudi}
-                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-[10px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.98] outline-none"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Alihkan ke Admin Bapak Rudi
-                </button>
-                <span className="text-xs text-slate-400 font-semibold">
-                  Untuk replenishment instan &amp; override diskon volume.
-                </span>
+          <div className="relative overflow-hidden bg-gradient-to-br from-amber-50/70 via-white/50 to-slate-50/50 border border-amber-200/50 backdrop-blur-sm rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition-all duration-300">
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-amber-600 ring-4 ring-amber-500/5 animate-pulse">
+                <AlertTriangle className="w-5 h-5" />
               </div>
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-800 bg-amber-50 border border-amber-200/40 px-2.5 py-1 rounded-md inline-block">
+                  Pemberitahuan Alokasi Stok
+                </span>
+                <p className="text-[13px] text-slate-700 leading-relaxed font-semibold">
+                  Mohon maaf atas ketidaknyamanannya. Ketersediaan material <strong className="font-extrabold text-slate-900">{warningItem.name}</strong> saat ini sedang terbatas di area gudang utama {currentUser?.city || 'Sleman'}.
+                </p>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Untuk memastikan kelancaran pemesanan Anda, diperlukan konfirmasi alokasi tambahan. Anda dapat masuk ke panel pengelola gudang untuk memproses verifikasi stok instan.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto border-t md:border-t-0 md:border-l border-slate-200/60 pt-4 md:pt-0 md:pl-5 flex-shrink-0">
+              <button 
+                onClick={switchToAdminRudi}
+                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.98] outline-none group min-w-[160px]"
+              >
+                <RefreshCw className="w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-180" />
+                PORTAL ADMIN
+              </button>
+              <span className="text-[10px] text-slate-400 text-center md:text-right font-medium">
+                Untuk replenishment &amp; volume discount
+              </span>
             </div>
           </div>
         )}
@@ -277,12 +280,12 @@ export default function OrderCart({
           ) : (
             <div className="space-y-3">
               {warningItem && (
-                <div className="p-4 bg-red-50/70 border border-red-100/50 rounded-2xl flex gap-3 items-start text-left mb-2.5">
-                  <AlertTriangle className="w-4.5 h-4.5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="p-4 bg-amber-50/70 border border-amber-100/50 rounded-2xl flex gap-3 items-start text-left mb-2.5">
+                  <AlertTriangle className="w-4.5 h-4.5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs font-bold text-red-700 leading-tight">Keranjang Belanja Dibekukan</p>
-                    <p className="text-[10px] text-red-600/90 mt-1 leading-relaxed font-semibold">
-                      Mohon kesediaan Anda untuk menunggu pembaruan stok oleh tim gudang kami. Tombol checkout akan segera aktif otomatis setelah stok tersedia.
+                    <p className="text-xs font-bold text-amber-800 leading-tight">Keranjang Belanja Ditangguhkan Sementara</p>
+                    <p className="text-[10px] text-slate-600 mt-1 leading-relaxed font-medium">
+                      Mohon kesediaan Bapak/Ibu untuk menunggu pembaruan alokasi oleh tim gudang kami. Tombol pemesanan akan aktif secara otomatis setelah alokasi stok terverifikasi.
                     </p>
                   </div>
                 </div>
