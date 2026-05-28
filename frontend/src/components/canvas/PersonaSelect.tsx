@@ -66,17 +66,17 @@ export const getPersonaGreeting = (role: string) => {
           {
             title: "Granit Carrara Ruang Keluarga",
             desc: "Kurasi ubin granit polished 60x60 cm seluas 35 m² untuk konsep interior modern klasik.",
-            prompt: "Rekomendasikan ubin granit polished 60x60 cm bermotif Carrara dari katalog untuk ruang tamu 35 m² bergaya modern klasik. Pilihkan produk yang tersedia di stok dan cocok secara estetika."
+            prompt: "Rekomendasikan ubin granit polished 60x60 cm bermotif Carrara (gunakan secara eksplisit Granit Carrara White Polished 60x60 Roman, SKU: FL-061, harga: 320432.82) dari katalog untuk ruang tamu 35 m² bergaya modern klasik. Jika merekomendasikan bahan pendukung semen perekat, gunakan secara eksplisit Lemkra FK 206 Perekat Granit 40kg (SKU: BM-007, harga: 121913.7, unit: Sak) untuk memenuhi seluruh kebutuhan semen perekat. Untuk pengisi nat, gunakan secara eksplisit AM 207 Pengisi Nat Keramik 5kg (SKU: BM-008, harga: 407573.77, unit: Sak) untuk memenuhi seluruh kebutuhan nat."
           },
           {
             title: "Estetika Lampu Gantung Hias",
             desc: "Pilih lampu gantung hias minimalis untuk mempercantik area ruang makan bertema Japandi.",
-            prompt: "Rekomendasikan lampu gantung hias minimalis dan lampu LED dari katalog untuk pencahayaan ruang makan berkonsep Japandi. Pilihkan produk yang tersedia di stok."
+            prompt: "Rekomasikan Lampu Gantung Hias Minimalis DL-805 Supreme (SKU: EL-006, harga: 525612.69) dari katalog QHomeMart untuk pencahayaan ruang makan berkonsep Japandi."
           },
           {
             title: "Saniter Wastafel Kamar Mandi",
             desc: "Kurasi wastafel gantung porselen dan kran air estetik untuk kamar mandi tamu minimalis.",
-            prompt: "Rekomendasikan wastafel gantung porselen dan kran air leher angsa meja dari katalog untuk kamar mandi tamu berdesain minimalis mewah. Pilihkan produk yang tersedia di stok."
+            prompt: "Rekomendasikan Wastafel Gantung Porselen SA-534 Kohler (SKU: SA-035, harga: 557859.64) dan Kran Angsa Meja Dapur SA-519 Grohe (SKU: SA-020, harga: 265495.4) dari katalog QHomeMart untuk kamar mandi tamu berdesain minimalis mewah."
           }
         ]
       };
@@ -88,7 +88,7 @@ export const getPersonaGreeting = (role: string) => {
           {
             title: "RAB Ubin & Perekat Semen Nat",
             desc: "Estimasi ubin granit 60x60 cm pola diagonal untuk lantai 40 m² dengan wastage 10% dan kebutuhan semen perekat.",
-            prompt: "Hitung kebutuhan ubin granit 60x60 cm untuk lantai 40 m² pola diagonal dengan wastage 10%, lengkap dengan semen perekat mortar MU dan pengisi nat AM. Gunakan produk yang tersedia di katalog QHomeMart."
+            prompt: "Hitung kebutuhan ubin granit 60x60 cm untuk lantai 40 m² pola diagonal dengan wastage 10%. Untuk bahan pendukung semen perekat, gunakan secara eksplisit Lemkra FK 206 Perekat Granit 40kg (SKU: BM-007, harga: 121913.7, unit: Sak) untuk memenuhi seluruh kebutuhan semen perekat. Untuk pengisi nat, gunakan secara eksplisit AM 207 Pengisi Nat Keramik 5kg (SKU: BM-008, harga: 407573.77, unit: Sak) untuk memenuhi seluruh kebutuhan nat. Gunakan produk yang tersedia di katalog QHomeMart."
           },
           {
             title: "RAB Lantai SPC Wood Motif",
@@ -98,7 +98,7 @@ export const getPersonaGreeting = (role: string) => {
           {
             title: "Waterproofing Dak Beton & Kamar Mandi",
             desc: "Estimasi pelapis kedap air 2 komponen Sika Top untuk area basah seluas 30 m².",
-            prompt: "Hitung kebutuhan Sika Top Waterproofing pelapis kedap air 2 komponen untuk lantai dak beton atau kamar mandi seluas 30 m² lengkap dengan floor drain stainless steel. Gunakan produk yang tersedia di katalog QHomeMart."
+            prompt: "Hitung kebutuhan pelapis kedap air Sika Top 205 Waterproofing 25kg (SKU: BM-006, harga: 111436.26) untuk lantai dak beton atau kamar mandi seluas 30 m². Tambahkan secara eksplisit Floor Drain Stainless Anti-Bau SA-587 Aer (SKU: SA-088, harga: 90478.16, qty: 1 unit) dari katalog QHomeMart."
           }
         ]
       };
@@ -110,17 +110,17 @@ export const getPersonaGreeting = (role: string) => {
           {
             title: "Bulk Order Ubin Granit Aula",
             desc: "Pengadaan ubin granit lantai 80 m² dalam satu batch untuk menjamin kesamaan warna.",
-            prompt: "Cek ketersediaan dan hitung kebutuhan ubin granit 60x60 cm untuk lantai aula 80 m². Gunakan produk yang tersedia di katalog QHomeMart dengan stok mencukupi."
+            prompt: "Cek ketersediaan dan hitung kebutuhan ubin granit 60x60 cm untuk lantai aula 80 m² (gunakan secara eksplisit Granit Carrara White Polished 60x60 Roman, SKU: FL-061, harga: 320432.82). Jika merekomendasikan bahan pendukung semen perekat, gunakan secara eksplisit Lemkra FK 206 Perekat Granit 40kg (SKU: BM-007, harga: 121913.7, unit: Sak) untuk memenuhi seluruh kebutuhan semen perekat. Untuk pengisi nat, gunakan secara eksplisit AM 207 Pengisi Nat Keramik 5kg (SKU: BM-008, harga: 407573.77, unit: Sak) untuk memenuhi seluruh kebutuhan nat."
           },
           {
             title: "Elektronik Dapur Apartemen",
             desc: "Pengadaan kompor tanam gas Modena dan cooker hood sebanyak 15 unit untuk dapur apartemen.",
-            prompt: "Hitung kebutuhan dan cek stok kompor tanam gas 2 tungku Modena serta Cooker Hood Slim untuk 15 unit dapur apartemen. Tampilkan estimasi harga total grosir."
+            prompt: "Hitung kebutuhan dan cek stok Kompor Tanam Gas 2 Tungku MX-100 Modena (SKU: AP-001, harga: 32370631.87) serta Cooker Hood Slim MX-110 Modena (SKU: AP-011, harga: 13883978.55) sebanyak 15 unit untuk dapur apartemen. Tampilkan estimasi harga total grosir."
           },
           {
             title: "Konsolidasi Semen & Waterproofing",
             desc: "Pengadaan Semen Portland Tiga Roda 100 sak dan Sika Top Waterproofing 20 set.",
-            prompt: "Hitung kebutuhan Semen Portland Tiga Roda 40kg sebanyak 100 sak dan Sika Top Waterproofing sebanyak 20 set dalam satu pesanan logistik. Tunjukkan estimasi total berat dan biayanya."
+            prompt: "Hitung kebutuhan Semen Portland Composite PCC 40kg Tiga Roda (SKU: BM-001, harga: 27130.22, unit: Sak) sebanyak 100 sak dan Sika Top 205 Waterproofing 25kg (SKU: BM-006, harga: 111436.26, unit: Set) sebanyak 20 set dalam satu pesanan logistik. Tunjukkan estimasi total berat dan biayanya."
           }
         ]
       };
@@ -138,7 +138,7 @@ export const getPersonaGreeting = (role: string) => {
           {
             title: "Integrasi Kolaborasi Staf (RAB)",
             desc: "Delegasi tugas simultan ke staf Ubin, Sanitary, dan Kelistrikan untuk estimasi kantor 100 m².",
-            prompt: "Uji koordinasi antar staf secara simultan: hitung ubin granit lantai Roman 60x60 untuk area 60 m2, kloset duduk Toto dan wastafel gantung untuk toilet, serta lampu LED downlight Philips 12W sebanyak 15 titik dalam satu sesi estimasi terpadu."
+            prompt: "Uji koordinasi antar staf secara simultan: hitung ubin granit lantai Roman 60x60 (gunakan secara eksplisit Granit Carrara White Polished 60x60 Roman, SKU: FL-061, harga: 320432.82) untuk area 60 m2. Untuk toilet, gunakan Closet Duduk Monoblok SA-500 Toto (SKU: SA-001, harga: 4016233.16) dan Wastafel Gantung Porselen SA-534 Kohler (SKU: SA-035, harga: 557859.64). Untuk lampu, gunakan Downlight LED Slim Round 19W Philips (SKU: EL-050, harga: 262885.29) sebanyak 15 titik. Jika merekomendasikan bahan pendukung semen perekat, gunakan secara eksplisit Lemkra FK 206 Perekat Granit 40kg (SKU: BM-007, harga: 121913.7, unit: Sak) untuk memenuhi seluruh kebutuhan semen perekat. Untuk pengisi nat, gunakan secara eksplisit AM 207 Pengisi Nat Keramik 5kg (SKU: BM-008, harga: 407573.77, unit: Sak) untuk memenuhi seluruh kebutuhan nat."
           },
           {
             title: "Override Diskon Volume",
