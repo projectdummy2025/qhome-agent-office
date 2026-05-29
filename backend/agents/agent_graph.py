@@ -19,11 +19,11 @@ from backend.agents.stone_agent import stone_specialist
 from backend.agents.research_agent import restock_researcher
 
 def chief_supervisor(state: AgentState):
-    """Menganalisis brief, mendeteksi penghapusan/rejeksi barang, dan menentukan agen spesialis"""
+    """Menganalisis brief, mendeteksi intent (conversational vs estimation), dan menentukan agen spesialis"""
     brief = state.get("brief", "").strip()
     if not brief:
-        return {"hired_agents": []}
-        
+        return {"hired_agents": [], "intent": "conversational"}
+
     reports = state.get("reports", [])
     history_summary = state.get("history_summary", "")
 
@@ -31,39 +31,53 @@ def chief_supervisor(state: AgentState):
     for r in reports:
         if "product" in r:
             p = r["product"]
-            existing_materials.append(
-                f"- {r['agent']}: {p.get('name')} (Sku: {p.get('sku')}, Qty: {p.get('qty')}, Total: Rp {p.get('total', 0):,})"
-            )
+            if isinstance(p, list):
+                for item in p:
+                    existing_materials.append(
+                        f"- {r['agent']}: {item.get('name')} (Sku: {item.get('sku')}, Qty: {item.get('qty')}, Total: Rp {item.get('total', 0):,})"
+                    )
+            else:
+                existing_materials.append(
+                    f"- {r['agent']}: {p.get('name')} (Sku: {p.get('sku')}, Qty: {p.get('qty')}, Total: Rp {p.get('total', 0):,})"
+                )
 
     materials_summary = "\n".join(existing_materials) if existing_materials else "Tidak ada."
 
     prompt = (
-        f"Klien mengajukan instruksi terbaru: '{brief}'.\n\n"
-        f"Konteks Sesi Sebelumnya:\n{history_summary if history_summary else 'Tidak ada.'}\n\n"
-        f"Rencana belanja saat ini:\n{materials_summary}\n\n"
-        "Tugas Anda adalah menganalisis instruksi terbaru klien tersebut dan menentukan:\n"
-        "1. Apakah klien ingin menghapus, membatalkan, menolak, atau tidak ingin menyertakan jenis material tertentu dari rencana belanja saat ini? "
-        "(Misalnya: 'jangan pakai cat', 'batalkan ubin', 'hapus panel kayu', 'cat dicancel saja', 'saya tidak mau ubin/granit').\n"
-        "Jika YA, masukkan nama agent spesialis yang menangani material tersebut ke dalam list 'rejected_agents'. "
-        "Pilihan nama agent: 'tile' (ubin/lantai/semen/nat), 'wood' (kayu/panel/wpc), 'stone' (batu/batu alam), 'paint' (cat/jotaplast).\n\n"
-        "2. Agen spesialis mana saja yang perlu dipanggil (hired) untuk memproses, menghitung, atau merevisi kebutuhan material sesuai instruksi klien? "
-        "Pilihan nama agent: 'tile', 'wood', 'stone', 'paint', 'researcher'.\n\n"
-        "Format output harus HANYA berupa JSON valid dengan skema berikut tanpa backticks atau teks tambahan:\n"
+        f"Klien mengajukan pesan terbaru: '{brief}'.\n\n"
+        f"Konteks Percakapan Sebelumnya:\n{history_summary if history_summary else 'Tidak ada.'}\n\n"
+        f"Material yang sudah ada di rencana belanja:\n{materials_summary}\n\n"
+        "Tugas Anda adalah menganalisis pesan klien dan mengisi JSON berikut:\n\n"
+        "1. 'intent': Tentukan apakah pesan klien adalah:\n"
+        "   - 'conversational': pertanyaan umum, konsultasi desain, diskusi ide, tanya rekomendasi tanpa angka/dimensi spesifik, "
+        "     ucapan terima kasih, konfirmasi sederhana, atau pesan yang tidak memerlukan kalkulasi material.\n"
+        "   - 'estimation': permintaan kalkulasi RAB, estimasi kebutuhan material, menyebut dimensi ruangan (m2/meter), "
+        "     minta daftar produk, revisi kalkulasi, atau tambah/hapus material dari rencana.\n\n"
+        "2. 'rejected_agents': Jika klien ingin menghapus material tertentu dari rencana (misal: 'jangan pakai cat', 'batalkan ubin'), "
+        "masukkan nama agentnya. Pilihan: 'tile', 'wood', 'stone', 'paint'. Kosongkan jika tidak ada.\n\n"
+        "3. 'hired_agents': Jika intent adalah 'estimation', tentukan agen spesialis mana yang perlu dipanggil. "
+        "Pilihan: 'tile' (ubin/lantai/semen/nat), 'wood' (kayu/panel/wpc), 'stone' (batu/batu alam), "
+        "'paint' (cat/jotaplast), 'researcher' (tren desain/riset pasar). "
+        "Jika intent adalah 'conversational', KOSONGKAN list ini.\n\n"
+        "Format output HANYA JSON valid tanpa backticks:\n"
         "{\n"
-        '  "rejected_agents": ["nama_agent_yang_dihapus"],\n'
-        '  "hired_agents": ["nama_agent_yang_dipanggil"]\n'
+        '  "intent": "conversational" atau "estimation",\n'
+        '  "rejected_agents": [],\n'
+        '  "hired_agents": []\n'
         "}"
     )
 
     response = _llm_invoke_with_retry(supervisor_llm, prompt)
-    
+
+    intent = "estimation"
     rejected = []
     hired = []
-    
+
     try:
         match = re.search(r"\{.*\}", response.content, re.DOTALL)
         if match:
             res_json = json.loads(match.group(0))
+            intent = res_json.get("intent", "estimation")
             rejected = res_json.get("rejected_agents", [])
             hired = res_json.get("hired_agents", [])
     except Exception:
@@ -74,6 +88,7 @@ def chief_supervisor(state: AgentState):
         if "paint" in text: hired.append("paint")
         if "researcher" in text: hired.append("researcher")
 
+    # Fallback keyword-based rejection
     brief_lower = brief.lower()
     negative_words = ["jangan", "batal", "hapus", "cancel", "tidak usah", "tidak mau", "tanpa", "tolak", "remove", "delete"]
     if any(neg in brief_lower for neg in negative_words):
@@ -87,24 +102,24 @@ def chief_supervisor(state: AgentState):
             rejected.append("stone")
 
     rejected = list(set([r.lower() for r in rejected]))
-    
+
+    # Kalau intent conversational, jangan panggil specialist apapun
+    if intent == "conversational":
+        hired = []
+
     updated_reports = list(reports)
     if rejected:
         filtered_reports = []
         for r in updated_reports:
             agent_name = r.get("agent", "").lower()
-            is_rejected = False
-            for rej in rejected:
-                if rej in agent_name:
-                    is_rejected = True
-                    break
+            is_rejected = any(rej in agent_name for rej in rejected)
             if not is_rejected:
                 filtered_reports.append(r)
         updated_reports = filtered_reports
 
     hired = [h for h in hired if h not in rejected]
 
-    return {"hired_agents": hired, "reports": updated_reports}
+    return {"hired_agents": hired, "reports": updated_reports, "intent": intent}
 
 
 def market_researcher(state: AgentState):
@@ -347,7 +362,11 @@ DISCLAIMER_TEXT = (
 )
 
 def synthesizer(state: AgentState):
-    """Supervisor merangkum proposal, membuat narasi, dan menyertakan disclaimer teknis"""
+    """Supervisor merangkum proposal atau menjawab pertanyaan konsultasi secara natural"""
+    brief = state.get("brief", "")
+    history_summary = state.get("history_summary", "")
+    intent = state.get("intent", "estimation")
+
     products = []
     agent_reports_text = ""
 
@@ -363,8 +382,38 @@ def synthesizer(state: AgentState):
         ).strip()
         agent_reports_text += f"\n- Laporan {r['agent']}: {clean_report_content}"
 
-    brief = state.get("brief", "")
-    history_summary = state.get("history_summary", "")
+    if intent == "conversational":
+        prompt = (
+            "Anda adalah Asisten Konsultasi QHomeMart yang ramah, berpengetahuan luas tentang material bangunan, "
+            "desain interior, dan renovasi rumah. Anda berbicara seperti konsultan toko yang membantu pelanggan "
+            "secara natural — tidak kaku, tidak seperti robot.\n\n"
+            f"Riwayat percakapan:\n{history_summary if history_summary else 'Belum ada.'}\n\n"
+            f"Pesan terbaru dari klien: '{brief}'\n\n"
+            "Berikan jawaban yang natural, informatif, dan langsung relevan dengan pertanyaan klien. "
+            "Jika ada konteks dari riwayat percakapan yang relevan, gunakan itu untuk memberikan jawaban yang konsisten. "
+            "Jangan tambahkan disclaimer teknis. Jangan sebut angka kalkulasi jika tidak diminta. "
+            "Maksimal 2-3 paragraf atau lebih pendek jika memungkinkan."
+        )
+        try:
+            response = _llm_invoke_with_retry(supervisor_llm, prompt)
+            content = response.content
+            narrative = str(content) if not isinstance(content, list) else " ".join(
+                [str(c.get("text", c)) if isinstance(c, dict) else str(c) for c in content]
+            )
+        except Exception:
+            narrative = "Terima kasih atas pertanyaannya. Silakan sampaikan detail lebih lanjut agar saya bisa membantu dengan lebih tepat."
+
+        generated_at = datetime.now(timezone.utc).isoformat()
+        return {
+            "final_proposal": json.dumps({
+                "narrative": narrative,
+                "products": [],
+                "disclaimer": "",
+                "generated_at": generated_at,
+            })
+        }
+
+    # Mode estimation: rangkum laporan specialist
     prompt = (
         f"Anda adalah Chief Supervisor di Kalkulator RAB QHomeMart.\n"
         f"Konteks Percakapan Sebelumnya: {history_summary if history_summary else 'Tidak ada.'}\n\n"
@@ -385,32 +434,73 @@ def synthesizer(state: AgentState):
         content = response.content
         if isinstance(content, list):
             narrative = " ".join(
-                [
-                    str(c.get("text", c)) if isinstance(c, dict) else str(c)
-                    for c in content
-                ]
+                [str(c.get("text", c)) if isinstance(c, dict) else str(c) for c in content]
             )
         else:
             narrative = str(content)
     except Exception:
         narrative = (
             "Berdasarkan analisis mendalam dari tim spesialis kami, berikut adalah rekomendasi material yang paling sesuai "
-            "dengan kriteria dan kebutuhan proyek Anda. Material ini dipilih secara spesifik untuk menjamin kualitas, "
-            "fungsionalitas, serta estetika yang maksimal."
+            "dengan kriteria dan kebutuhan proyek Anda."
         )
 
     generated_at = datetime.now(timezone.utc).isoformat()
-
     return {
-        "final_proposal": json.dumps(
-            {
-                "narrative": narrative,
-                "products": products,
-                "disclaimer": DISCLAIMER_TEXT,
-                "generated_at": generated_at,
-            }
-        )
+        "final_proposal": json.dumps({
+            "narrative": narrative,
+            "products": products,
+            "disclaimer": DISCLAIMER_TEXT,
+            "generated_at": generated_at,
+        })
     }
+
+def route_after_supervisor(state: AgentState):
+    """Routing: kalau conversational langsung synthesizer, kalau estimation jalankan specialist"""
+    intent = state.get("intent", "estimation")
+    if intent == "conversational":
+        return "synthesizer"
+    hired = state.get("hired_agents", [])
+    if not hired:
+        return "synthesizer"
+    # Mulai dari tile dulu, masing-masing agent akan skip kalau tidak di-hire
+    return "tile"
+
+def route_after_tile(state: AgentState):
+    hired = state.get("hired_agents", [])
+    if "wood" in hired:
+        return "wood"
+    if "stone" in hired:
+        return "stone"
+    if "paint" in hired:
+        return "paint"
+    if "researcher" in hired:
+        return "researcher"
+    return "inventory"
+
+def route_after_wood(state: AgentState):
+    hired = state.get("hired_agents", [])
+    if "stone" in hired:
+        return "stone"
+    if "paint" in hired:
+        return "paint"
+    if "researcher" in hired:
+        return "researcher"
+    return "inventory"
+
+def route_after_stone(state: AgentState):
+    hired = state.get("hired_agents", [])
+    if "paint" in hired:
+        return "paint"
+    if "researcher" in hired:
+        return "researcher"
+    return "inventory"
+
+def route_after_paint(state: AgentState):
+    hired = state.get("hired_agents", [])
+    if "researcher" in hired:
+        return "researcher"
+    return "inventory"
+
 
 workflow = StateGraph(AgentState)
 
@@ -425,11 +515,33 @@ workflow.add_node("restock_researcher", restock_researcher)
 workflow.add_node("synthesizer", synthesizer)
 
 workflow.set_entry_point("supervisor")
-workflow.add_edge("supervisor", "tile")
-workflow.add_edge("tile", "wood")
-workflow.add_edge("wood", "stone")
-workflow.add_edge("stone", "paint")
-workflow.add_edge("paint", "researcher")
+
+workflow.add_conditional_edges("supervisor", route_after_supervisor, {
+    "synthesizer": "synthesizer",
+    "tile": "tile",
+})
+workflow.add_conditional_edges("tile", route_after_tile, {
+    "wood": "wood",
+    "stone": "stone",
+    "paint": "paint",
+    "researcher": "researcher",
+    "inventory": "inventory",
+})
+workflow.add_conditional_edges("wood", route_after_wood, {
+    "stone": "stone",
+    "paint": "paint",
+    "researcher": "researcher",
+    "inventory": "inventory",
+})
+workflow.add_conditional_edges("stone", route_after_stone, {
+    "paint": "paint",
+    "researcher": "researcher",
+    "inventory": "inventory",
+})
+workflow.add_conditional_edges("paint", route_after_paint, {
+    "researcher": "researcher",
+    "inventory": "inventory",
+})
 workflow.add_edge("researcher", "inventory")
 workflow.add_edge("inventory", "restock_researcher")
 workflow.add_edge("restock_researcher", "synthesizer")

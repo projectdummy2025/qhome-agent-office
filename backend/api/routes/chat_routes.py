@@ -17,6 +17,45 @@ from backend.services import chat_service
 
 router = APIRouter(prefix="/api/projects", tags=["chat"])
 
+
+def _build_history_summary(db: Session, session_id: str, existing_summary: str = None) -> str:
+    """Bangun context percakapan dari riwayat pesan DB, maksimal 10 pesan terakhir."""
+    from backend.models.schema import ChatMessage, ChatRole
+    import json as _json
+    import re as _re
+
+    messages = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.session_id == session_id)
+        .order_by(ChatMessage.created_at.asc())
+        .all()
+    )
+
+    if not messages:
+        return existing_summary or ""
+
+    lines = []
+    for msg in messages[-10:]:  # Ambil 10 pesan terakhir
+        if msg.role == ChatRole.user:
+            lines.append(f"Klien: {msg.content}")
+        elif msg.role == ChatRole.system:
+            # Ambil narrative dari agent_logs jika ada, fallback ke content
+            narrative = msg.content or ""
+            if msg.agent_logs:
+                completed = next(
+                    (l for l in msg.agent_logs if isinstance(l, dict) and l.get("event") == "completed"),
+                    None,
+                )
+                if completed:
+                    raw_narrative = completed.get("narrative", msg.content or "")
+                    narrative = _re.sub(r"<think>[\s\S]*?</think>", "", raw_narrative, flags=_re.IGNORECASE).strip()
+                    # Potong kalau terlalu panjang
+                    if len(narrative) > 400:
+                        narrative = narrative[:400] + "..."
+            lines.append(f"Asisten: {narrative}")
+
+    return "\n".join(lines) if lines else (existing_summary or "")
+
 @router.post("/analyze")
 async def analyze_project(request: Request, db: Session = Depends(get_db)):
     payload = await request.json()
@@ -37,8 +76,8 @@ async def analyze_project(request: Request, db: Session = Depends(get_db)):
     else:
         existing_session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
         if existing_session:
-            if existing_session.summary:
-                history_summary = existing_session.summary
+            # Bangun history dari pesan nyata di DB, bukan hanya summary
+            history_summary = _build_history_summary(db, session_id, existing_session.summary)
         else:
             title = chat_service.generate_session_title(brief)
             db_session = ChatSession(id=session_id, user_id=user_id, title=title)
