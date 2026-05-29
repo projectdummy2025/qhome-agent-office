@@ -1,54 +1,28 @@
-import { Palette, HardHat, Store, ShieldCheck } from 'lucide-react';
+import { Palette, ShieldCheck } from 'lucide-react';
 import MaterialCatalog from '../MaterialCatalog';
 
 export const PERSONAS = [
   {
-    role: 'architect',
-    roleDisplay: 'Senior Architect & Designer',
-    name: 'Ibu Amalia',
+    role: 'user',
+    roleDisplay: 'Mitra B2B / Professional',
+    name: 'Mitra QHomeMart',
     icon: Palette,
     iconBg: 'bg-blue-50 text-blue-600 border border-blue-100/50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30',
     iconColor: 'text-blue-600 dark:text-blue-400',
-    desc: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior.',
+    desc: 'Melakukan estimasi material proyek (Granit, Cat, Kayu, Batu), waterproofing area basah, saniter toilet, serta bulk order grosir.',
     colorClass: 'border-hairline hover:border-blue-300 hover:shadow-[0_8px_30px_rgb(219,234,254,0.3)] hover:bg-blue-50/5 focus:ring-blue-100',
     badgeColor: 'bg-blue-50 text-blue-700 border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-300',
     distanceKm: 8,
     city: 'Sleman'
   },
   {
-    role: 'contractor',
-    roleDisplay: 'General Contractor & Engineer',
-    name: 'Bapak Joko',
-    icon: HardHat,
-    iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100/50 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30',
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
-    desc: 'Kalkulator volume struktural proyek, perhitungan wastage margin semen/perekat, verifikasi standar teknis, dan rancangan RAB.',
-    colorClass: 'border-hairline hover:border-emerald-300 hover:shadow-[0_8px_30px_rgb(209,250,229,0.3)] hover:bg-emerald-50/5 focus:ring-emerald-100',
-    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-300',
-    distanceKm: 15,
-    city: 'Bantul'
-  },
-  {
-    role: 'retailer',
-    roleDisplay: 'Retail & Procurement Partner',
-    name: 'Ibu Santi',
-    icon: Store,
-    iconBg: 'bg-purple-50 text-purple-600 border border-purple-100/50 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/30',
-    iconColor: 'text-purple-600 dark:text-purple-400',
-    desc: 'Pemesanan volume besar (bulk procurement), koordinasi alokasi stok pergudangan terdistribusi, dan negosiasi pricing tier korporat.',
-    colorClass: 'border-hairline hover:border-purple-300 hover:shadow-[0_8px_30px_rgb(243,232,255,0.3)] hover:bg-purple-50/5 focus:ring-purple-100',
-    badgeColor: 'bg-purple-50 text-purple-700 border-emerald-100/60 dark:bg-purple-950/40 dark:text-purple-300',
-    distanceKm: 35,
-    city: 'Kulon Progo'
-  },
-  {
     role: 'admin',
-    roleDisplay: 'Lead System Administrator',
-    name: 'Bapak Rudi',
+    roleDisplay: 'Lead Warehouse Administrator',
+    name: 'Admin Gudang',
     icon: ShieldCheck,
     iconBg: 'bg-amber-50 text-amber-600 border border-amber-100/50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30',
     iconColor: 'text-amber-600 dark:text-amber-400',
-    desc: 'Manajemen otorisasi diskon volume, intervensi stok kritis, pemutakhiran master catalog, dan audit log koordinasi antar staf.',
+    desc: 'Manajemen ketersediaan stok kritis, intervensi dan persetujuan restok, pemutakhiran katalog produk gudang.',
     colorClass: 'border-hairline hover:border-amber-300 hover:shadow-[0_8px_30px_rgb(254,243,199,0.3)] hover:bg-amber-50/5 focus:ring-amber-100',
     badgeColor: 'bg-amber-50 text-amber-700 border-amber-100/60 dark:bg-amber-950/40 dark:text-amber-300',
     distanceKm: 0,
@@ -58,69 +32,50 @@ export const PERSONAS = [
 
 export const getPersonaGreeting = (role: string) => {
   switch (role) {
-    case 'architect':
+    case 'user':
       return {
-        title: "Halo Ibu Amalia, mari ciptakan estetika ruang yang mewah.",
-        subtitle: "Simulasi fokus pada visual estetika, moodboard premium, dan keselarasan desain ruang.",
+        title: "Halo Mitra B2B, mari rencanakan kebutuhan material proyek Anda.",
+        subtitle: "Simulasi fokus pada visual estetika, kalkulasi teknis volume RAB, dan ketersediaan stok grosir.",
         presets: [
           {
-            title: "Granit Carrara Kamar Mandi Kecil",
-            desc: "Kurasi ubin granit polished 60x60 cm seluas 10 m² untuk konsep lantai kamar mandi minimalis.",
-            prompt: "Tolong rekomendasikan ubin granit polished motif Carrara White ukuran 60x60 buatan Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Hitung juga kebutuhan semen perekat Lemkra FK 206 dan pengisi nat AM 207 untuk pemasangannya."
+            title: "Desain Kamar Mandi (Arsitek)",
+            desc: "Kalkulasi ubin granit polished 60x60 cm seluas 10 m² untuk konsep lantai kamar mandi minimalis.",
+            prompt: "Tolong carikan di katalog QHomeMart ubin granit polished motif Carrara White 60x60 Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Cek juga ketersediaan semen perekat Lemkra FK 206 dan pengisi nat AM 207 dari katalog toko untuk pemasangannya."
           },
           {
-            title: "Waterproofing Kamar Mandi Mungil",
+            title: "Waterproofing Kamar Mandi (Arsitek)",
             desc: "Estimasi pelapis kedap air 2 komponen Sika Top untuk toilet seluas 6 m².",
-            prompt: "Tolong hitung kebutuhan bahan pelapis kedap air Sika Top 205 Waterproofing untuk area lantai toilet seluas 6 m²."
+            prompt: "Tolong hitung kebutuhan bahan pelapis kedap air Sika Top 205 Waterproofing dari katalog QHomeMart untuk toilet seluas 6 m²."
           },
           {
-            title: "Saniter Wastafel Kamar Mandi",
+            title: "Saniter Wastafel (Arsitek)",
             desc: "Kurasi wastafel porselen untuk kamar mandi tamu minimalis.",
             prompt: "Rekomendasikan wastafel gantung porselen tipe SA-534 buatan Kohler dari katalog QHomeMart untuk wastafel kamar mandi tamu."
-          }
-        ]
-      };
-    case 'contractor':
-      return {
-        title: "Halo Bapak Joko, mari hitung volume material & anggaran.",
-        subtitle: "Simulasi fokus pada kalkulator semen nat pendukung, wastage ubin, dan efisiensi anggaran lapangan.",
-        presets: [
+          },
           {
-            title: "RAB Ubin Selasar Kecil",
+            title: "RAB Ubin Selasar (Kontraktor)",
             desc: "Estimasi ubin granit 60x60 cm pola diagonal untuk lantai selasar 15 m² dengan wastage 10% dan kebutuhan semen perekat.",
-            prompt: "Hitung kebutuhan ubin granit Carrara White Polished 60x60 Roman untuk lantai selasar seluas 15 m² dengan pola diagonal (wastage 10%). Sertakan juga perekat ubin Lemkra FK 206 dan pengisi nat AM 207 untuk pemasangannya."
+            prompt: "Hitung kebutuhan ubin granit Carrara White Polished 60x60 Roman dari katalog QHomeMart untuk lantai selasar seluas 15 m² dengan pola diagonal (wastage 10%). Sertakan juga semen perekat Lemkra FK 206 dan pengisi nat AM 207 yang tersedia di katalog kalian."
           },
           {
-            title: "RAB Lantai SPC Teras",
+            title: "RAB Lantai SPC Teras (Kontraktor)",
             desc: "Hitung kebutuhan lantai SPC motif kayu tebal 4mm seluas 10 m².",
-            prompt: "Hitung kebutuhan lantai SPC Flooring Wood Motif Roman untuk area teras seluas 10 m² dengan perkiraan wastage 5%."
+            prompt: "Cari produk lantai SPC Flooring Wood Motif Roman dari katalog QHomeMart untuk area teras seluas 10 m² dengan perkiraan wastage 5%."
           },
           {
-            title: "Waterproofing Toilet Minimalis",
+            title: "Waterproofing Toilet (Kontraktor)",
             desc: "Estimasi pelapis kedap air 2 komponen Sika Top untuk toilet seluas 10 m².",
-            prompt: "Hitung kebutuhan pelapis kedap air Sika Top 205 Waterproofing untuk lantai toilet seluas 10 m²."
-          }
-        ]
-      };
-    case 'retailer':
-      return {
-        title: "Halo Ibu Santi, mari cek ketersediaan stok pergudangan.",
-        subtitle: "Simulasi fokus pada kuantitas stok volume besar, substitusi alternatif barang, dan logistik.",
-        presets: [
-          {
-            title: "Bulk Order Ubin Granit Ruangan",
-            desc: "Pengadaan ubin granit lantai 100 dus dalam satu batch untuk menjamin kesamaan warna.",
-            prompt: "Cek ketersediaan dan hitung kebutuhan untuk pemesanan massal 100 dus ubin granit Carrara White Polished 60x60 Roman."
+            prompt: "Tolong carikan produk pelapis kedap air Sika Top 205 Waterproofing di katalog QHomeMart untuk lantai toilet seluas 10 m²."
           },
           {
-            title: "Bulk Order Kompor Tanam Modena",
-            desc: "Pengadaan kompor tanam gas Modena sebanyak 15 unit untuk dapur apartemen.",
-            prompt: "Cek ketersediaan stok dan hitung total harga grosir untuk pemesanan 15 unit Kompor Tanam Gas 2 Tungku Modena."
+            title: "Bulk Order Semen (Ritel)",
+            desc: "Pengadaan Semen Portland Tiga Roda sebanyak 10 sak dari katalog toko.",
+            prompt: "Saya ingin memesan secara massal Semen Portland Composite PCC Tiga Roda kemasan 40kg sebanyak 10 sak dari katalog QHomeMart. Tolong tampilkan ketersediaan stok dan harganya."
           },
           {
-            title: "Bulk Order Semen Tiga Roda",
-            desc: "Pengadaan Semen Portland Tiga Roda sebanyak 100 sak.",
-            prompt: "Saya ingin memesan secara massal Semen Portland Composite PCC Tiga Roda kemasan 40kg sebanyak 100 sak. Tolong tampilkan ketersediaan stok dan total biayanya."
+            title: "Bulk Order Kompor (Ritel)",
+            desc: "Pengadaan kompor tanam gas Modena sebanyak 15 unit.",
+            prompt: "Cek ketersediaan stok Kompor Tanam Gas 2 Tungku Modena di katalog QHomeMart untuk pemesanan 15 unit."
           }
         ]
       };

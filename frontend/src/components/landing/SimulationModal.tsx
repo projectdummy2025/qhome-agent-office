@@ -10,40 +10,21 @@ interface SimulationModalProps {
 const consultantList = [
   {
     id: 1,
-    role: 'architect',
-    name: 'Ibu Amalia',
-    label: 'Senior Architect & Designer',
-    description: 'Evaluasi keselarasan gaya arsitektural, spesifikasi material premium, integrasi visual, dan penyusunan moodboard interior.',
+    role: 'user',
+    name: 'Mitra B2B',
+    label: 'Mitra Professional & B2B Customer',
+    description: 'Pesan material dan kalkulasi volume proyek untuk kebutuhan arsitektur, konstruksi, atau pengadaan grosir ritel.',
     borderClass: 'border-slate-100 hover:border-blue-400/60 hover:shadow-[0_12px_30px_-5px_rgba(59,130,246,0.08)]',
     glowColor: 'bg-blue-400/10'
   },
   {
     id: 2,
-    role: 'contractor',
-    name: 'Bapak Joko',
-    label: 'General Contractor & Engineer',
-    description: 'Kalkulator volume struktural proyek, perhitungan wastage margin semen/perekat, verifikasi standar teknis, dan rancangan RAB.',
-    borderClass: 'border-slate-100 hover:border-emerald-400/60 hover:shadow-[0_12px_30px_-5px_rgba(16,185,129,0.08)]',
-    glowColor: 'bg-emerald-400/10'
-  },
-  {
-    id: 3,
-    role: 'retailer',
-    name: 'Ibu Santi',
-    label: 'Retail & Procurement Partner',
-    description: 'Pemesanan volume besar (bulk procurement), koordinasi alokasi stok pergudangan terdistribusi, dan negosiasi pricing tier korporat.',
-    borderClass: 'border-slate-100 hover:border-violet-400/60 hover:shadow-[0_12px_30px_-5px_rgba(139,92,246,0.08)]',
-    glowColor: 'bg-purple-400/10'
-  },
-  {
-    id: 4,
     role: 'admin',
-    name: 'Bapak Rudi',
-    label: 'Lead System Administrator',
-    description: 'Manajemen otorisasi diskon volume, intervensi stok kritis, pemutakhiran master catalog, dan audit log koordinasi antar staf.',
+    name: 'Admin Gudang',
+    label: 'Warehouse & Operations Administrator',
+    description: 'Pantau logistik kargo, restok barang habis, kelola katalog produk, dan otorisasi limit B2B.',
     borderClass: 'border-slate-100 hover:border-amber-400/60 hover:shadow-[0_12px_30px_-5px_rgba(245,158,11,0.08)]',
-    glowColor: 'bg-amber-400/10',
-    isMuted: true
+    glowColor: 'bg-amber-400/10'
   }
 ];
 
@@ -92,11 +73,7 @@ const SimulationModal: React.FC<SimulationModalProps> = ({ isOpen, onClose, onSe
                 <div 
                   key={consultant.id}
                   onClick={() => handleSelect(consultant)}
-                  className={`group cursor-pointer rounded-2xl border-2 transition-all duration-300 p-6 relative overflow-hidden bg-white flex flex-col justify-between
-                    ${consultant.isMuted 
-                      ? 'bg-slate-50/40 opacity-90 border-slate-200/50 hover:bg-white hover:opacity-100' 
-                      : 'border-slate-200/80 hover:-translate-y-0.5'
-                    } ${consultant.borderClass}`}
+                  className={`group cursor-pointer rounded-2xl border-2 transition-all duration-300 p-6 relative overflow-hidden bg-white flex flex-col justify-between border-slate-200/80 hover:-translate-y-0.5 ${consultant.borderClass}`}
                 >
                   {/* Decorative Radial Glow */}
                   <div className={`absolute -right-12 -bottom-12 w-36 h-36 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${consultant.glowColor}`} />

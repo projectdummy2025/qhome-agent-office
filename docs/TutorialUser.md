@@ -55,17 +55,17 @@ Salin salah satu prompt percakapan alami berikut ke kolom input chat di aplikasi
 
 ### Opsi 1: Skenario Pemesanan Ubin Lantai (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia dari Sleman. Saya ingin memesan Granit Carrara White Polished 60x60 Roman untuk area teras kecil seluas 10 m2 dengan pola standard. Tolong hitung kebutuhan ubinnya, serta semen perekat Lemkra FK 206 dan pengisi nat AM 207."
+> "Halo, saya Amalia dari Sleman. Tolong carikan di katalog QHomeMart ubin granit polished motif Carrara White 60x60 Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Cek juga ketersediaan semen perekat Lemkra FK 206 dan pengisi nat AM 207 dari katalog toko untuk pemasangannya."
 *   **Mengapa tidak memicu restok?** Ubin utama (FL-061) dan bahan pendukung (BM-007, BM-008) berstatus **TERSEDIA** di database karena kebutuhannya di bawah batas stok (50 unit). Untuk item tambahan nat pembantu lainnya yang berlabel `(Menunggu Konfirmasi)`, Anda dapat membatalkan centangnya (uncheck) di keranjang untuk langsung checkout, atau memicu alur restok via Admin Portal untuk memperbarui harganya.
 
 ### Opsi 2: Skenario Pemesanan Pengecatan Dinding (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia dari Sleman. Saya ingin merenovasi dinding kamar tidur anak berukuran 3x4 meter dengan tinggi 3 meter. Tolong hitung kebutuhan cat dinding interior putih Jotun Jotaplast 5L dan cat dasar Jotun Undercoat Primer 5L untuk dasarnya."
+> "Halo, saya Amalia dari Sleman. Saya ingin merenovasi dinding kamar tidur mungil dengan luas dinding 12 m². Tolong kalkulasikan kebutuhan cat interior putih Jotun Jotaplast 5L dan sertakan cat dasar Jotun Undercoat Primer 5L untuk pelapis dasarnya dari katalog QHomeMart yang tersedia."
 *   **Mengapa tidak memicu restok?** Cat utama (BM-101) dan primer dasar (BM-105) memiliki stok yang cukup di gudang. Sementara untuk hardcoded primer pembantu lainnya yang berlabel OOS di keranjang, Anda dapat menonaktifkan centangnya di keranjang untuk langsung ke logistik, atau menyetujuinya via Admin Portal.
 
 ### Opsi 3: Skenario Pemesanan Panel Dinding Kayu (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia dari Sleman. Kami ingin memasang lantai SPC Flooring Wood Motif 60x60 Roman untuk kamar tidur seluas 12 m2. Tolong kalkulasikan kebutuhan lembar panelnya."
+> "Halo, saya Amalia dari Sleman. Kami ingin memasang lantai SPC Flooring Wood Motif 60x60 Roman untuk kamar tidur seluas 12 m². Tolong hitungkan kebutuhan lembar panelnya dari produk yang ada di katalog QHomeMart."
 *   **Mengapa tidak memicu restok?** Kebutuhan ubin lantai SPC (FL-011) berada di bawah batas stok gudang sehingga berstatus aman. Hilangkan centang pada item pelengkap (Cairan Coating) di keranjang belanja Anda untuk memotong alur restok, atau setujui restoknya melalui Admin Portal.
 
 ### Opsi 4: Skenario Konsultasi Tren & Estetika (Murni Konsultasi - Tanpa Keranjang Belanja)
@@ -75,7 +75,7 @@ Salin salah satu prompt percakapan alami berikut ke kolom input chat di aplikasi
 
 ### Opsi 5: Skenario Pengadaan Skala Besar (Memicu Restok Gudang)
 > **Salin & Tempel Prompt Ini:**
-> "Selamat siang, saya Santi dari Kulon Progo. Kami sedang mengerjakan perumahan baru di Kulon Progo dan ingin memesan MU-203 Perekat Keramik 50kg sebanyak 80 sak dari gudang. Mohon hitung estimasi total biaya dan biaya logistik kargo CDD ke Kulon Progo."
+> "Selamat siang, saya Santi dari Kulon Progo. Kami sedang mengerjakan perumahan baru di Kulon Progo. Tolong cek stok MU-203 Perekat Keramik 50kg dari katalog QHomeMart untuk pemesanan sebanyak 80 sak. Hitung biaya logistik kargo CDD ke Kulon Progo dan total biayanya."
 *   **Mengapa memicu restok?** Permintaan sebanyak 80 sak melebihi batas stok default gudang (50 unit), sehingga secara otomatis memicu status `[STOK TERBATAS]` pada item tersebut dan mengunci tombol checkout (Lihat Langkah 4 - Bagian B).
 
 ---

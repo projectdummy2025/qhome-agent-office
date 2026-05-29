@@ -60,7 +60,11 @@ export default function App() {
     const originRoleParam = params.get('origin_role');
 
     if ((portalParam === 'order' || portalParam === 'admin') && sessionIdParam && userRoleParam) {
-      const matchedPersona = PERSONAS.find(p => p.role === userRoleParam);
+      let roleToFind = userRoleParam;
+      if (['architect', 'contractor', 'retailer'].includes(userRoleParam)) {
+        roleToFind = 'user';
+      }
+      const matchedPersona = PERSONAS.find(p => p.role === roleToFind);
       if (matchedPersona) {
         setCurrentUser(matchedPersona);
         chatApi.setCurrentSessionId(sessionIdParam);
