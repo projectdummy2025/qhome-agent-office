@@ -1,4 +1,4 @@
-import { AlertTriangle, RefreshCw, Check, Info, ShoppingBag } from 'lucide-react';
+import { AlertTriangle, Check, Info, ShoppingBag } from 'lucide-react';
 
 interface Product {
   sku: string;
@@ -20,7 +20,6 @@ interface OrderCartProps {
   toggleProductApproval: (sku: string) => void;
   warningItem: Product | undefined;
   materialsTotal: number;
-  switchToAdminRudi: () => void;
   syncApprovedItemsToSession: (items: Product[]) => Promise<void>;
   sendRestockRequestToAdmin: (items: Product[], approvedItems: Product[]) => Promise<void>;
   setCartStep: (step: 'review' | 'logistics' | 'success') => void;
@@ -36,7 +35,6 @@ export default function OrderCart({
   toggleProductApproval,
   warningItem,
   materialsTotal,
-  switchToAdminRudi,
   syncApprovedItemsToSession,
   sendRestockRequestToAdmin,
   setCartStep,
@@ -102,19 +100,7 @@ export default function OrderCart({
                 </p>
               </div>
             </div>
-            
-            <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto border-t md:border-t-0 md:border-l border-slate-200/60 pt-4 md:pt-0 md:pl-5 flex-shrink-0">
-              <button 
-                onClick={switchToAdminRudi}
-                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.98] outline-none group min-w-[160px]"
-              >
-                <RefreshCw className="w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-180" />
-                PORTAL ADMIN
-              </button>
-              <span className="text-[10px] text-slate-400 text-center md:text-right font-medium">
-                Untuk replenishment &amp; volume discount
-              </span>
-            </div>
+
           </div>
         )}
 

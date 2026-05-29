@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import { Check, ShieldAlert, Info, ShoppingBag, Download } from 'lucide-react';
+import { Check, ShieldAlert, Info, ShoppingBag, Download, RefreshCw } from 'lucide-react';
 import OrderCart from './order/OrderCart';
 import OrderShipping from './order/OrderShipping';
 import OrderPayment from './order/OrderPayment';
@@ -396,6 +396,15 @@ export default function OrderPortal({
                 <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">{currentUser.roleDisplay}</span>
               </div>
             )}
+            {warningItem && (
+              <button
+                onClick={switchToAdminRudi}
+                className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-[10px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.98] outline-none group"
+              >
+                <RefreshCw className="w-3 h-3 transition-transform duration-500 group-hover:rotate-180" />
+                PORTAL ADMIN
+              </button>
+            )}
             <button
               onClick={onBack}
               className="text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-slate-900 transition-all duration-200 focus:outline-none cursor-pointer border border-slate-200 hover:border-slate-800 px-5 py-2 rounded-full flex items-center gap-1.5 bg-white shadow-sm hover:shadow active:scale-[0.98]"
@@ -490,7 +499,6 @@ export default function OrderPortal({
                 toggleProductApproval={toggleProductApproval}
                 warningItem={warningItem}
                 materialsTotal={materialsTotal}
-                switchToAdminRudi={switchToAdminRudi}
                 syncApprovedItemsToSession={syncApprovedItemsToSession}
                 sendRestockRequestToAdmin={sendRestockRequestToAdmin}
                 setCartStep={setCartStep}
