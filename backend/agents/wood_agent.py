@@ -3,6 +3,8 @@ from backend.agents.shared import (
     _should_reuse_product,
     _get_stock_and_details_for_sku,
     _get_candidates_with_stock,
+    _find_product_by_name_sql,
+    _has_buying_intent,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
     groq_specialist
@@ -15,7 +17,7 @@ def wood_specialist(state: AgentState):
     brief = state.get("brief", "")
     try:
         reuse_result = _should_reuse_product(brief, "Wood Specialist", state)
-        
+
         if reuse_result["should_reuse"] and reuse_result["product"]:
             meta = reuse_result["product"]
             sku = meta["sku"]
@@ -32,7 +34,10 @@ def wood_specialist(state: AgentState):
                     "desc": f"Produk reused dari sesi sebelumnya: {meta['name']}"
                 }]
         else:
-            candidates = _get_candidates_with_stock(brief, "furniture", limit=5)
+            # SQL name-search dulu, ChromaDB sebagai fallback
+            candidates = _find_product_by_name_sql(brief, "furniture", limit=5)
+            if not candidates:
+                candidates = _get_candidates_with_stock(brief, "furniture", limit=5)
             if not candidates:
                 raise Exception("No product found")
 
@@ -88,26 +93,6 @@ def wood_specialist(state: AgentState):
         qty = calc["panels_needed"]
         unit = "Lembar"
 
-        content = (
-            f"{reasoning}. Untuk luas bidang kayu {area_m2} m2, diperlukan sebanyak {qty} lembar panel. "
-            f"Diperlukan pula {calc['coating_cans_needed']} kaleng cairan coating pelindung UV agar warna kayu tahan lama."
-        )
-        # Dynamic lookup for coating
-        coating_qty = calc["coating_cans_needed"]
-        coating_candidates = _get_candidates_with_stock("coating", "furniture", limit=1)
-        if not coating_candidates:
-            coating_candidates = _get_candidates_with_stock("pelapis", "furniture", limit=1)
-        
-        if coating_candidates:
-            coating_match = coating_candidates[0]
-            coating_sku = coating_match["sku"]
-            coating_name = coating_match["name"]
-            coating_price = coating_match["base_price"]
-        else:
-            coating_sku = "OOS-COATING"
-            coating_name = "Cairan Coating Pelindung UV (Menunggu Konfirmasi)"
-            coating_price = 0
-
         product_data = [
             {
                 "sku": selected_product["sku"],
@@ -117,14 +102,28 @@ def wood_specialist(state: AgentState):
                 "qty": f"{qty} {unit} (Est)",
                 "total": selected_product["base_price"] * qty,
             },
-            {
-                "sku": coating_sku,
-                "name": coating_name if coating_price > 0 else f"{coating_name} (Estimasi Internet)" if "Menunggu" not in coating_name else coating_name,
-                "price": coating_price,
-                "qty": f"{coating_qty} Kaleng (Est)",
-                "total": coating_price * coating_qty,
-            }
         ]
+
+        if _has_buying_intent(brief):
+            coating_qty = calc["coating_cans_needed"]
+            coating_candidates = _find_product_by_name_sql("coating pelindung", "furniture", limit=1)
+            if not coating_candidates:
+                coating_candidates = _get_candidates_with_stock("coating", "furniture", limit=1)
+
+            if coating_candidates:
+                cm = coating_candidates[0]
+                product_data.append({
+                    "sku": cm["sku"],
+                    "name": cm["name"],
+                    "price": cm["base_price"],
+                    "qty": f"{coating_qty} Kaleng (Est)",
+                    "total": cm["base_price"] * coating_qty,
+                })
+
+        content = (
+            f"{reasoning}. Untuk luas bidang kayu {area_m2} m2, diperlukan sebanyak {qty} lembar panel."
+            + (f" Diperlukan pula {calc['coating_cans_needed']} kaleng cairan coating pelindung UV agar warna kayu tahan lama." if _has_buying_intent(brief) else "")
+        )
     except Exception as e:
         content = f"Maaf, saya tidak menemukan produk panel kayu yang sesuai di database. Detail {str(e)}"
         product_data = [{

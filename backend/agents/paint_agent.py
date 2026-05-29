@@ -3,6 +3,8 @@ from backend.agents.shared import (
     _should_reuse_product,
     _get_stock_and_details_for_sku,
     _get_candidates_with_stock,
+    _find_product_by_name_sql,
+    _has_buying_intent,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
     groq_specialist
@@ -15,7 +17,7 @@ def paint_consultant(state: AgentState):
     brief = state.get("brief", "")
     try:
         reuse_result = _should_reuse_product(brief, "Paint Consultant", state)
-        
+
         if reuse_result["should_reuse"] and reuse_result["product"]:
             meta = reuse_result["product"]
             sku = meta["sku"]
@@ -32,7 +34,10 @@ def paint_consultant(state: AgentState):
                     "desc": f"Produk reused dari sesi sebelumnya: {meta['name']}"
                 }]
         else:
-            candidates = _get_candidates_with_stock(brief, "building material", limit=5)
+            # SQL name-search dulu, ChromaDB sebagai fallback
+            candidates = _find_product_by_name_sql(brief, "building material", limit=5)
+            if not candidates:
+                candidates = _get_candidates_with_stock(brief, "building material", limit=5)
             if not candidates:
                 raise Exception("No product found")
 
@@ -100,27 +105,6 @@ def paint_consultant(state: AgentState):
             paint_unit = explicit_paint.get("unit", "Pail")
             paint_name = explicit_paint.get("name", "Cat Khusus")
             calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
-            content = (
-                f"{reasoning}. Klien secara eksplisit meminta {paint_name} sebanyak {paint_qty} {paint_unit}. "
-                f"Produk ini belum terdaftar di katalog, menunggu konfirmasi harga dari tim pengadaan. "
-                f"Tambahan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar juga dibutuhkan."
-            )
-            
-            # Dynamic lookup for primer
-            primer_qty = calc["primer_pails_needed"]
-            primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
-            if not primer_candidates:
-                primer_candidates = _get_candidates_with_stock("primer", "building material", limit=1)
-            
-            if primer_candidates:
-                primer_match = primer_candidates[0]
-                primer_sku = primer_match["sku"]
-                primer_name = primer_match["name"]
-                primer_price = primer_match["base_price"]
-            else:
-                primer_sku = "OOS-PRIMER"
-                primer_name = "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)"
-                primer_price = 0
 
             product_data = [
                 {
@@ -130,39 +114,33 @@ def paint_consultant(state: AgentState):
                     "qty": f"{paint_qty} {paint_unit}",
                     "total": 0,
                 },
-                {
-                    "sku": primer_sku,
-                    "name": primer_name if primer_price > 0 else f"{primer_name} (Estimasi Internet)" if "Menunggu" not in primer_name else primer_name,
-                    "price": primer_price,
-                    "qty": f"{primer_qty} Pail (Est)",
-                    "total": primer_price * primer_qty,
-                }
             ]
+
+            if _has_buying_intent(brief):
+                primer_qty = calc["primer_pails_needed"]
+                primer_candidates = _find_product_by_name_sql("cat dasar alkali sealer", "building material", limit=1)
+                if not primer_candidates:
+                    primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
+
+                if primer_candidates:
+                    pm = primer_candidates[0]
+                    product_data.append({
+                        "sku": pm["sku"],
+                        "name": pm["name"],
+                        "price": pm["base_price"],
+                        "qty": f"{primer_qty} Pail (Est)",
+                        "total": pm["base_price"] * primer_qty,
+                    })
+
+            content = (
+                f"{reasoning}. Klien secara eksplisit meminta {paint_name} sebanyak {paint_qty} {paint_unit}. "
+                f"Produk ini belum terdaftar di katalog, menunggu konfirmasi harga dari tim pengadaan."
+                + (f" Tambahan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar juga disertakan." if _has_buying_intent(brief) else "")
+            )
         else:
             calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
             qty = calc["pails_needed"]
             unit = "Pail"
-
-            content = (
-                f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
-                f"dibutuhkan {qty} pail cat utama dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar."
-            )
-            
-            # Dynamic lookup for primer
-            primer_qty = calc["primer_pails_needed"]
-            primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
-            if not primer_candidates:
-                primer_candidates = _get_candidates_with_stock("primer", "building material", limit=1)
-            
-            if primer_candidates:
-                primer_match = primer_candidates[0]
-                primer_sku = primer_match["sku"]
-                primer_name = primer_match["name"]
-                primer_price = primer_match["base_price"]
-            else:
-                primer_sku = "OOS-PRIMER"
-                primer_name = "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)"
-                primer_price = 0
 
             product_data = [
                 {
@@ -173,14 +151,29 @@ def paint_consultant(state: AgentState):
                     "qty": f"{qty} {unit} (Est)",
                     "total": selected_product["base_price"] * qty,
                 },
-                {
-                    "sku": primer_sku,
-                    "name": primer_name if primer_price > 0 else f"{primer_name} (Estimasi Internet)" if "Menunggu" not in primer_name else primer_name,
-                    "price": primer_price,
-                    "qty": f"{primer_qty} Pail (Est)",
-                    "total": primer_price * primer_qty,
-                }
             ]
+
+            if _has_buying_intent(brief):
+                primer_qty = calc["primer_pails_needed"]
+                primer_candidates = _find_product_by_name_sql("cat dasar alkali sealer", "building material", limit=1)
+                if not primer_candidates:
+                    primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
+
+                if primer_candidates:
+                    pm = primer_candidates[0]
+                    product_data.append({
+                        "sku": pm["sku"],
+                        "name": pm["name"],
+                        "price": pm["base_price"],
+                        "qty": f"{primer_qty} Pail (Est)",
+                        "total": pm["base_price"] * primer_qty,
+                    })
+
+            content = (
+                f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
+                f"dibutuhkan {qty} pail cat utama"
+                + (f" dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar." if _has_buying_intent(brief) else ".")
+            )
     except Exception as e:
         content = f"Maaf, saya tidak menemukan cat interior yang spesifik sesuai permintaan. Detail {str(e)}"
         product_data = [{

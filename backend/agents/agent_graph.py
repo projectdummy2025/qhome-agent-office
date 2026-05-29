@@ -7,6 +7,11 @@ from langgraph.checkpoint.memory import MemorySaver
 from backend.agents.shared import (
     AgentState,
     _llm_invoke_with_retry,
+    _find_product_by_name_sql,
+    _get_candidates_with_stock,
+    _has_buying_intent,
+    _get_resolved,
+    _mark_resolved,
     supervisor_llm,
     gemini_specialist,
     groq_specialist
@@ -16,6 +21,7 @@ from backend.agents.tile_agent import tile_estimator
 from backend.agents.wood_agent import wood_specialist
 from backend.agents.paint_agent import paint_consultant
 from backend.agents.stone_agent import stone_specialist
+from backend.agents.catalog_agent import catalog_agent
 from backend.agents.research_agent import restock_researcher
 
 def chief_supervisor(state: AgentState):
@@ -52,13 +58,18 @@ def chief_supervisor(state: AgentState):
         "   - 'conversational': pertanyaan umum, konsultasi desain, diskusi ide, tanya rekomendasi tanpa angka/dimensi spesifik, "
         "     ucapan terima kasih, konfirmasi sederhana, atau pesan yang tidak memerlukan kalkulasi material.\n"
         "   - 'estimation': permintaan kalkulasi RAB, estimasi kebutuhan material, menyebut dimensi ruangan (m2/meter), "
-        "     minta daftar produk, revisi kalkulasi, atau tambah/hapus material dari rencana.\n\n"
-        "2. 'rejected_agents': Jika klien ingin menghapus material tertentu dari rencana (misal: 'jangan pakai cat', 'batalkan ubin'), "
-        "masukkan nama agentnya. Pilihan: 'tile', 'wood', 'stone', 'paint'. Kosongkan jika tidak ada.\n\n"
-        "3. 'hired_agents': Jika intent adalah 'estimation', tentukan agen spesialis mana yang perlu dipanggil. "
-        "Pilihan: 'tile' (ubin/lantai/semen/nat), 'wood' (kayu/panel/wpc), 'stone' (batu/batu alam), "
-        "'paint' (cat/jotaplast), 'researcher' (tren desain/riset pasar). "
-        "Jika intent adalah 'conversational', KOSONGKAN list ini.\n\n"
+        "     minta daftar produk, cek stok/harga, pesan/order/beli produk tertentu, atau revisi rencana belanja.\n\n"
+        "2. 'rejected_agents': Jika klien ingin menghapus material tertentu dari rencana, "
+        "masukkan nama agentnya. Pilihan: 'tile', 'wood', 'stone', 'paint', 'catalog'. Kosongkan jika tidak ada.\n\n"
+        "3. 'hired_agents': Jika intent adalah 'estimation', tentukan agen yang perlu dipanggil:\n"
+        "   - 'tile': ubin/granit/keramik/lantai/semen perekat/nat\n"
+        "   - 'wood': kayu/panel/wpc/fluted/SPC flooring\n"
+        "   - 'stone': batu alam/veneer/andesit\n"
+        "   - 'paint': cat/waterproofing/pelapis/coating dinding\n"
+        "   - 'catalog': sanitary/wastafel/closet/kompor/elektronik/lampu/alat/bulk order produk tunggal "
+        "     tanpa kalkulasi area, atau produk yang tidak masuk kategori tile/wood/stone/paint\n"
+        "   - 'researcher': riset tren desain/insight pasar\n"
+        "   Satu permintaan bisa hire lebih dari satu agent. Jika intent 'conversational', KOSONGKAN.\n\n"
         "Format output HANYA JSON valid tanpa backticks:\n"
         "{\n"
         '  "intent": "conversational" atau "estimation",\n'
@@ -119,7 +130,13 @@ def chief_supervisor(state: AgentState):
 
     hired = [h for h in hired if h not in rejected]
 
-    return {"hired_agents": hired, "reports": updated_reports, "intent": intent}
+    # Reset resolved_supporting tiap giliran baru (brief baru = resolusi baru)
+    return {
+        "hired_agents": hired,
+        "reports": updated_reports,
+        "intent": intent,
+        "resolved_supporting": [],
+    }
 
 
 def market_researcher(state: AgentState):
@@ -462,44 +479,47 @@ def route_after_supervisor(state: AgentState):
     hired = state.get("hired_agents", [])
     if not hired:
         return "synthesizer"
-    # Mulai dari tile dulu, masing-masing agent akan skip kalau tidak di-hire
-    return "tile"
-
-def route_after_tile(state: AgentState):
-    hired = state.get("hired_agents", [])
+    if "tile" in hired:
+        return "tile"
     if "wood" in hired:
         return "wood"
     if "stone" in hired:
         return "stone"
     if "paint" in hired:
         return "paint"
+    if "catalog" in hired:
+        return "catalog"
     if "researcher" in hired:
         return "researcher"
+    return "synthesizer"
+
+def _next_after(state: AgentState, current: str) -> str:
+    """Tentukan node berikutnya dalam urutan dinamis sesuai hired_agents."""
+    order = ["tile", "wood", "stone", "paint", "catalog", "researcher"]
+    hired = state.get("hired_agents", [])
+    try:
+        idx = order.index(current)
+    except ValueError:
+        return "inventory"
+    for candidate in order[idx + 1:]:
+        if candidate in hired:
+            return candidate
     return "inventory"
+
+def route_after_tile(state: AgentState):
+    return _next_after(state, "tile")
 
 def route_after_wood(state: AgentState):
-    hired = state.get("hired_agents", [])
-    if "stone" in hired:
-        return "stone"
-    if "paint" in hired:
-        return "paint"
-    if "researcher" in hired:
-        return "researcher"
-    return "inventory"
+    return _next_after(state, "wood")
 
 def route_after_stone(state: AgentState):
-    hired = state.get("hired_agents", [])
-    if "paint" in hired:
-        return "paint"
-    if "researcher" in hired:
-        return "researcher"
-    return "inventory"
+    return _next_after(state, "stone")
 
 def route_after_paint(state: AgentState):
-    hired = state.get("hired_agents", [])
-    if "researcher" in hired:
-        return "researcher"
-    return "inventory"
+    return _next_after(state, "paint")
+
+def route_after_catalog(state: AgentState):
+    return _next_after(state, "catalog")
 
 
 workflow = StateGraph(AgentState)
@@ -509,6 +529,7 @@ workflow.add_node("tile", tile_estimator)
 workflow.add_node("wood", wood_specialist)
 workflow.add_node("stone", stone_specialist)
 workflow.add_node("paint", paint_consultant)
+workflow.add_node("catalog", catalog_agent)
 workflow.add_node("researcher", market_researcher)
 workflow.add_node("inventory", inventory_administrator)
 workflow.add_node("restock_researcher", restock_researcher)
@@ -516,32 +537,16 @@ workflow.add_node("synthesizer", synthesizer)
 
 workflow.set_entry_point("supervisor")
 
-workflow.add_conditional_edges("supervisor", route_after_supervisor, {
-    "synthesizer": "synthesizer",
-    "tile": "tile",
-})
-workflow.add_conditional_edges("tile", route_after_tile, {
-    "wood": "wood",
-    "stone": "stone",
-    "paint": "paint",
-    "researcher": "researcher",
-    "inventory": "inventory",
-})
-workflow.add_conditional_edges("wood", route_after_wood, {
-    "stone": "stone",
-    "paint": "paint",
-    "researcher": "researcher",
-    "inventory": "inventory",
-})
-workflow.add_conditional_edges("stone", route_after_stone, {
-    "paint": "paint",
-    "researcher": "researcher",
-    "inventory": "inventory",
-})
-workflow.add_conditional_edges("paint", route_after_paint, {
-    "researcher": "researcher",
-    "inventory": "inventory",
-})
+_all_targets = {"tile": "tile", "wood": "wood", "stone": "stone", "paint": "paint",
+                "catalog": "catalog", "researcher": "researcher",
+                "inventory": "inventory", "synthesizer": "synthesizer"}
+
+workflow.add_conditional_edges("supervisor", route_after_supervisor, _all_targets)
+workflow.add_conditional_edges("tile", route_after_tile, _all_targets)
+workflow.add_conditional_edges("wood", route_after_wood, _all_targets)
+workflow.add_conditional_edges("stone", route_after_stone, _all_targets)
+workflow.add_conditional_edges("paint", route_after_paint, _all_targets)
+workflow.add_conditional_edges("catalog", route_after_catalog, _all_targets)
 workflow.add_edge("researcher", "inventory")
 workflow.add_edge("inventory", "restock_researcher")
 workflow.add_edge("restock_researcher", "synthesizer")

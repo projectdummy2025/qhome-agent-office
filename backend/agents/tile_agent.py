@@ -3,6 +3,10 @@ from backend.agents.shared import (
     _should_reuse_product,
     _get_stock_and_details_for_sku,
     _get_candidates_with_stock,
+    _find_product_by_name_sql,
+    _has_buying_intent,
+    _get_resolved,
+    _mark_resolved,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
     gemini_specialist
@@ -15,7 +19,7 @@ def tile_estimator(state: AgentState):
     brief = state.get("brief", "")
     try:
         reuse_result = _should_reuse_product(brief, "Tile Estimator", state)
-        
+
         if reuse_result["should_reuse"] and reuse_result["product"]:
             meta = reuse_result["product"]
             sku = meta["sku"]
@@ -32,7 +36,10 @@ def tile_estimator(state: AgentState):
                     "desc": f"Produk reused dari sesi sebelumnya: {meta['name']}"
                 }]
         else:
-            candidates = _get_candidates_with_stock(brief, "floor", limit=5)
+            # SQL name-search dulu, ChromaDB sebagai fallback
+            candidates = _find_product_by_name_sql(brief, "floor", limit=5)
+            if not candidates:
+                candidates = _get_candidates_with_stock(brief, "floor", limit=5)
             if not candidates:
                 raise Exception("No product found")
 
@@ -122,56 +129,59 @@ def tile_estimator(state: AgentState):
             },
         ]
 
-        # Resolve Cement
-        cement_qty = explicit_cement.get("qty", calc["cement_sacks_needed"]) if explicit_cement else calc["cement_sacks_needed"]
-        cement_unit = explicit_cement.get("unit", "Sak") if explicit_cement else "Sak"
-        
-        # Dynamic database search for cement
-        cement_keyword = explicit_cement.get("name", "semen perekat") if explicit_cement else "semen perekat"
-        cement_candidates = _get_candidates_with_stock(cement_keyword, "building material", limit=1)
-        
-        if cement_candidates:
-            cement_match = cement_candidates[0]
-            cement_sku = cement_match["sku"]
-            cement_name = cement_match["name"]
-            cement_price = cement_match["base_price"]
-        else:
-            cement_sku = "OOS-CEMENT"
-            cement_name = explicit_cement.get("name", "Semen Perekat Instan") if explicit_cement else "Semen Perekat Instan"
-            cement_name = f"{cement_name} (Menunggu Konfirmasi)"
-            cement_price = 0
+        resolved = list(state.get("resolved_supporting", []))
 
-        product_data.append({
-            "sku": cement_sku,
-            "name": cement_name if cement_price > 0 else f"{cement_name} (Estimasi Internet)" if "Menunggu" not in cement_name else cement_name,
-            "price": cement_price,
-            "qty": f"{cement_qty} {cement_unit}",
-            "total": cement_price * cement_qty,
-        })
+        if _has_buying_intent(brief):
+            cement_qty = explicit_cement.get("qty", calc["cement_sacks_needed"]) if explicit_cement else calc["cement_sacks_needed"]
+            cement_unit = explicit_cement.get("unit", "Sak") if explicit_cement else "Sak"
 
-        # Resolve Grout
-        grout_qty = calc["grout_bags_needed"]
-        grout_unit = "Bag"
-        
-        # Dynamic database search for grout
-        grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
-        if grout_candidates:
-            grout_match = grout_candidates[0]
-            grout_sku = grout_match["sku"]
-            grout_name = grout_match["name"]
-            grout_price = grout_match["base_price"]
-        else:
-            grout_sku = "OOS-GROUT"
-            grout_name = "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)"
-            grout_price = 0
+            existing_cement = _get_resolved(state, "cement")
+            if existing_cement:
+                cement_sku, cement_name, cement_price = existing_cement["sku"], existing_cement["name"], existing_cement["price"]
+            else:
+                cement_keyword = explicit_cement.get("name", "semen perekat") if explicit_cement else "semen perekat"
+                cement_candidates = _find_product_by_name_sql(cement_keyword, "building material", limit=1)
+                if not cement_candidates:
+                    cement_candidates = _get_candidates_with_stock(cement_keyword, "building material", limit=1)
+                if cement_candidates:
+                    cm = cement_candidates[0]
+                    cement_sku, cement_name, cement_price = cm["sku"], cm["name"], cm["base_price"]
+                else:
+                    cement_sku = "OOS-CEMENT"
+                    cement_name = (explicit_cement.get("name", "Semen Perekat Instan") if explicit_cement else "Semen Perekat Instan") + " (Menunggu Konfirmasi)"
+                    cement_price = 0
+                resolved = _mark_resolved(resolved, "cement", cement_sku, cement_name, cement_price)
 
-        product_data.append({
-            "sku": grout_sku,
-            "name": grout_name if grout_price > 0 else f"{grout_name} (Estimasi Internet)" if "Menunggu" not in grout_name else grout_name,
-            "price": grout_price,
-            "qty": f"{grout_qty} {grout_unit}",
-            "total": grout_price * grout_qty,
-        })
+            product_data.append({
+                "sku": cement_sku,
+                "name": cement_name,
+                "price": cement_price,
+                "qty": f"{cement_qty} {cement_unit}",
+                "total": cement_price * cement_qty,
+            })
+
+            grout_qty = calc["grout_bags_needed"]
+            existing_grout = _get_resolved(state, "grout")
+            if existing_grout:
+                grout_sku, grout_name, grout_price = existing_grout["sku"], existing_grout["name"], existing_grout["price"]
+            else:
+                grout_candidates = _find_product_by_name_sql("nat keramik", "building material", limit=1)
+                if not grout_candidates:
+                    grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
+                if grout_candidates:
+                    gm = grout_candidates[0]
+                    grout_sku, grout_name, grout_price = gm["sku"], gm["name"], gm["base_price"]
+                else:
+                    grout_sku, grout_name, grout_price = "OOS-GROUT", "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)", 0
+                resolved = _mark_resolved(resolved, "grout", grout_sku, grout_name, grout_price)
+
+            product_data.append({
+                "sku": grout_sku,
+                "name": grout_name,
+                "price": grout_price,
+                "qty": f"{grout_qty} Bag",
+                "total": grout_price * grout_qty,
+            })
     except Exception as e:
         content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"
         product_data = [{
@@ -181,9 +191,10 @@ def tile_estimator(state: AgentState):
             "qty": "0",
             "total": 0,
         }]
+        resolved = list(state.get("resolved_supporting", []))
 
     report = {"agent": "Tile Estimator", "content": content, "product": product_data}
     old_reports = [
         r for r in state.get("reports", []) if r.get("agent") != "Tile Estimator"
     ]
-    return {"reports": old_reports + [report]}
+    return {"reports": old_reports + [report], "resolved_supporting": resolved}

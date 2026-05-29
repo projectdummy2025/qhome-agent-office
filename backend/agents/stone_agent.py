@@ -3,6 +3,10 @@ from backend.agents.shared import (
     _should_reuse_product,
     _get_stock_and_details_for_sku,
     _get_candidates_with_stock,
+    _find_product_by_name_sql,
+    _has_buying_intent,
+    _get_resolved,
+    _mark_resolved,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
     gemini_specialist
@@ -15,7 +19,7 @@ def stone_specialist(state: AgentState):
     brief = state.get("brief", "")
     try:
         reuse_result = _should_reuse_product(brief, "Stone Veneer Specialist", state)
-        
+
         if reuse_result["should_reuse"] and reuse_result["product"]:
             meta = reuse_result["product"]
             sku = meta["sku"]
@@ -32,7 +36,10 @@ def stone_specialist(state: AgentState):
                     "desc": f"Produk reused dari sesi sebelumnya: {meta['name']}"
                 }]
         else:
-            candidates = _get_candidates_with_stock(brief, "building material", limit=5)
+            # SQL name-search dulu, ChromaDB sebagai fallback
+            candidates = _find_product_by_name_sql(brief, "building material", limit=5)
+            if not candidates:
+                candidates = _get_candidates_with_stock(brief, "building material", limit=5)
             if not candidates:
                 raise Exception("No stone product found")
 
@@ -88,43 +95,6 @@ def stone_specialist(state: AgentState):
         qty = calc["stone_units_needed"]
         unit = "m2"
 
-        content = (
-            f"{reasoning}. Untuk luas dinding batu {area_m2} m2, diperlukan {qty} m2 batu alam. "
-            f"Kalkulator merekomendasikan tambahan perekat khusus sebanyak {calc['bonding_agent_bags_needed']} sak heavy-duty bonding agent "
-            f"dan {calc['grout_bags_needed']} sak joint filler pengisi nat batu."
-        )
-        # Resolve Cement/Bonding Agent
-        bonding_qty = calc["bonding_agent_bags_needed"]
-        bonding_candidates = _get_candidates_with_stock("semen perekat", "building material", limit=1)
-        if not bonding_candidates:
-            bonding_candidates = _get_candidates_with_stock("perekat", "building material", limit=1)
-        
-        if bonding_candidates:
-            bonding_match = bonding_candidates[0]
-            bonding_sku = bonding_match["sku"]
-            bonding_name = bonding_match["name"]
-            bonding_price = bonding_match["base_price"]
-        else:
-            bonding_sku = "OOS-CEMENT"
-            bonding_name = "Heavy-Duty Bonding Agent (Menunggu Konfirmasi)"
-            bonding_price = 0
-
-        # Resolve Grout/Joint Filler
-        grout_qty = calc["grout_bags_needed"]
-        grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
-        if not grout_candidates:
-            grout_candidates = _get_candidates_with_stock("joint filler", "building material", limit=1)
-        
-        if grout_candidates:
-            grout_match = grout_candidates[0]
-            grout_sku = grout_match["sku"]
-            grout_name = grout_match["name"]
-            grout_price = grout_match["base_price"]
-        else:
-            grout_sku = "OOS-GROUT"
-            grout_name = "Pengisi Nat Batu / Joint Filler (Menunggu Konfirmasi)"
-            grout_price = 0
-
         product_data = [
             {
                 "sku": selected_product["sku"],
@@ -134,25 +104,69 @@ def stone_specialist(state: AgentState):
                 "qty": f"{qty} {unit} (Est)",
                 "total": selected_product["base_price"] * qty,
             },
-            {
+        ]
+
+        resolved = list(state.get("resolved_supporting", []))
+
+        if _has_buying_intent(brief):
+            # Bonding agent — pakai resolved kalau tile_agent sudah resolve cement
+            bonding_qty = calc["bonding_agent_bags_needed"]
+            existing_cement = _get_resolved(state, "cement")
+            if existing_cement:
+                bonding_sku, bonding_name, bonding_price = existing_cement["sku"], existing_cement["name"], existing_cement["price"]
+            else:
+                bonding_candidates = _find_product_by_name_sql("semen perekat", "building material", limit=1)
+                if not bonding_candidates:
+                    bonding_candidates = _get_candidates_with_stock("perekat", "building material", limit=1)
+                if bonding_candidates:
+                    bm = bonding_candidates[0]
+                    bonding_sku, bonding_name, bonding_price = bm["sku"], bm["name"], bm["base_price"]
+                else:
+                    bonding_sku, bonding_name, bonding_price = "OOS-CEMENT", "Semen Perekat (Menunggu Konfirmasi)", 0
+                resolved = _mark_resolved(resolved, "cement", bonding_sku, bonding_name, bonding_price)
+
+            product_data.append({
                 "sku": bonding_sku,
-                "name": bonding_name if bonding_price > 0 else f"{bonding_name} (Estimasi Internet)" if "Menunggu" not in bonding_name else bonding_name,
+                "name": bonding_name,
                 "price": bonding_price,
                 "qty": f"{bonding_qty} Sak (Est)",
                 "total": bonding_price * bonding_qty,
-            },
-            {
+            })
+
+            # Grout — pakai resolved kalau tile_agent sudah resolve grout
+            grout_qty = calc["grout_bags_needed"]
+            existing_grout = _get_resolved(state, "grout")
+            if existing_grout:
+                grout_sku, grout_name, grout_price = existing_grout["sku"], existing_grout["name"], existing_grout["price"]
+            else:
+                grout_candidates = _find_product_by_name_sql("nat", "building material", limit=1)
+                if not grout_candidates:
+                    grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
+                if grout_candidates:
+                    gm = grout_candidates[0]
+                    grout_sku, grout_name, grout_price = gm["sku"], gm["name"], gm["base_price"]
+                else:
+                    grout_sku, grout_name, grout_price = "OOS-GROUT", "Pengisi Nat Batu (Menunggu Konfirmasi)", 0
+                resolved = _mark_resolved(resolved, "grout", grout_sku, grout_name, grout_price)
+
+            product_data.append({
                 "sku": grout_sku,
-                "name": grout_name if grout_price > 0 else f"{grout_name} (Estimasi Internet)" if "Menunggu" not in grout_name else grout_name,
+                "name": grout_name,
                 "price": grout_price,
                 "qty": f"{grout_qty} Sak (Est)",
                 "total": grout_price * grout_qty,
-            }
-        ]
-    except Exception as e:
+            })
+
         content = (
-            f"Maaf, produk Stone Veneer tidak ditemukan di katalog. Detail: {str(e)}"
+            f"{reasoning}. Untuk luas dinding batu {area_m2} m2, diperlukan {qty} m2 batu alam."
+            + (
+                f" Kalkulator merekomendasikan tambahan perekat khusus sebanyak {calc['bonding_agent_bags_needed']} sak heavy-duty bonding agent "
+                f"dan {calc['grout_bags_needed']} sak joint filler pengisi nat batu."
+                if _has_buying_intent(brief) else ""
+            )
         )
+    except Exception as e:
+        content = f"Maaf, produk Stone Veneer tidak ditemukan di katalog. Detail: {str(e)}"
         product_data = [{
             "sku": "OOS-STONE",
             "name": "Menunggu Konfirmasi",
@@ -160,6 +174,7 @@ def stone_specialist(state: AgentState):
             "qty": "0",
             "total": 0,
         }]
+        resolved = list(state.get("resolved_supporting", []))
 
     report = {
         "agent": "Stone Veneer Specialist",
@@ -171,4 +186,4 @@ def stone_specialist(state: AgentState):
         for r in state.get("reports", [])
         if r.get("agent") != "Stone Veneer Specialist"
     ]
-    return {"reports": old_reports + [report]}
+    return {"reports": old_reports + [report], "resolved_supporting": resolved}

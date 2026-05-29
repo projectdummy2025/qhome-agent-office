@@ -1,3 +1,4 @@
+import re
 import time
 from typing import TypedDict, List
 from openai import OpenAI
@@ -13,6 +14,10 @@ class AgentState(TypedDict):
     history_summary: str
     session_id: str
     intent: str  # "conversational" atau "estimation"
+    # Produk yang sudah di-resolve oleh specialist sebelumnya.
+    # Format: [{"sku": str, "name": str, "role": "cement"|"grout"|"primer"|"coating"|"bonding"}]
+    # Dipakai agar specialist berikutnya tidak resolve produk pendukung yang sama dua kali.
+    resolved_supporting: List[dict]
 
 class SumoPodLLM:
     def __init__(self, api_key: str, base_url: str, model: str):
@@ -199,3 +204,82 @@ def _format_candidates_for_prompt(candidates: list) -> str:
             f"   Deskripsi: {c['desc']}"
         )
     return "\n".join(lines)
+
+
+_BUYING_INTENT_WORDS = [
+    "pesan", "order", "beli", "butuh", "kebutuhan", "hitung", "kalkulasi",
+    "estimasi", "rab", "berapa", "saya mau", "saya ingin", "tolong carikan",
+    "tolong hitung", "cari", "pengadaan", "cek stok", "cek ketersediaan",
+    "m2", "meter", "luas", "unit", "sak", "dus", "pail", "lembar", "bag",
+    "wastage", "carikan", "tampilkan", "sertakan",
+]
+
+def _has_buying_intent(brief: str) -> bool:
+    """True kalau brief mengarah ke pembelian/order — bukan sekadar konsultasi."""
+    brief_lower = brief.lower()
+    return any(w in brief_lower for w in _BUYING_INTENT_WORDS)
+
+
+def _find_product_by_name_sql(query_text: str, category: str = None, limit: int = 5) -> list:
+    """SQL ILIKE name-search — lebih akurat untuk produk yang disebut eksplisit.
+    Coba AND semua token dulu, fallback ke OR kalau kosong.
+    """
+    from sqlalchemy import and_, or_
+
+    stop_words = {
+        "untuk", "dari", "yang", "dengan", "dan", "atau", "di", "ke", "pada",
+        "sebanyak", "seluas", "tolong", "cari", "hitung", "carikan", "saya",
+        "ingin", "mau", "kami", "ada", "juga", "ini", "itu", "area", "lantai",
+        "dinding", "ruang", "kamar", "mandi", "tamu", "teras", "toilet",
+    }
+    tokens = [
+        t for t in re.sub(r"[^\w\s]", " ", query_text.lower()).split()
+        if len(t) >= 3 and t not in stop_words
+    ]
+    if not tokens:
+        return []
+
+    db = SessionLocal()
+    try:
+        q = db.query(ProductModel)
+        if category:
+            q = q.filter(ProductModel.category == category)
+
+        # AND — semua token harus ada di nama
+        and_results = q.filter(
+            and_(*[ProductModel.name.ilike(f"%{t}%") for t in tokens[:5]])
+        ).limit(limit).all()
+
+        if and_results:
+            results = and_results
+        else:
+            # OR — minimal salah satu token ada
+            results = q.filter(
+                or_(*[ProductModel.name.ilike(f"%{t}%") for t in tokens[:5]])
+            ).limit(limit).all()
+
+        return [{
+            "sku": p.sku,
+            "name": p.name,
+            "base_price": p.base_price,
+            "coverage_m2": p.coverage_m2 or 0,
+            "stock_qty": p.stock_qty,
+            "desc": p.desc or "",
+        } for p in results]
+    finally:
+        db.close()
+
+
+def _get_resolved(state: AgentState, role: str) -> dict | None:
+    """Kembalikan produk pendukung yang sudah di-resolve oleh specialist sebelumnya untuk role tertentu."""
+    for item in state.get("resolved_supporting", []):
+        if item.get("role") == role:
+            return item
+    return None
+
+
+def _mark_resolved(state_resolved: list, role: str, sku: str, name: str, price: float) -> list:
+    """Tambahkan entri ke resolved_supporting; skip kalau role sudah ada."""
+    if any(r.get("role") == role for r in state_resolved):
+        return state_resolved
+    return state_resolved + [{"role": role, "sku": sku, "name": name, "price": price}]
