@@ -93,6 +93,38 @@ def stone_specialist(state: AgentState):
             f"Kalkulator merekomendasikan tambahan perekat khusus sebanyak {calc['bonding_agent_bags_needed']} sak heavy-duty bonding agent "
             f"dan {calc['grout_bags_needed']} sak joint filler pengisi nat batu."
         )
+        # Resolve Cement/Bonding Agent
+        bonding_qty = calc["bonding_agent_bags_needed"]
+        bonding_candidates = _get_candidates_with_stock("semen perekat", "building material", limit=1)
+        if not bonding_candidates:
+            bonding_candidates = _get_candidates_with_stock("perekat", "building material", limit=1)
+        
+        if bonding_candidates:
+            bonding_match = bonding_candidates[0]
+            bonding_sku = bonding_match["sku"]
+            bonding_name = bonding_match["name"]
+            bonding_price = bonding_match["base_price"]
+        else:
+            bonding_sku = "OOS-CEMENT"
+            bonding_name = "Heavy-Duty Bonding Agent (Menunggu Konfirmasi)"
+            bonding_price = 0
+
+        # Resolve Grout/Joint Filler
+        grout_qty = calc["grout_bags_needed"]
+        grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
+        if not grout_candidates:
+            grout_candidates = _get_candidates_with_stock("joint filler", "building material", limit=1)
+        
+        if grout_candidates:
+            grout_match = grout_candidates[0]
+            grout_sku = grout_match["sku"]
+            grout_name = grout_match["name"]
+            grout_price = grout_match["base_price"]
+        else:
+            grout_sku = "OOS-GROUT"
+            grout_name = "Pengisi Nat Batu / Joint Filler (Menunggu Konfirmasi)"
+            grout_price = 0
+
         product_data = [
             {
                 "sku": selected_product["sku"],
@@ -103,18 +135,18 @@ def stone_specialist(state: AgentState):
                 "total": selected_product["base_price"] * qty,
             },
             {
-                "sku": "OOS-CEMENT",
-                "name": "Heavy-Duty Bonding Agent (Menunggu Konfirmasi)",
-                "price": 0,
-                "qty": f"{calc['bonding_agent_bags_needed']} Sak (Est)",
-                "total": 0,
+                "sku": bonding_sku,
+                "name": bonding_name if bonding_price > 0 else f"{bonding_name} (Estimasi Internet)" if "Menunggu" not in bonding_name else bonding_name,
+                "price": bonding_price,
+                "qty": f"{bonding_qty} Sak (Est)",
+                "total": bonding_price * bonding_qty,
             },
             {
-                "sku": "OOS-GROUT",
-                "name": "Pengisi Nat Batu / Joint Filler (Menunggu Konfirmasi)",
-                "price": 0,
-                "qty": f"{calc['grout_bags_needed']} Sak (Est)",
-                "total": 0,
+                "sku": grout_sku,
+                "name": grout_name if grout_price > 0 else f"{grout_name} (Estimasi Internet)" if "Menunggu" not in grout_name else grout_name,
+                "price": grout_price,
+                "qty": f"{grout_qty} Sak (Est)",
+                "total": grout_price * grout_qty,
             }
         ]
     except Exception as e:

@@ -122,34 +122,55 @@ def tile_estimator(state: AgentState):
             },
         ]
 
-        if explicit_cement:
-            cement_sku = explicit_cement.get("sku", "OOS-CEMENT")
-            cement_name = explicit_cement.get("name", "Semen Perekat Khusus")
-            cement_qty = explicit_cement.get("qty", calc["cement_sacks_needed"])
-            cement_unit = explicit_cement.get("unit", "Sak")
-            cement_price = explicit_cement.get("price", 0)
-            product_data.append({
-                "sku": cement_sku,
-                "name": cement_name if cement_price > 0 else f"{cement_name} (Estimasi Internet)",
-                "price": cement_price,
-                "qty": f"{cement_qty} {cement_unit}",
-                "total": cement_price * cement_qty,
-            })
+        # Resolve Cement
+        cement_qty = explicit_cement.get("qty", calc["cement_sacks_needed"]) if explicit_cement else calc["cement_sacks_needed"]
+        cement_unit = explicit_cement.get("unit", "Sak") if explicit_cement else "Sak"
+        
+        # Dynamic database search for cement
+        cement_keyword = explicit_cement.get("name", "semen perekat") if explicit_cement else "semen perekat"
+        cement_candidates = _get_candidates_with_stock(cement_keyword, "building material", limit=1)
+        
+        if cement_candidates:
+            cement_match = cement_candidates[0]
+            cement_sku = cement_match["sku"]
+            cement_name = cement_match["name"]
+            cement_price = cement_match["base_price"]
         else:
-            product_data.append({
-                "sku": "OOS-CEMENT",
-                "name": "Semen Perekat Instan (Menunggu Konfirmasi)",
-                "price": 0,
-                "qty": f"{calc['cement_sacks_needed']} Sak (Est)",
-                "total": 0,
-            })
+            cement_sku = "OOS-CEMENT"
+            cement_name = explicit_cement.get("name", "Semen Perekat Instan") if explicit_cement else "Semen Perekat Instan"
+            cement_name = f"{cement_name} (Menunggu Konfirmasi)"
+            cement_price = 0
 
         product_data.append({
-            "sku": "OOS-GROUT",
-            "name": "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)",
-            "price": 0,
-            "qty": f"{calc['grout_bags_needed']} Bag (Est)",
-            "total": 0,
+            "sku": cement_sku,
+            "name": cement_name if cement_price > 0 else f"{cement_name} (Estimasi Internet)" if "Menunggu" not in cement_name else cement_name,
+            "price": cement_price,
+            "qty": f"{cement_qty} {cement_unit}",
+            "total": cement_price * cement_qty,
+        })
+
+        # Resolve Grout
+        grout_qty = calc["grout_bags_needed"]
+        grout_unit = "Bag"
+        
+        # Dynamic database search for grout
+        grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
+        if grout_candidates:
+            grout_match = grout_candidates[0]
+            grout_sku = grout_match["sku"]
+            grout_name = grout_match["name"]
+            grout_price = grout_match["base_price"]
+        else:
+            grout_sku = "OOS-GROUT"
+            grout_name = "Pengisi Nat / Tile Grout (Menunggu Konfirmasi)"
+            grout_price = 0
+
+        product_data.append({
+            "sku": grout_sku,
+            "name": grout_name if grout_price > 0 else f"{grout_name} (Estimasi Internet)" if "Menunggu" not in grout_name else grout_name,
+            "price": grout_price,
+            "qty": f"{grout_qty} {grout_unit}",
+            "total": grout_price * grout_qty,
         })
     except Exception as e:
         content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"

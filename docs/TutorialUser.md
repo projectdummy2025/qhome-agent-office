@@ -12,19 +12,17 @@
 
 ---
 
-Selamat datang di **Tutorial Penggunaan QHome-MAS**! Dokumen ini dirancang khusus untuk memandu Anda merasakan pengalaman langsung menggunakan platform multi-agent secara interaktif. Dengan mengikuti tutorial ini, Anda akan memahami bagaimana sistem multi-agent bekerja sama dengan kalkulator sipil, database real-time, logistik dinamis, hingga sinkronisasi pembayaran real-time lintas-tab.
+Selamat datang di **Tutorial Penggunaan QHome-MAS**! Dokumen ini dirancang khusus untuk memandu Anda merasakan pengalaman menggunakan platform multi-agent secara interaktif. Tutorial ini disusun dari tingkat yang paling sederhana hingga skenario lanjutan: pemesanan langsung tanpa restok, sesi konsultasi murni tanpa belanja, dan skenario pengadaan volume besar yang memicu alur restok oleh admin.
 
 ---
 
 ## Peta Alur Perjalanan Pengguna (User Journey Map)
 
-Ikuti langkah-langkah di bawah ini secara berurutan untuk mendapatkan pemahaman mendalam tentang ekosistem QHome-MAS:
-
 ```mermaid
 graph TD
     A[Langkah 1: Masuk Platform & Pilih Persona B2B] --> B[Langkah 2: Kirim Brief Konsultasi Alami]
     B --> C[Langkah 3: Pantau Proses Berpikir Multi-Agent]
-    C --> D[Langkah 4: Kelola Keranjang Belanja & Skenario Stok Habis]
+    C --> D[Langkah 4: Kelola Keranjang Belanja B2B & Status Stok]
     D --> E[Langkah 5: Simulasi Logistik & Pengantaran Dinamis]
     E --> F[Langkah 6: Proses Checkout & Double Verification]
     F --> G[Langkah 7: QRIS Stand & Unduh Nota PDF Resmi]
@@ -33,146 +31,135 @@ graph TD
 
 ---
 
-## Langkah 1: Mempersiapkan Skenario & Memilih Persona B2B
+### Langkah 1: Memilih Persona B2B Melalui Landing Page
 
-Sebelum memulai obrolan, pilihlah profil persona yang sesuai dengan kebutuhan proyek Anda. Setiap persona memiliki karakteristik proyek dan **jarak fisik pengiriman** yang berbeda dari Kantor Pusat QHome (HQ), yang nantinya akan memengaruhi perhitungan logistik secara otomatis.
+Sebelum memulai obrolan, pilihlah profil persona profesional yang sesuai dengan skenario proyek Anda di landing page:
+
+1.  **Mulai Simulasi**: Klik tombol Call-to-Action (CTA) **"Mulai Konsultasi"** atau **"Mulai Simulasi"** pada bagian utama (Hero Section) landing page.
+2.  **Pilih Persona**: Jendela pop-up **Pilih Persona Simulasi** akan muncul. Pilih salah satu profil berikut (setiap persona memiliki lokasi proyek dan jarak pengiriman berbeda dari Kantor Pusat/HQ QHomeMart yang memengaruhi perhitungan logistik):
+    *   **Ibu Amalia (Senior Architect & Designer)**: Lokasi Sleman (Jarak: **8 Km**) — Fokus proyek modern, elegan, ramah anak.
+    *   **Bapak Joko (General Contractor & Engineer)**: Lokasi Bantul (Jarak: **15 Km**) — Fokus proyek volume tinggi, semen, pilar beton.
+    *   **Ibu Santi (Retail & Procurement Partner)**: Lokasi Kulon Progo (Jarak: **35 Km**) — Fokus grosir/tahap awal perumahan baru.
+3.  **Masuk Chat Workspace**: Setelah memilih persona, Anda akan otomatis masuk ke halaman **Chat Workspace** dengan asisten digital yang sudah aktif mendampingi persona Anda.
 
 > [!TIP]
-> Di pojok kiri atas/dashboard aplikasi, cari menu dropdown persona dan pilih salah satu profil di bawah ini:
-> * **Ibu Amalia (Senior Architect & Designer)**: Lokasi Sleman (Jarak: **8 Km**) — Fokus proyek modern, elegan, ramah anak.
-> * **Bapak Joko (General Contractor & Engineer)**: Lokasi Bantul (Jarak: **15 Km**) — Fokus proyek aula besar dengan kebutuhan volume tinggi.
-> * **Ibu Santi (Retail & Procurement Partner)**: Lokasi Kulon Progo (Jarak: **35 Km**) — Fokus grosir/tahap awal perumahan baru.
+> Jika Anda ingin berganti persona atau memulai skenario baru, Anda dapat mengklik tombol **"Keluar"** di pojok kiri atas Chat Workspace untuk kembali ke landing page.
 
 ---
 
 ## Langkah 2: Memulai Konsultasi dengan Prompt Alami
 
-Setelah memilih persona, Anda dapat berinteraksi langsung dengan sistem AI menggunakan bahasa percakapan yang natural (seperti bertukar pesan biasa dengan konsultan profesional). 
+Setelah memilih persona, Anda dapat berinteraksi langsung dengan sistem AI menggunakan bahasa percakapan yang natural. 
 
 Salin salah satu prompt percakapan alami berikut ke kolom input chat di aplikasi:
 
-### Opsi A: Skenario Konsultasi Desain & Tren (Cocok untuk Persona **Ibu Amalia**)
+### Opsi 1: Skenario Pemesanan Ubin Lantai (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia, arsitek dari Jogja. Saat ini saya sedang mengerjakan proyek renovasi ruang keluarga untuk klien di daerah Sleman. Klien saya menginginkan konsep modern kontemporer yang elegan tapi tetap terkesan hangat dan ramah anak. Untuk area lantai bersih ukuran 6x6 meter, kami berencana menggunakan lantai granit polished motif Carrara putih ukuran 60x60. Lalu untuk backdrop TV seluas 15 meter persegi, tolong rekomendasikan panel kayu fluted warna Walnut agar ruangan terasa lebih nyaman. Di ruangan itu juga ada pilar beton yang ingin kami balut dengan batu alam veneer sekitar 10 meter persegi sebagai aksen tekstur alami. Untuk sisa dinding ruangan lainnya, kami butuh pilihan cat interior premium yang mudah dibersihkan dari coretan anak-anak. Terakhir, tolong berikan analisis singkat mengenai tren material interior yang sedang populer saat ini di Indonesia agar proyek ini tetap terlihat modern dan tidak ketinggalan zaman. Terima kasih."
+> "Halo, saya Amalia dari Sleman. Saya ingin memesan Granit Carrara White Polished 60x60 Roman untuk area teras kecil seluas 10 m2 dengan pola standard. Tolong hitung kebutuhan ubinnya, serta semen perekat Lemkra FK 206 dan pengisi nat AM 207."
+*   **Mengapa tidak memicu restok?** Ubin utama (FL-061) dan bahan pendukung (BM-007, BM-008) berstatus **TERSEDIA** di database karena kebutuhannya di bawah batas stok (50 unit). Untuk item tambahan nat pembantu lainnya yang berlabel `(Menunggu Konfirmasi)`, Anda dapat membatalkan centangnya (uncheck) di keranjang untuk langsung checkout, atau memicu alur restok via Admin Portal untuk memperbarui harganya.
 
-### Opsi B: Skenario Pengadaan Skala Besar / Grosir (Cocok untuk Persona **Ibu Santi**)
+### Opsi 2: Skenario Pemesanan Pengecatan Dinding (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Selamat siang, saya Santi dari divisi pengadaan retail untuk proyek perumahan baru di Kulon Progo. Kami berencana melakukan pemesanan grosir untuk tipe ubin lantai standar berukuran 60x60 sebanyak 80 dus, serta cat dinding interior warna putih netral sebanyak 15 pail untuk pengerjaan tahap pertama. Mohon dibantu estimasi ketersediaan barang dan perhitungan pengiriman kargo ke lokasi proyek kami di Kulon Progo. Terima kasih."
+> "Halo, saya Amalia dari Sleman. Saya ingin merenovasi dinding kamar tidur anak berukuran 3x4 meter dengan tinggi 3 meter. Tolong hitung kebutuhan cat dinding interior putih Jotun Jotaplast 5L dan cat dasar Jotun Undercoat Primer 5L untuk dasarnya."
+*   **Mengapa tidak memicu restok?** Cat utama (BM-101) dan primer dasar (BM-105) memiliki stok yang cukup di gudang. Sementara untuk hardcoded primer pembantu lainnya yang berlabel OOS di keranjang, Anda dapat menonaktifkan centangnya di keranjang untuk langsung ke logistik, atau menyetujuinya via Admin Portal.
 
-### Opsi C: Skenario Barang Tidak Tersedia / Riset Internet (Menguji OOS & Research Agent)
+### Opsi 3: Skenario Pemesanan Panel Dinding Kayu (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Halo, saya Joko dari Bantul. Saya ingin memesan Semen Instan QHome #1 sebanyak 150 sak. Namun, kami juga membutuhkan Cat Dinding Nippon Paint Spotless sebanyak 8 pail dan Perekat Keramik Khusus SikaCeram-200 sebanyak 12 sak yang tidak terdaftar di daftar utama showroom. Tolong carikan spesifikasinya di internet, berikan estimasi harga pasarnya, dan buatkan rincian anggarannya."
+> "Halo, saya Amalia dari Sleman. Kami ingin memasang lantai SPC Flooring Wood Motif 60x60 Roman untuk kamar tidur seluas 12 m2. Tolong kalkulasikan kebutuhan lembar panelnya."
+*   **Mengapa tidak memicu restok?** Kebutuhan ubin lantai SPC (FL-011) berada di bawah batas stok gudang sehingga berstatus aman. Hilangkan centang pada item pelengkap (Cairan Coating) di keranjang belanja Anda untuk memotong alur restok, atau setujui restoknya melalui Admin Portal.
 
-### Alur Uji Coba (Sinyal ke Admin):
-1. **Analisis Ketersediaan Inventaris (Inventory Administrator)**:
-   * Setelah agen spesialis memilih ubin/kayu, *Inventory Administrator* akan mengecek database Gudang.
-   * Jika stok `< 20` atau `0`, agen akan memberikan sinyal ke frontend dengan menyisipkan tag `[STOK TERBATAS]` atau `[STOK HABIS]` pada nama produk, serta memunculkan alternatif dengan tag `(Substitusi)`.
-2. **Respons B2B Cart**:
-   * Keranjang B2B akan membaca tag *string* tersebut dan memunculkan *banner* merah peringatan bahwa Checkout dikunci.
-   * Muncul tombol **"Intervensi Admin"**.
+### Opsi 4: Skenario Konsultasi Tren & Estetika (Murni Konsultasi - Tanpa Keranjang Belanja)
+> **Salin & Tempel Prompt Ini:**
+> "Halo, saya Amalia. Tolong berikan analisis singkat mengenai tren material interior dan kombinasi palet warna modern kontemporer yang sedang populer di Indonesia saat ini untuk ruang keluarga minimalis."
+*   **Mengapa tidak membuat keranjang?** Brief ini hanya berupa pertanyaan informasional tanpa menyebutkan spesifikasi material komersial, ukuran area, atau permintaan kalkulasi unit. AI hanya akan menyajikan narasi analisis tren arsitektural (menggunakan **Market Research Agent**). B2B Cart di sisi kanan akan tetap kosong.
+
+### Opsi 5: Skenario Pengadaan Skala Besar (Memicu Restok Gudang)
+> **Salin & Tempel Prompt Ini:**
+> "Selamat siang, saya Santi dari Kulon Progo. Kami sedang mengerjakan perumahan baru di Kulon Progo dan ingin memesan MU-203 Perekat Keramik 50kg sebanyak 80 sak dari gudang. Mohon hitung estimasi total biaya dan biaya logistik kargo CDD ke Kulon Progo."
+*   **Mengapa memicu restok?** Permintaan sebanyak 80 sak melebihi batas stok default gudang (50 unit), sehingga secara otomatis memicu status `[STOK TERBATAS]` pada item tersebut dan mengunci tombol checkout (Lihat Langkah 4 - Bagian B).
+
 ---
 
-## Langkah 3: Memantau Proses Berpikir Multi-Agent (Live Canvas)
+## Langkah 3: Memantau Proses Berpikir Multi-Agent (Live Office Canvas)
 
 Sesaat setelah Anda mengirim pesan, perhatikan bagaimana platform memproses permintaan Anda secara kolaboratif:
 
-1. **Chief Supervisor**: Mengaktifkan alur kerja dan memecah kebutuhan Anda ke agen spesialis.
-2. **Agent Specialists**:
-   * **Tile Specialist**: Menghitung kebutuhan ubin, semen perekat, dan pengisi nat secara presisi menggunakan kalkulator sipil.
-   * **Wood Specialist**: Menganalisis kebutuhan panel kayu walnut dan kelengkapannya.
-   * **Stone Specialist**: Menghitung kebutuhan batu alam veneer dan perekat khusus luar/dalam ruangan.
-   * **Paint Specialist**: Menyarankan jenis cat ramah anak (mudah dibersihkan) dan menghitung volume pail yang dibutuhkan.
-   * **Market Analyst**: Menyusun ringkasan tren pasar terkini untuk memastikan desain Anda tetap relevan.
-3. **Live Office Canvas**: Di sisi kiri, indikator visual setiap agen akan menyala bergantian sebagai tanda kolaborasi aktif sedang berlangsung.
-4. **Terminal Log**: Di panel bawah/samping, Anda dapat melihat log mentah (*thought processes*) bagaimana agen memanggil tools MCP mereka secara transparan.
+1.  **Chief Supervisor**: Menganalisis brief awal Anda dan mengaktifkan agen spesialis terkait (seperti Tile Agent, Paint Agent, atau Market Research Agent).
+2.  **Live Office Canvas**: Di **sisi kanan** obrolan (klik tombol ikon **Aktivitas Staf Kantor / User Cog** di pojok kanan atas untuk membuka/menutup panel), indikator visual setiap agen yang aktif menyala hijau bergantian sesuai giliran tugas mereka (*waterfall execution*).
+3.  **Proses Berpikir (Thinking Log)**: Di dalam balon chat system atau di panel kanan log aktivitas, Anda dapat mengeklik bagian **"Proses Berpikir Agen"** untuk melihat detail penalaran Chain-of-Thought secara transparan.
 
 ---
 
-## Langkah 4: Mengelola Keranjang Belanja B2B & Intervensi Stok
+## Langkah 4: Mengelola Keranjang Belanja B2B & Status Stok
 
-Setelah agen selesai merumuskan rekomendasi, **Keranjang Belanja B2B** (B2B Cart) di panel kanan akan otomatis terisi dengan daftar material yang direkomendasikan beserta kalkulasi volumenya.
+Setelah asisten digital selesai mengurasi material, Anda dapat mengelola daftar belanjaan di halaman keranjang belanja:
 
-### Menguji Fitur Stok Terbatas / Habis (OOS Flow):
-Jika Anda menggunakan **Opsi Skenario Bapak Joko** (kebutuhan volume ubin dan kayu yang sangat besar), sistem mungkin mendeteksi bahwa stok gudang saat ini tidak mencukupi.
+1.  **Buka Keranjang**: Klik tombol ikon **Shopping Bag ("Buka Keranjang Pengadaan")** di bagian header pojok kanan atas untuk masuk ke halaman **Order Portal** (`/order`).
 
-1. **Tag Peringatan**: Keranjang akan menampilkan tag merah menyala `[STOK HABIS]` atau `[STOK TERBATAS]` pada item tertentu.
-2. **Kunci Checkout**: Tombol Checkout akan dikunci (dinonaktifkan) demi keamanan transaksi pengadaan.
-3. **Tombol Intervensi Admin**: Di bagian bawah keranjang, tombol **"Intervensi Admin"** akan muncul.
+### Bagian A: Alur Pembelian Langsung Tanpa Restok (Opsi 1, 2, dan 3)
+Agar Anda dapat langsung checkout ke halaman logistik dan pembayaran secara instan:
+1.  **Tinjau Keranjang**: Di halaman **Daftar Material**, Anda akan melihat produk utama yang Anda pesan berstatus aktif (bercentang hijau), namun ada item pendukung otomatis (seperti semen nat, cat dasar, atau coating) yang berlabel `(Menunggu Konfirmasi)` dengan harga Rp 0.
+2.  **Lakukan Deseleksi (Uncheck)**: Hilangkan centang (uncheck) pada item-item pendukung berlabel `(Menunggu Konfirmasi)` tersebut.
+3.  **Buka Kunci Checkout**: Setelah item-item OOS pembantu dinonaktifkan dari daftar belanja, status proposal di bagian atas berubah menjadi **"Keranjang Belanja Aktif (Telah Disetujui)"**!
+4.  **Lanjutkan**: Klik tombol **"Setujui Rencana & Masukkan Keranjang"** (atau **"Lanjut ke Logistik"** jika proposal sudah disetujui) untuk menuju halaman konfigurasi kargo.
 
-### Cara Melakukan Restock (Intervensi Mandiri):
-1. Klik tombol **"Intervensi Admin"** di cart. Layar akan beralih secara mulus ke portal **Bapak Rudi (Admin Portal)**.
-2. Temukan produk yang kehabisan stok pada daftar inventaris.
-3. Masukkan jumlah restock (misal: tambah `200` unit), lalu klik tombol **Restock**. Database PostgreSQL akan langsung diperbarui.
-4. Klik tombol **"Kembali Ke Chat"** di sudut kanan atas untuk kembali ke konsultasi Anda.
-5. Kirim prompt lanjutan berikut di kolom chat:
-   > "Tadi kata admin sudah direstock. Coba tolong dicek lagi apakah stoknya sudah aman dan hitung ulang total biayanya."
-6. **Verifikasi Stateful RAG**: Agen spesialis akan memanfaatkan memori jangka panjang (`_should_reuse_product`), mendeteksi pembaruan stok tanpa mengulang pencarian di ChromaDB, lalu membuka kembali tombol Checkout di Keranjang B2B Anda!
-
-### Skenario Barang Tidak Tersedia / Belum Terdaftar di Katalog (OOS Flow & Riset Internet):
-Jika Anda meminta barang yang **tidak tersedia** atau **belum terdaftar** dalam katalog master (misalnya meminta merek cat impor khusus atau produk perekat spesifik yang tidak ada di showroom):
-
-1. **Pemicuan Research Agent**: Sistem multi-agent akan mendeteksi ketidaktersediaan barang di database lokal, lalu memicu **Research Agent** (Agen Riset) secara otomatis.
-2. **Riset Internet Real-time**: Agen Riset akan melakukan pencarian web secara asinkron menggunakan *Tavily Search API* untuk menemukan estimasi harga pasar, merek alternatif populer di Indonesia, dan spesifikasi kemasan barang tersebut.
-3. **Pemberian Estimasi Sementara**: Di dalam ruang obrolan, item tersebut akan diberikan label `(Estimasi Internet - Menunggu Validasi)` dengan estimasi harga pasar agar perhitungan estimasi anggaran proyek Anda tetap dapat berjalan tanpa hambatan.
-4. **Penyimpanan Usulan Stok Baru**: Data hasil riset internet tersebut akan disimpan ke database (`stock_recommendations`) dengan status `pending`. Admin Gudang dapat melihat rekomendasi tersebut di Admin Portal untuk divalidasi dan ditambahkan ke dalam katalog master secara resmi jika disetujui.
+### Bagian B: Alur Restok Gudang (Opsi 5)
+1.  **Kunci Checkout**: Tombol checkout dinonaktifkan (berwarna abu-abu) karena ada item utama berlabel `[STOK HABIS]` atau `[STOK TERBATAS]`.
+2.  **Portal Admin**: Tombol **"PORTAL ADMIN"** akan muncul di bagian header kanan atas karena adanya peringatan stok kritis.
+3.  **Cara Pengisian Stok (Intervensi)**: 
+    *   Klik **"PORTAL ADMIN"** untuk membuka halaman **Admin Portal (Bapak Rudi)** di tab baru.
+    *   Buka **Tab Operasional**, cari produk yang habis, masukkan jumlah restock (misal: tambah `200` unit), lalu klik **Restock**.
+    *   Kembali ke tab Chat Workspace, kirim pesan lanjutan: *"Saya sudah restok produk tersebut. Tolong cek kembali ketersediaan stoknya dan hitung ulang total biayanya."*
+    *   Sistem memperbarui data, menghilangkan tanda peringatan, dan membuka kembali tombol checkout di Order Portal.
 
 ---
 
 ## Langkah 5: Simulasi Logistik & Pengiriman Cargo Dinamis
 
-Setelah stok aman dan keranjang terbuka, klik **"Lanjutkan ke Pengiriman"** untuk beralih ke **Langkah 2 (Logistics)** di panel kanan.
+Setelah masuk ke halaman **Logistics** di Order Portal:
 
-1. Sistem mendeteksi lokasi persona Anda (Sleman: 8 Km, Bantul: 15 Km, atau Kulon Progo: 35 Km).
-2. Pilih salah satu jenis armada kargo yang tersedia.
-3. Perhatikan biaya pengiriman otomatis dihitung secara real-time berdasarkan rumus berikut:
+1.  Sistem otomatis mendeteksi lokasi pengantaran persona Anda (Sleman: 8 Km, Bantul: 15 Km, atau Kulon Progo: 35 Km).
+2.  Pilih salah satu armada pengiriman kargo yang sesuai (CDD, Fuso, atau Tronton).
+3.  Perhatikan biaya pengiriman otomatis dihitung secara real-time berdasarkan rumus berikut:
 
-| Pilihan Armada | Formula Logistik (Jarak = $X$ Km) | Contoh Biaya (Kulon Progo - 35 Km) |
+| Pilihan Armada | Formula Logistik (Jarak = $X$ Km) | Contoh Biaya (Sleman - 8 Km) |
 | :--- | :--- | :--- |
-| **Colt Diesel Double (CDD)** | Rp 400.000 + ($X$ Km × Rp 15.000) | **Rp 925.000** |
-| **Truk Fuso Box** | Rp 900.000 + ($X$ Km × Rp 25.000) | **Rp 1.775.000** |
-| **Tronton Wingbox** | Rp 1.800.000 + ($X$ Km × Rp 40.000) | **Rp 3.200.000** |
+| **Colt Diesel Double (CDD)** | Rp 750.000 + ($X$ Km × Rp 15.000) | **Rp 870.000** |
+| **Truk Fuso Box** | Rp 1.500.000 + ($X$ Km × Rp 25.000) | **Rp 1.700.000** |
+| **Tronton Wingbox** | Rp 3.000.000 + ($X$ Km × Rp 45.000) | **Rp 3.360.000** |
 
 ---
 
 ## Langkah 6: Otorisasi Transaksi (Double Verification Modal)
 
-Untuk keamanan transaksi bernilai tinggi khas B2B, sistem menerapkan perlindungan verifikasi ganda sebelum data ditulis secara permanen ke database relasional (3NF).
+Untuk keamanan pengadaan material bernilai tinggi khas B2B, sistem menerapkan perlindungan verifikasi ganda sebelum data ditulis secara permanen ke database.
 
-1. Tentukan tanggal pengiriman proyek dan tambahkan catatan pengiriman (misal: *"Akses masuk gang cukup lebar untuk Fuso"*).
-2. Klik tombol **"Lanjutkan Verifikasi"**.
-3. **Double Verification Modal** akan muncul dengan efek latar belakang blur (*glassmorphism*).
-4. **Wajib centang** kedua kotak persetujuan:
-   - [ ] *"Saya memverifikasi spesifikasi arsitektural dan volume material..."*
-   - [ ] *"Saya menyetujui jadwal pengiriman kargo dan biaya logistik B2B..."*
-5. Setelah kedua kotak dicentang, tombol **"PROSES TRANSAKSI RESMI B2B"** akan aktif. Klik tombol tersebut untuk memproses order.
+1.  Tentukan tanggal pengiriman proyek dan tambahkan catatan pengiriman (misal: *"Akses masuk gang cukup lebar"*).
+2.  Klik tombol **"Lanjutkan Verifikasi"**.
+3.  **Double Verification Modal** akan muncul dengan efek latar belakang blur (*glassmorphism*).
+4.  Klik **"Setujui & Kirim Pesanan"** pada modal popup untuk memproses order.
 
 ---
 
 ## Langkah 7: QRIS Stand & Unduh Nota Belanja Resmi (PDF)
 
-Begitu transaksi diproses, panel kanan akan beralih ke **Langkah 3 (Success & Payment)**:
+Begitu transaksi diproses, halaman Order Portal akan beralih ke halaman **Success & Payment**:
 
-1. **Invoice ID**: Menampilkan ID Order resmi (misal: `ORD-XXXXXXXX`).
-2. **Simulated QRIS**: Menampilkan gambar QRIS interaktif berstandar GPN.
-3. **Unduh PDF Nota**: Klik tombol **"Unduh PDF Nota Belanja Resmi"**.
-   * Sistem akan memanggil engine backend untuk menggenerasi PDF dinamis secara langsung.
-   * Periksa file PDF yang diunduh: file tersebut berisi rincian item, rumus volume material, biaya kirim logistik, catatan akses jalan, serta logo dan QRIS transaksi resmi.
+1.  **Invoice ID**: Menampilkan ID Order resmi (misal: `ORD-XXXXXXXX`).
+2.  **Simulated QRIS**: Menampilkan gambar QRIS interaktif berstandar GPN.
+3.  **Unduh PDF Nota**: Klik tombol **"Unduh PDF Nota"** atau **"Unduh PDF Nota Belanja Resmi"** untuk mengunduh PDF Nota Pembelian resmi berformat ReportLab vektor yang tajam.
 
 ---
 
 ## Langkah 8: Konfirmasi Pembayaran & Sinkronisasi Lintas-Tab
 
-Skenario tercanggih dari platform ini adalah pengujian sinkronisasi data asinkron lintas-tab tanpa memicu pemuatan ulang halaman web secara keseluruhan (*hard reload*).
-
-1. Pastikan tab obrolan chat utama di layar kiri/tengah tetap terbuka.
-2. Di panel sukses sebelah kanan, klik tombol **"Konfirmasi Sudah Bayar"**.
-3. **Apa yang terjadi di balik layar?**
-   * Frontend memancarkan event `payment_confirmed` melalui API **BroadcastChannel (`qhome_payment_channel`)**.
-   * Tab obrolan utama mendeteksi event ini, mengambil data terbaru dari server secara asinkron (`/api/projects/sessions/{session_id}/messages`).
-   * Chat utama langsung menampilkan pesan ucapan selamat baru dari **Chief Supervisor** yang mengabarkan bahwa pembayaran Anda telah divalidasi dan pengiriman dijadwalkan secara resmi!
-   * Panel sukses di kanan akan menutup secara otomatis dalam waktu 1.5 detik dengan transisi animasi yang sangat halus.
+1.  Pastikan tab obrolan chat utama di layar kiri/tengah tetap terbuka.
+2.  Di halaman sukses pembayaran Order Portal, klik tombol **"Konfirmasi Sudah Bayar"**.
+3.  **Sinkronisasi Instan**: Frontend memancarkan event `payment_confirmed` melalui `BroadcastChannel`. Tab obrolan utama langsung menangkap sinyal ini, mengupdate database `payment_status` menjadi `'paid'`, membekukan input obrolan, dan secara otomatis memuat pesan baru dari Chief Supervisor yang mengabarkan pembayaran sukses tanpa memicu pemuatan ulang halaman (*hard reload*).
+4.  Halaman Order Portal akan kembali secara otomatis ke halaman Chat Workspace dalam waktu 1.5 detik dengan transisi animasi yang sangat halus.
 
 ---
 
 > [!NOTE]
 > Selamat! Anda telah berhasil menyelesaikan seluruh alur penggunaan B2B Consultation & Procurement di platform QHome-MAS. Jika Anda ingin melakukan uji coba kembali dengan skenario atau volume berbeda, silakan pilih persona baru atau segarkan halaman obrolan.
+

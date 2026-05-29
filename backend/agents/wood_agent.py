@@ -92,6 +92,22 @@ def wood_specialist(state: AgentState):
             f"{reasoning}. Untuk luas bidang kayu {area_m2} m2, diperlukan sebanyak {qty} lembar panel. "
             f"Diperlukan pula {calc['coating_cans_needed']} kaleng cairan coating pelindung UV agar warna kayu tahan lama."
         )
+        # Dynamic lookup for coating
+        coating_qty = calc["coating_cans_needed"]
+        coating_candidates = _get_candidates_with_stock("coating", "furniture", limit=1)
+        if not coating_candidates:
+            coating_candidates = _get_candidates_with_stock("pelapis", "furniture", limit=1)
+        
+        if coating_candidates:
+            coating_match = coating_candidates[0]
+            coating_sku = coating_match["sku"]
+            coating_name = coating_match["name"]
+            coating_price = coating_match["base_price"]
+        else:
+            coating_sku = "OOS-COATING"
+            coating_name = "Cairan Coating Pelindung UV (Menunggu Konfirmasi)"
+            coating_price = 0
+
         product_data = [
             {
                 "sku": selected_product["sku"],
@@ -102,11 +118,11 @@ def wood_specialist(state: AgentState):
                 "total": selected_product["base_price"] * qty,
             },
             {
-                "sku": "OOS-COATING",
-                "name": "Cairan Coating Pelindung UV (Menunggu Konfirmasi)",
-                "price": 0,
-                "qty": f"{calc['coating_cans_needed']} Kaleng (Est)",
-                "total": 0,
+                "sku": coating_sku,
+                "name": coating_name if coating_price > 0 else f"{coating_name} (Estimasi Internet)" if "Menunggu" not in coating_name else coating_name,
+                "price": coating_price,
+                "qty": f"{coating_qty} Kaleng (Est)",
+                "total": coating_price * coating_qty,
             }
         ]
     except Exception as e:

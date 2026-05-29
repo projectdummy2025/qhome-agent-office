@@ -105,6 +105,23 @@ def paint_consultant(state: AgentState):
                 f"Produk ini belum terdaftar di katalog, menunggu konfirmasi harga dari tim pengadaan. "
                 f"Tambahan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar juga dibutuhkan."
             )
+            
+            # Dynamic lookup for primer
+            primer_qty = calc["primer_pails_needed"]
+            primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
+            if not primer_candidates:
+                primer_candidates = _get_candidates_with_stock("primer", "building material", limit=1)
+            
+            if primer_candidates:
+                primer_match = primer_candidates[0]
+                primer_sku = primer_match["sku"]
+                primer_name = primer_match["name"]
+                primer_price = primer_match["base_price"]
+            else:
+                primer_sku = "OOS-PRIMER"
+                primer_name = "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)"
+                primer_price = 0
+
             product_data = [
                 {
                     "sku": "OOS-PAINT",
@@ -114,11 +131,11 @@ def paint_consultant(state: AgentState):
                     "total": 0,
                 },
                 {
-                    "sku": "OOS-PRIMER",
-                    "name": "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)",
-                    "price": 0,
-                    "qty": f"{calc['primer_pails_needed']} Pail (Est)",
-                    "total": 0,
+                    "sku": primer_sku,
+                    "name": primer_name if primer_price > 0 else f"{primer_name} (Estimasi Internet)" if "Menunggu" not in primer_name else primer_name,
+                    "price": primer_price,
+                    "qty": f"{primer_qty} Pail (Est)",
+                    "total": primer_price * primer_qty,
                 }
             ]
         else:
@@ -130,6 +147,23 @@ def paint_consultant(state: AgentState):
                 f"{reasoning}. Dengan estimasi luas dinding {area_m2} m2 untuk pengecatan double-coat (2 lapis), "
                 f"dibutuhkan {qty} pail cat utama dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar."
             )
+            
+            # Dynamic lookup for primer
+            primer_qty = calc["primer_pails_needed"]
+            primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
+            if not primer_candidates:
+                primer_candidates = _get_candidates_with_stock("primer", "building material", limit=1)
+            
+            if primer_candidates:
+                primer_match = primer_candidates[0]
+                primer_sku = primer_match["sku"]
+                primer_name = primer_match["name"]
+                primer_price = primer_match["base_price"]
+            else:
+                primer_sku = "OOS-PRIMER"
+                primer_name = "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)"
+                primer_price = 0
+
             product_data = [
                 {
                     "sku": selected_product["sku"],
@@ -140,11 +174,11 @@ def paint_consultant(state: AgentState):
                     "total": selected_product["base_price"] * qty,
                 },
                 {
-                    "sku": "OOS-PRIMER",
-                    "name": "Cat Dasar / Alkali Sealer (Menunggu Konfirmasi)",
-                    "price": 0,
-                    "qty": f"{calc['primer_pails_needed']} Pail (Est)",
-                    "total": 0,
+                    "sku": primer_sku,
+                    "name": primer_name if primer_price > 0 else f"{primer_name} (Estimasi Internet)" if "Menunggu" not in primer_name else primer_name,
+                    "price": primer_price,
+                    "qty": f"{primer_qty} Pail (Est)",
+                    "total": primer_price * primer_qty,
                 }
             ]
     except Exception as e:
