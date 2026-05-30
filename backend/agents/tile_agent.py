@@ -134,15 +134,27 @@ def tile_estimator(state: AgentState):
         resolved = list(state.get("resolved_supporting", []))
 
         if _has_buying_intent(brief):
-            cement_qty = explicit_cement.get("qty", calc["cement_sacks_needed"]) if explicit_cement else calc["cement_sacks_needed"]
-            cement_unit = explicit_cement.get("unit", "Sak") if explicit_cement else "Sak"
+            cement_qty = None
+            if isinstance(explicit_cement, dict):
+                try:
+                    val = explicit_cement.get("qty")
+                    if val is not None and int(val) > 0:
+                        cement_qty = int(val)
+                except (ValueError, TypeError):
+                    pass
+            if cement_qty is None:
+                cement_qty = calc["cement_sacks_needed"]
+
+            cement_unit = "Sak"
+            if isinstance(explicit_cement, dict) and explicit_cement.get("unit"):
+                cement_unit = explicit_cement["unit"]
 
             existing_cement = _get_resolved(state, "cement")
             if existing_cement:
                 cement_sku, cement_name, cement_price = existing_cement["sku"], existing_cement["name"], existing_cement["price"]
             else:
                 explicit_cement_name = _extract_explicit_support(brief, "cement")
-                if explicit_cement:
+                if isinstance(explicit_cement, dict):
                     cement_keyword = explicit_cement.get("name") or explicit_cement_name or "semen perekat"
                 else:
                     cement_keyword = explicit_cement_name or "semen perekat"
@@ -154,7 +166,8 @@ def tile_estimator(state: AgentState):
                     cement_sku, cement_name, cement_price = cm["sku"], cm["name"], cm["base_price"]
                 else:
                     cement_sku = "OOS-CEMENT"
-                    cement_name = (explicit_cement.get("name", "Semen Perekat Instan") if explicit_cement else "Semen Perekat Instan") + " (Menunggu Konfirmasi)"
+                    explicit_name_str = explicit_cement.get("name", "Semen Perekat Instan") if isinstance(explicit_cement, dict) else "Semen Perekat Instan"
+                    cement_name = explicit_name_str + " (Menunggu Konfirmasi)"
                     cement_price = 0
                 resolved = _mark_resolved(resolved, "cement", cement_sku, cement_name, cement_price)
 

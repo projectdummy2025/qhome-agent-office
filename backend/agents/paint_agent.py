@@ -101,9 +101,22 @@ def paint_consultant(state: AgentState):
 
         # If LLM returned an explicit paint product not in DB, use it directly
         if explicit_paint:
-            paint_qty = explicit_paint.get("qty", 1)
-            paint_unit = explicit_paint.get("unit", "Pail")
-            paint_name = explicit_paint.get("name", "Cat Khusus")
+            paint_qty = None
+            if isinstance(explicit_paint, dict):
+                try:
+                    val = explicit_paint.get("qty")
+                    if val is not None and int(val) > 0:
+                        paint_qty = int(val)
+                except (ValueError, TypeError):
+                    pass
+            if paint_qty is None:
+                paint_qty = 1
+
+            paint_unit = "Pail"
+            if isinstance(explicit_paint, dict) and explicit_paint.get("unit"):
+                paint_unit = explicit_paint["unit"]
+
+            paint_name = explicit_paint.get("name", "Cat Khusus") if isinstance(explicit_paint, dict) else "Cat Khusus"
             calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
 
             product_data = [
