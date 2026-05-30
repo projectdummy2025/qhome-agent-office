@@ -31,16 +31,16 @@ graph TD
 
 ---
 
-### Langkah 1: Memilih Persona B2B Melalui Landing Page
+#### Langkah 1: Memilih Persona Simulasi Melalui Landing Page
 
-Sebelum memulai obrolan, pilihlah profil persona profesional yang sesuai dengan skenario proyek Anda di landing page:
+Sebelum memulai obrolan, pilihlah profil persona simulasi yang sesuai dengan skenario Anda di landing page:
 
-1.  **Mulai Simulasi**: Klik tombol Call-to-Action (CTA) **"Mulai Konsultasi"** atau **"Mulai Simulasi"** pada bagian utama (Hero Section) landing page.
-2.  **Pilih Persona**: Jendela pop-up **Pilih Persona Simulasi** akan muncul. Pilih salah satu profil berikut (setiap persona memiliki lokasi proyek dan jarak pengiriman berbeda dari Kantor Pusat/HQ QHomeMart yang memengaruhi perhitungan logistik):
-    *   **Ibu Amalia (Senior Architect & Designer)**: Lokasi Sleman (Jarak: **8 Km**) — Fokus proyek modern, elegan, ramah anak.
-    *   **Bapak Joko (General Contractor & Engineer)**: Lokasi Bantul (Jarak: **15 Km**) — Fokus proyek volume tinggi, semen, pilar beton.
-    *   **Ibu Santi (Retail & Procurement Partner)**: Lokasi Kulon Progo (Jarak: **35 Km**) — Fokus grosir/tahap awal perumahan baru.
-3.  **Masuk Chat Workspace**: Setelah memilih persona, Anda akan otomatis masuk ke halaman **Chat Workspace** dengan asisten digital yang sudah aktif mendampingi persona Anda.
+1.  **Pilih Persona**: Pada bagian **Pilih Persona Simulasi** di landing page, pilih salah satu profil berikut (masing-masing memiliki peran dan konfigurasi logistik yang berbeda):
+    *   **Mitra QHomeMart (Mitra B2B / Professional)**: Lokasi Sleman (Jarak: **8 Km**) — Bertindak sebagai pelanggan B2B untuk melakukan simulasi estimasi material proyek (Granit, Cat, Kayu, Batu), waterproofing, saniter toilet, serta pesanan grosir (bulk order).
+    *   **Admin Gudang (Lead Warehouse Administrator)**: Lokasi Yogyakarta (HQ) (Jarak: **0 Km**) — Bertindak sebagai administrator gudang yang bertanggung jawab atas manajemen ketersediaan stok kritis, persetujuan restok, dan katalog produk.
+2.  **Masuk Workspace**:
+    *   Jika memilih **Mitra QHomeMart**, Anda akan otomatis masuk ke halaman **Chat Workspace** untuk berkonsultasi dengan asisten digital dan merencanakan kebutuhan material.
+    *   Jika memilih **Admin Gudang**, Anda akan otomatis masuk ke halaman **Admin Portal** untuk mengelola stok gudang secara langsung.
 
 > [!TIP]
 > Jika Anda ingin berganti persona atau memulai skenario baru, Anda dapat mengklik tombol **"Keluar"** di pojok kiri atas Chat Workspace untuk kembali ke landing page.
@@ -49,33 +49,31 @@ Sebelum memulai obrolan, pilihlah profil persona profesional yang sesuai dengan 
 
 ## Langkah 2: Memulai Konsultasi dengan Prompt Alami
 
-Setelah memilih persona, Anda dapat berinteraksi langsung dengan sistem AI menggunakan bahasa percakapan yang natural. 
-
-Salin salah satu prompt percakapan alami berikut ke kolom input chat di aplikasi:
+Setelah memilih persona **Mitra QHomeMart**, Anda dapat berinteraksi langsung dengan sistem AI menggunakan bahasa percakapan yang natural. Anda dapat mengeklik salah satu preset yang tersedia di bagian bawah chat workspace atau menyalin prompt berikut:
 
 ### Opsi 1: Skenario Pemesanan Ubin Lantai (Membuat Keranjang - Checkout Jalur Cepat)
-> **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia dari Sleman. Tolong carikan di katalog QHomeMart ubin granit polished motif Carrara White 60x60 Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Cek juga ketersediaan semen perekat Lemkra FK 206 dan pengisi nat AM 207 dari katalog toko untuk pemasangannya."
+> **Salin & Tempel Prompt Ini (atau Klik Preset "Desain Kamar Mandi (Arsitek)"):**
+> "Tolong carikan di katalog QHomeMart ubin granit polished motif Carrara White 60x60 Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Cek juga ketersediaan semen perekat Lemkra FK 206 dan pengisi nat AM 207 dari katalog toko untuk pemasangannya."
 *   **Mengapa tidak memicu restok?** Ubin utama (FL-061) dan bahan pendukung (BM-007, BM-008) berstatus **TERSEDIA** di database karena kebutuhannya di bawah batas stok (50 unit). Untuk item tambahan nat pembantu lainnya yang berlabel `(Menunggu Konfirmasi)`, Anda dapat membatalkan centangnya (uncheck) di keranjang untuk langsung checkout, atau memicu alur restok via Admin Portal untuk memperbarui harganya.
 
 ### Opsi 2: Skenario Pemesanan Pengecatan Dinding (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia dari Sleman. Saya ingin merenovasi dinding kamar tidur mungil dengan luas dinding 12 m². Tolong kalkulasikan kebutuhan cat interior putih Jotun Jotaplast 5L dan sertakan cat dasar Jotun Undercoat Primer 5L untuk pelapis dasarnya dari katalog QHomeMart yang tersedia."
+> "Saya ingin merenovasi dinding kamar tidur mungil dengan luas dinding 12 m². Tolong kalkulasikan kebutuhan cat interior putih Jotun Jotaplast 5L dan sertakan cat dasar Jotun Undercoat Primer 5L untuk pelapis dasarnya dari katalog QHomeMart yang tersedia."
 *   **Mengapa tidak memicu restok?** Cat utama (BM-101) dan primer dasar (BM-105) memiliki stok yang cukup di gudang. Sementara untuk hardcoded primer pembantu lainnya yang berlabel OOS di keranjang, Anda dapat menonaktifkan centangnya di keranjang untuk langsung ke logistik, atau menyetujuinya via Admin Portal.
 
-### Opsi 3: Skenario Pemesanan Panel Dinding Kayu (Membuat Keranjang - Checkout Jalur Cepat)
+### Opsi 3: Skenario Pemesanan Lantai SPC Teras (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia dari Sleman. Kami ingin memasang lantai SPC Flooring Wood Motif 60x60 Roman untuk kamar tidur seluas 12 m². Tolong hitungkan kebutuhan lembar panelnya dari produk yang ada di katalog QHomeMart."
+> "Cari produk lantai SPC Flooring Wood Motif Roman dari katalog QHomeMart untuk area teras seluas 10 m² dengan perkiraan wastage 5%."
 *   **Mengapa tidak memicu restok?** Kebutuhan ubin lantai SPC (FL-011) berada di bawah batas stok gudang sehingga berstatus aman. Hilangkan centang pada item pelengkap (Cairan Coating) di keranjang belanja Anda untuk memotong alur restok, atau setujui restoknya melalui Admin Portal.
 
 ### Opsi 4: Skenario Konsultasi Tren & Estetika (Murni Konsultasi - Tanpa Keranjang Belanja)
-> **Salin & Tempel Prompt Ini:**
-> "Halo, saya Amalia. Tolong berikan analisis singkat mengenai tren material interior dan kombinasi palet warna modern kontemporer yang sedang populer di Indonesia saat ini untuk ruang keluarga minimalis."
+> **Salin & Tempel Prompt Ini (atau Klik Preset "Konsultasi Tren Interior (Desainer)"):**
+> "Tolong berikan analisis singkat mengenai tren material interior dan kombinasi palet warna modern kontemporer yang sedang populer di Indonesia saat ini untuk ruang keluarga minimalis."
 *   **Mengapa tidak membuat keranjang?** Brief ini hanya berupa pertanyaan informasional tanpa menyebutkan spesifikasi material komersial, ukuran area, atau permintaan kalkulasi unit. AI hanya akan menyajikan narasi analisis tren arsitektural (menggunakan **Market Research Agent**). B2B Cart di sisi kanan akan tetap kosong.
 
 ### Opsi 5: Skenario Pengadaan Skala Besar (Memicu Restok Gudang)
-> **Salin & Tempel Prompt Ini:**
-> "Selamat siang, saya Santi dari Kulon Progo. Kami sedang mengerjakan perumahan baru di Kulon Progo. Tolong cek stok MU-203 Perekat Keramik 50kg dari katalog QHomeMart untuk pemesanan sebanyak 80 sak. Hitung biaya logistik kargo CDD ke Kulon Progo dan total biayanya."
+> **Salin & Tempel Prompt Ini (atau Klik Preset "Bulk Order Semen (Ritel - Memicu Restok)"):**
+> "Selamat siang, kami sedang mengerjakan proyek di Sleman. Tolong cek stok MU-203 Perekat Keramik 50kg dari katalog QHomeMart untuk pemesanan sebanyak 80 sak. Hitung biaya logistik kargo CDD ke Sleman dan total biayanya."
 *   **Mengapa memicu restok?** Permintaan sebanyak 80 sak melebihi batas stok default gudang (50 unit), sehingga secara otomatis memicu status `[STOK TERBATAS]` pada item tersebut dan mengunci tombol checkout (Lihat Langkah 4 - Bagian B).
 
 ---
@@ -104,10 +102,10 @@ Agar Anda dapat langsung checkout ke halaman logistik dan pembayaran secara inst
 4.  **Lanjutkan**: Klik tombol **"Setujui Rencana & Masukkan Keranjang"** (atau **"Lanjut ke Logistik"** jika proposal sudah disetujui) untuk menuju halaman konfigurasi kargo.
 
 ### Bagian B: Alur Restok Gudang (Opsi 5)
-1.  **Kunci Checkout**: Tombol checkout dinonaktifkan (berwarna abu-abu) karena ada item utama berlabel `[STOK HABIS]` atau `[STOK TERBATAS]`.
+1.  **Kunci Checkout**: Tombol checkout dinonaktifkan (berwarna abu-abu) karena ada item utama berlabel `[STOK HABIS]` / `[STOK TERBATAS]`.
 2.  **Portal Admin**: Tombol **"PORTAL ADMIN"** akan muncul di bagian header kanan atas karena adanya peringatan stok kritis.
 3.  **Cara Pengisian Stok (Intervensi)**: 
-    *   Klik **"PORTAL ADMIN"** untuk membuka halaman **Admin Portal (Bapak Rudi)** di tab baru.
+    *   Klik **"PORTAL ADMIN"** untuk membuka halaman **Admin Portal** (menggunakan persona **Admin Gudang**).
     *   Buka **Tab Operasional**, cari produk yang habis, masukkan jumlah restock (misal: tambah `200` unit), lalu klik **Restock**.
     *   Kembali ke tab Chat Workspace, kirim pesan lanjutan: *"Saya sudah restok produk tersebut. Tolong cek kembali ketersediaan stoknya dan hitung ulang total biayanya."*
     *   Sistem memperbarui data, menghilangkan tanda peringatan, dan membuka kembali tombol checkout di Order Portal.
@@ -118,7 +116,7 @@ Agar Anda dapat langsung checkout ke halaman logistik dan pembayaran secara inst
 
 Setelah masuk ke halaman **Logistics** di Order Portal:
 
-1.  Sistem otomatis mendeteksi lokasi pengantaran persona Anda (Sleman: 8 Km, Bantul: 15 Km, atau Kulon Progo: 35 Km).
+1.  Sistem otomatis mendeteksi lokasi pengantaran persona Anda (Sleman: 8 Km untuk Mitra QHomeMart).
 2.  Pilih salah satu armada pengiriman kargo yang sesuai (CDD, Fuso, atau Tronton).
 3.  Perhatikan biaya pengiriman otomatis dihitung secara real-time berdasarkan rumus berikut:
 

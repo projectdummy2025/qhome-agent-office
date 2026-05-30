@@ -43,39 +43,14 @@ export const getPersonaGreeting = (role: string) => {
             prompt: "Tolong carikan di katalog QHomeMart ubin granit polished motif Carrara White 60x60 Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Cek juga ketersediaan semen perekat Lemkra FK 206 dan pengisi nat AM 207 dari katalog toko untuk pemasangannya."
           },
           {
-            title: "Waterproofing Kamar Mandi (Arsitek)",
-            desc: "Estimasi pelapis kedap air 2 komponen Sika Top untuk toilet seluas 6 m².",
-            prompt: "Tolong hitung kebutuhan bahan pelapis kedap air Sika Top 205 Waterproofing dari katalog QHomeMart untuk toilet seluas 6 m²."
+            title: "Konsultasi Tren Interior (Desainer)",
+            desc: "Analisis singkat mengenai tren material interior dan kombinasi palet warna modern kontemporer di Indonesia saat ini.",
+            prompt: "Tolong berikan analisis singkat mengenai tren material interior dan kombinasi palet warna modern kontemporer yang sedang populer di Indonesia saat ini untuk ruang keluarga minimalis."
           },
           {
-            title: "Saniter Wastafel (Arsitek)",
-            desc: "Kurasi wastafel porselen untuk kamar mandi tamu minimalis.",
-            prompt: "Rekomendasikan wastafel gantung porselen tipe SA-534 buatan Kohler dari katalog QHomeMart untuk wastafel kamar mandi tamu."
-          },
-          {
-            title: "RAB Ubin Selasar (Kontraktor)",
-            desc: "Estimasi ubin granit 60x60 cm pola diagonal untuk lantai selasar 15 m² dengan wastage 10% dan kebutuhan semen perekat.",
-            prompt: "Hitung kebutuhan ubin granit Carrara White Polished 60x60 Roman dari katalog QHomeMart untuk lantai selasar seluas 15 m² dengan pola diagonal (wastage 10%). Sertakan juga semen perekat Lemkra FK 206 dan pengisi nat AM 207 yang tersedia di katalog kalian."
-          },
-          {
-            title: "RAB Lantai SPC Teras (Kontraktor)",
-            desc: "Hitung kebutuhan lantai SPC motif kayu tebal 4mm seluas 10 m².",
-            prompt: "Cari produk lantai SPC Flooring Wood Motif Roman dari katalog QHomeMart untuk area teras seluas 10 m² dengan perkiraan wastage 5%."
-          },
-          {
-            title: "Waterproofing Toilet (Kontraktor)",
-            desc: "Estimasi pelapis kedap air 2 komponen Sika Top untuk toilet seluas 10 m².",
-            prompt: "Tolong carikan produk pelapis kedap air Sika Top 205 Waterproofing di katalog QHomeMart untuk lantai toilet seluas 10 m²."
-          },
-          {
-            title: "Bulk Order Semen (Ritel)",
-            desc: "Pengadaan Semen Portland Tiga Roda sebanyak 10 sak dari katalog toko.",
-            prompt: "Saya ingin memesan secara massal Semen Portland Composite PCC Tiga Roda kemasan 40kg sebanyak 10 sak dari katalog QHomeMart. Tolong tampilkan ketersediaan stok dan harganya."
-          },
-          {
-            title: "Bulk Order Kompor (Ritel)",
-            desc: "Pengadaan kompor tanam gas Modena sebanyak 15 unit.",
-            prompt: "Cek ketersediaan stok Kompor Tanam Gas 2 Tungku Modena di katalog QHomeMart untuk pemesanan 15 unit."
+            title: "Bulk Order Semen (Ritel - Memicu Restok)",
+            desc: "Pemesanan semen perekat MU-203 sebanyak 80 sak untuk memicu alur restok gudang oleh Admin.",
+            prompt: "Selamat siang, kami sedang mengerjakan proyek di Sleman. Tolong cek stok MU-203 Perekat Keramik 50kg dari katalog QHomeMart untuk pemesanan sebanyak 80 sak. Hitung biaya logistik kargo CDD ke Sleman dan total biayanya."
           }
         ]
       };

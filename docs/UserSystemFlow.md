@@ -20,23 +20,15 @@ Dokumen ini memetakan skenario interaksi end-to-end (dari awal hingga akhir) ant
 
 Sistem menyediakan skenario penanganan logistik cerdas berdasarkan jarak fisik dari kantor pusat (**QHome HQ**) ke lokasi pengiriman masing-masing persona:
 
-1. **Ibu Amalia (Senior Architect & Designer)**
+1. **Mitra QHomeMart (Mitra B2B / Professional)**
    * **Lokasi Pengiriman**: Sleman
    * **Jarak Tempuh**: **8 Km**
-   * **Fokus**: Estetika premium, panel WPC, granit mewah, dan keselarasan desain ruang.
+   * **Fokus**: Simulasi estimasi material proyek (Granit, Cat, Kayu, Batu), waterproofing area basah, saniter toilet, serta bulk order grosir.
 
-2. **Bapak Joko (General Contractor & Engineer)**
-   * **Lokasi Pengiriman**: Bantul
-   * **Jarak Tempuh**: **15 Km**
-   * **Fokus**: Volume material struktural besar, semen, keramik kokoh, dan optimalisasi bujet proyek.
-
-3. **Ibu Santi (Retail & Procurement Partner)**
-   * **Lokasi Pengiriman**: Kulon Progo
-   * **Jarak Tempuh**: **35 Km**
-   * **Fokus**: Pembelian volume grosir berkala, logistik berjadwal, dan keakuratan daftar belanja.
-
-4. **Bapak Rudi (Lead System Administrator)**
-   * **Fokus**: Otentikasi pengawasan sistem, penyesuaian stok gudang kritis (*Out-of-Stock*), dan otorisasi transaksi.
+2. **Admin Gudang (Lead Warehouse Administrator)**
+   * **Lokasi**: Yogyakarta (HQ)
+   * **Jarak Tempuh**: **0 Km**
+   * **Fokus**: Manajemen ketersediaan stok kritis, intervensi dan persetujuan restok, pemutakhiran katalog produk gudang.
 
 ---
 
@@ -61,7 +53,7 @@ Sistem menampilkan dashboard **Split-Screen Premium** yang terbagi menjadi dua p
 ```
 
 ### Langkah 1: Input Brief & Konsultasi
-1. User (misal: **Ibu Amalia**) masuk ke dashboard, memilih persona, dan memasukkan spesifikasi kebutuhan proyek konstruksinya.
+1. User (misal: **Mitra QHomeMart**) masuk ke dashboard, memilih persona, dan memasukkan spesifikasi kebutuhan proyek konstruksinya atau memilih salah satu preset skenario.
 2. **Brief Kebutuhan (Contoh)**: *"Saya ingin merenovasi teras dan ruang tamu dengan marmer putih mewah di Sleman. Dinding area TV tolong dipasang panel kayu bergaris fluted, dan sisa dindingnya dicat warna terang ramah anak."*
 3. User menekan tombol **"Konsultasi Sekarang"**.
 
@@ -83,7 +75,7 @@ Setelah kalkulasi selesai:
    * Tombol checkout di Keranjang Belanja B2B **dikunci otomatis**.
    * Banner peringatan menyala merah: *"Butuh Konfirmasi Admin"*.
 2. User mengklik tombol **"Intervensi Admin"**:
-   * Sistem melakukan transisi mulus berbasis routing URL ke `/admin` yang memuat portal persona **Bapak Rudi (Admin)**.
+   * Sistem melakukan transisi mulus berbasis routing URL ke `/admin` yang memuat portal persona **Admin Gudang**.
    * Portal Admin menyediakan ruang kerja multifungsi dengan dua tab navigasi utama:
      * **Tab Dashboard**: Menyajikan visualisasi data *Business Intelligence* real-time (total order, total/pending revenue, margin laba kotor material berdasarkan estimasi COGS, leaderboard 5 produk teratas, snapshot kesehatan stok inventaris, serta SLA performa estimasi AI).
      * **Tab Operasional**: Tempat admin mengevaluasi *RAB Draft*, menyetujui usulan substitusi produk alternatif, serta melakukan restok produk berlabel `[STOK HABIS]` / `[STOK TERBATAS]` dengan menyuplai kuantitas baru ke gudang database.
@@ -126,7 +118,7 @@ Bagaimana FastAPI, LangGraph, dan SumoPod AI Gateway bekerja mengorkestrasi ekos
 Sistem tidak lagi mengandalkan penyimpanan state in-memory atau sinkronisasi state lokal yang rentan terhadap inkonsistensi saat reload. Navigasi portal sepenuhnya didelegasikan ke routing URL deklaratif (menggunakan `react-router-dom`):
 * `/` atau `/landing`: Halaman muka simulasi & pemilihan persona (Unauthenticated).
 * `/chat`: Kanvas obrolan utama dengan panel live agent activity & stream (Authenticated).
-* `/admin`: Workspace admin Bapak Rudi untuk pemantauan performa & stok (Authenticated).
+* `/admin`: Workspace admin Admin Gudang untuk pemantauan performa & stok (Authenticated).
 * `/order`: Keranjang belanja terpadu & checkout logistik B2B (Authenticated).
 * `/history`: Riwayat pesanan & pengunduhan nota resmi B2B (Authenticated).
 * `/catalog`: Katalog interaktif material konstruksi terintegrasi RAG (Bisa diakses publik / terotentikasi).

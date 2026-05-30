@@ -224,15 +224,29 @@ def inventory_administrator(state: AgentState):
                 for p_idx, prod_dict in enumerate(prods_data):
                     prod = dict(prod_dict)
                     prod_name = prod.get("name", "")
+                    prod_sku = (prod.get("sku") or "").strip()
 
                     if prod_name and prod_name != "Menunggu Konfirmasi":
-                        db_product = (
-                            db.query(ProductModel)
-                            .filter(ProductModel.name.ilike(f"%{prod_name[:20]}%"))
-                            .first()
-                        )
+                        db_product = None
+                        if prod_sku and not prod_sku.startswith("OOS-"):
+                            db_product = (
+                                db.query(ProductModel)
+                                .filter(ProductModel.sku == prod_sku)
+                                .first()
+                            )
+                        if not db_product:
+                            # Coba strip suffix "(Menunggu Konfirmasi)" sebelum name lookup
+                            clean_lookup = re.sub(r"\s*\(Menunggu Konfirmasi\)", "", prod_name, flags=re.IGNORECASE).strip()
+                            db_product = (
+                                db.query(ProductModel)
+                                .filter(ProductModel.name.ilike(f"%{clean_lookup[:20]}%"))
+                                .first()
+                            )
 
                         if db_product:
+                            # Selalu sinkronkan SKU dan nama ke data DB yang valid
+                            prod["sku"] = db_product.sku
+                            prod["name"] = re.sub(r"\s*\[STOK[^\]]*\]", "", prod.get("name", "")).strip() or db_product.name
                             qty_val = db_product.stock_qty
                             qty_str = prod.get("qty", "10")
                             try:

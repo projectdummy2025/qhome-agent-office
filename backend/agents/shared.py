@@ -206,6 +206,49 @@ def _format_candidates_for_prompt(candidates: list) -> str:
     return "\n".join(lines)
 
 
+_SUPPORT_HINTS = {
+    "cement": [
+        r"lemkra\s*fk[\s-]*\d+",
+        r"sika[\w\s-]*\d+",
+        r"semen\s+(perekat|instan)[\w\s#]*",
+        r"mortar\s+utama[\w\s-]*",
+        r"mu[\s-]*\d+",
+    ],
+    "grout": [
+        r"am\s*\d+",
+        r"nat\s+keramik[\w\s-]*",
+        r"tile\s+grout[\w\s-]*",
+        r"pengisi\s+nat[\w\s-]*",
+    ],
+    "primer": [
+        r"alkali\s+sealer[\w\s-]*",
+        r"wall\s+primer[\w\s-]*",
+        r"cat\s+dasar[\w\s-]*",
+        r"mowilex\s+primer[\w\s-]*",
+        r"nippon\s+primer[\w\s-]*",
+    ],
+    "coating": [
+        r"propan[\w\s-]*",
+        r"mowilex\s+wood[\w\s-]*",
+        r"polyurethane[\w\s-]*",
+        r"wood\s+sealer[\w\s-]*",
+        r"coating\s+kayu[\w\s-]*",
+    ],
+}
+
+
+def _extract_explicit_support(brief: str, role: str) -> str | None:
+    """Ekstrak nama produk pendukung eksplisit dari brief berdasarkan role.
+    Kembalikan substring asli yang cocok, atau None.
+    """
+    patterns = _SUPPORT_HINTS.get(role, [])
+    for pat in patterns:
+        m = re.search(pat, brief, re.IGNORECASE)
+        if m:
+            return m.group(0).strip()
+    return None
+
+
 _BUYING_INTENT_WORDS = [
     "pesan", "order", "beli", "butuh", "kebutuhan", "hitung", "kalkulasi",
     "estimasi", "rab", "berapa", "saya mau", "saya ingin", "tolong carikan",
@@ -221,7 +264,8 @@ def _has_buying_intent(brief: str) -> bool:
 
 
 def _find_product_by_name_sql(query_text: str, category: str = None, limit: int = 5) -> list:
-    """SQL ILIKE name-search — lebih akurat untuk produk yang disebut eksplisit.
+    """SQL ILIKE search di kolom name DAN desc — desc memuat brand (Roman/Sandimas/dll)
+    yang tidak ada di name, sehingga brand eksplisit dari user bisa terfilter.
     Coba AND semua token dulu, fallback ke OR kalau kosong.
     """
     from sqlalchemy import and_, or_
@@ -231,6 +275,8 @@ def _find_product_by_name_sql(query_text: str, category: str = None, limit: int 
         "sebanyak", "seluas", "tolong", "cari", "hitung", "carikan", "saya",
         "ingin", "mau", "kami", "ada", "juga", "ini", "itu", "area", "lantai",
         "dinding", "ruang", "kamar", "mandi", "tamu", "teras", "toilet",
+        "katalog", "qhomemart", "toko", "ketersediaan", "cek", "motif",
+        "pola", "standard", "vintage", "pemasangannya", "pemasangan", "ubin",
     }
     tokens = [
         t for t in re.sub(r"[^\w\s]", " ", query_text.lower()).split()
@@ -239,23 +285,29 @@ def _find_product_by_name_sql(query_text: str, category: str = None, limit: int 
     if not tokens:
         return []
 
+    def _token_clause(token: str):
+        return or_(
+            ProductModel.name.ilike(f"%{token}%"),
+            ProductModel.desc.ilike(f"%{token}%"),
+        )
+
     db = SessionLocal()
     try:
         q = db.query(ProductModel)
         if category:
             q = q.filter(ProductModel.category == category)
 
-        # AND — semua token harus ada di nama
+        # AND — semua token harus ada di name atau desc
         and_results = q.filter(
-            and_(*[ProductModel.name.ilike(f"%{t}%") for t in tokens[:5]])
+            and_(*[_token_clause(t) for t in tokens[:8]])
         ).limit(limit).all()
 
         if and_results:
             results = and_results
         else:
-            # OR — minimal salah satu token ada
+            # OR — minimal salah satu token cocok
             results = q.filter(
-                or_(*[ProductModel.name.ilike(f"%{t}%") for t in tokens[:5]])
+                or_(*[_token_clause(t) for t in tokens[:8]])
             ).limit(limit).all()
 
         return [{

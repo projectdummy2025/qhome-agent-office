@@ -7,6 +7,7 @@ from backend.agents.shared import (
     _has_buying_intent,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
+    _extract_explicit_support,
     groq_specialist
 )
 
@@ -57,10 +58,9 @@ def paint_consultant(state: AgentState):
             "   - Jika YA dan produk tersebut TIDAK ada di daftar kandidat: set 'explicit_paint' dengan nama persis sesuai brief, SKU 'OOS-PAINT', harga 0, dan kuantitas sesuai brief.\n"
             "2. JANGAN PERNAH memilih produk semen (SKU BM-055 atau BM-001, atau produk dengan kata 'Semen'/'Cement' di namanya) sebagai cat utama, meskipun kategorinya sama-sama 'building material'.\n\n"
             "Tugas Anda:\n"
-            "1. Ekstrak luas area dinding pengecatan (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya. Jika menyebutkan ukuran kamar (misal 3x4 meter dengan tinggi 3 meter), hitung luas keliling dikali tinggi (2*(3+4)*3 = 42 m2). Jika tidak ada spesifikasi ukuran, asumsikan luas dinding 12 m2.\n"
-            "2. Hitung jumlah pail cat yang dibutuhkan: (luas_area * 2) / coverage_m2 (karena double-coat/2 lapis).\n"
-            "3. Pilih produk CAT (bukan semen) terbaik dari daftar kandidat di atas yang memiliki STOK mencukupi kebutuhan tersebut.\n"
-            "4. Jika tidak ada produk CAT dengan stok mencukupi, pilih kandidat CAT pertama yang paling relevan.\n\n"
+            "1. Ekstrak luas area dinding pengecatan BERSIH (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya — TANPA menambahkan wastage atau faktor lapis, keduanya dihitung terpisah oleh kalkulator. Jika menyebutkan ukuran kamar (misal 3x4 meter dengan tinggi 3 meter), hitung luas keliling dikali tinggi (2*(3+4)*3 = 42 m2). Jika tidak ada spesifikasi ukuran, asumsikan luas dinding 12 m2.\n"
+            "2. Pilih produk CAT (bukan semen) terbaik dari daftar kandidat di atas yang memiliki STOK mencukupi kebutuhan tersebut.\n"
+            "3. Jika tidak ada produk CAT dengan stok mencukupi, pilih kandidat CAT pertama yang paling relevan.\n\n"
             "Format output HANYA JSON:\n"
             "{\n"
             '  "selected_sku": "SKU produk yang dipilih (harus produk cat, BUKAN semen)",\n'
@@ -118,7 +118,10 @@ def paint_consultant(state: AgentState):
 
             if _has_buying_intent(brief):
                 primer_qty = calc["primer_pails_needed"]
-                primer_candidates = _find_product_by_name_sql("cat dasar alkali sealer", "building material", limit=1)
+                primer_candidates = _find_product_by_name_sql(
+                    _extract_explicit_support(brief, "primer") or "cat dasar alkali sealer",
+                    "building material", limit=1
+                )
                 if not primer_candidates:
                     primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
 
@@ -155,7 +158,10 @@ def paint_consultant(state: AgentState):
 
             if _has_buying_intent(brief):
                 primer_qty = calc["primer_pails_needed"]
-                primer_candidates = _find_product_by_name_sql("cat dasar alkali sealer", "building material", limit=1)
+                primer_candidates = _find_product_by_name_sql(
+                    _extract_explicit_support(brief, "primer") or "cat dasar alkali sealer",
+                    "building material", limit=1
+                )
                 if not primer_candidates:
                     primer_candidates = _get_candidates_with_stock("cat dasar", "building material", limit=1)
 

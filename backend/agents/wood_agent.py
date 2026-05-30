@@ -7,6 +7,7 @@ from backend.agents.shared import (
     _has_buying_intent,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
+    _extract_explicit_support,
     groq_specialist
 )
 
@@ -51,7 +52,7 @@ def wood_specialist(state: AgentState):
             "Daftar produk panel kayu (furniture) kandidat yang tersedia beserta stok riilnya di gudang:\n"
             f"{candidates_formatted}\n\n"
             "Tugas Anda:\n"
-            "1. Ekstrak luas area dinding/panel (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya. Jika tidak ditentukan, asumsikan 15 m2.\n"
+            "1. Ekstrak luas area dinding/panel BERSIH (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya — TANPA menambahkan wastage, wastage dihitung terpisah oleh kalkulator. Jika tidak ditentukan, asumsikan 15 m2.\n"
             "2. Hitung jumlah lembar panel yang dibutuhkan untuk masing-masing kandidat: luas_area / coverage_m2.\n"
             "3. Pilih produk terbaik dari daftar kandidat di atas yang memiliki STOK mencukupi kebutuhan tersebut.\n"
             "4. Jika tidak ada produk dengan stok mencukupi, pilih kandidat pertama yang paling relevan.\n\n"
@@ -106,7 +107,10 @@ def wood_specialist(state: AgentState):
 
         if _has_buying_intent(brief):
             coating_qty = calc["coating_cans_needed"]
-            coating_candidates = _find_product_by_name_sql("coating pelindung", "furniture", limit=1)
+            coating_candidates = _find_product_by_name_sql(
+                _extract_explicit_support(brief, "coating") or "coating pelindung",
+                "furniture", limit=1
+            )
             if not coating_candidates:
                 coating_candidates = _get_candidates_with_stock("coating", "furniture", limit=1)
 

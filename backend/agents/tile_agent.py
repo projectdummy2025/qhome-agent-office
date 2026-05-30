@@ -9,8 +9,10 @@ from backend.agents.shared import (
     _mark_resolved,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
+    _extract_explicit_support,
     gemini_specialist
 )
+
 
 def tile_estimator(state: AgentState):
     """Tile Estimator"""
@@ -59,7 +61,7 @@ def tile_estimator(state: AgentState):
             "- Jika YA dan produk tersebut TIDAK terdaftar di daftar kandidat (misal SikaCeram-200): gunakan SKU 'OOS-CEMENT-<nama_singkat>' dengan harga 0 dan kuantitas sesuai brief.\n"
             "- Jika TIDAK ada permintaan produk spesifik: lanjutkan dengan kalkulasi area normal.\n\n"
             "Tugas Anda:\n"
-            "1. Ekstrak luas area lantai (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya. Jika tidak ditentukan, asumsikan 10 m2.\n"
+            "1. Ekstrak luas area lantai BERSIH (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya — TANPA menambahkan wastage, wastage dihitung terpisah oleh kalkulator. Jika tidak ditentukan, asumsikan 10 m2.\n"
             "2. Tentukan pola pemasangan: 'standard' (wastage 5%) atau 'vintage' (wastage 10%).\n"
             "3. Hitung jumlah dus yang dibutuhkan untuk masing-masing kandidat: (luas_area * (1 + wastage_decimal)) / coverage_m2.\n"
             "4. Pilih produk terbaik dari daftar kandidat di atas yang memiliki STOK mencukupi kebutuhan tersebut.\n"
@@ -139,7 +141,11 @@ def tile_estimator(state: AgentState):
             if existing_cement:
                 cement_sku, cement_name, cement_price = existing_cement["sku"], existing_cement["name"], existing_cement["price"]
             else:
-                cement_keyword = explicit_cement.get("name", "semen perekat") if explicit_cement else "semen perekat"
+                explicit_cement_name = _extract_explicit_support(brief, "cement")
+                if explicit_cement:
+                    cement_keyword = explicit_cement.get("name") or explicit_cement_name or "semen perekat"
+                else:
+                    cement_keyword = explicit_cement_name or "semen perekat"
                 cement_candidates = _find_product_by_name_sql(cement_keyword, "building material", limit=1)
                 if not cement_candidates:
                     cement_candidates = _get_candidates_with_stock(cement_keyword, "building material", limit=1)
@@ -165,9 +171,10 @@ def tile_estimator(state: AgentState):
             if existing_grout:
                 grout_sku, grout_name, grout_price = existing_grout["sku"], existing_grout["name"], existing_grout["price"]
             else:
-                grout_candidates = _find_product_by_name_sql("nat keramik", "building material", limit=1)
+                explicit_grout_name = _extract_explicit_support(brief, "grout") or "nat keramik"
+                grout_candidates = _find_product_by_name_sql(explicit_grout_name, "building material", limit=1)
                 if not grout_candidates:
-                    grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
+                    grout_candidates = _get_candidates_with_stock(explicit_grout_name, "building material", limit=1)
                 if grout_candidates:
                     gm = grout_candidates[0]
                     grout_sku, grout_name, grout_price = gm["sku"], gm["name"], gm["base_price"]

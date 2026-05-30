@@ -9,6 +9,7 @@ from backend.agents.shared import (
     _mark_resolved,
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
+    _extract_explicit_support,
     gemini_specialist
 )
 
@@ -53,7 +54,7 @@ def stone_specialist(state: AgentState):
             "Daftar produk batu alam (building material) kandidat yang tersedia beserta stok riilnya di gudang:\n"
             f"{candidates_formatted}\n\n"
             "Tugas Anda:\n"
-            "1. Ekstrak luas area dinding batu (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya. Jika tidak ditentukan, asumsikan 15 m2.\n"
+            "1. Ekstrak luas area dinding batu BERSIH (m2) dari instruksi/brief terbaru atau konteks sesi sebelumnya — TANPA menambahkan wastage, wastage dihitung terpisah oleh kalkulator. Jika tidak ditentukan, asumsikan 15 m2.\n"
             "2. Hitung jumlah unit m2 yang dibutuhkan: luas_area / coverage_m2.\n"
             "3. Pilih produk terbaik dari daftar kandidat di atas yang memiliki STOK mencukupi kebutuhan tersebut.\n"
             "4. Jika tidak ada produk dengan stok mencukupi, pilih kandidat pertama yang paling relevan.\n\n"
@@ -115,7 +116,10 @@ def stone_specialist(state: AgentState):
             if existing_cement:
                 bonding_sku, bonding_name, bonding_price = existing_cement["sku"], existing_cement["name"], existing_cement["price"]
             else:
-                bonding_candidates = _find_product_by_name_sql("semen perekat", "building material", limit=1)
+                bonding_candidates = _find_product_by_name_sql(
+                    _extract_explicit_support(brief, "cement") or "semen perekat",
+                    "building material", limit=1
+                )
                 if not bonding_candidates:
                     bonding_candidates = _get_candidates_with_stock("perekat", "building material", limit=1)
                 if bonding_candidates:
@@ -139,7 +143,10 @@ def stone_specialist(state: AgentState):
             if existing_grout:
                 grout_sku, grout_name, grout_price = existing_grout["sku"], existing_grout["name"], existing_grout["price"]
             else:
-                grout_candidates = _find_product_by_name_sql("nat", "building material", limit=1)
+                grout_candidates = _find_product_by_name_sql(
+                    _extract_explicit_support(brief, "grout") or "nat keramik",
+                    "building material", limit=1
+                )
                 if not grout_candidates:
                     grout_candidates = _get_candidates_with_stock("nat", "building material", limit=1)
                 if grout_candidates:
