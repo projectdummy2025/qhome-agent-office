@@ -56,8 +56,7 @@ def paint_consultant(state: AgentState):
             # Filter out non-paint products (mortar/cement/waterproofing)
             candidates = [c for c in candidates if not c["sku"].startswith("BM-0")][:5]
             
-            if not candidates:
-                raise Exception("No product found")
+
 
         candidates_formatted = _format_candidates_for_prompt(candidates)
         history_summary = state.get("history_summary", "")
@@ -98,23 +97,33 @@ def paint_consultant(state: AgentState):
                 json.loads(match.group(0))
                 if match
                 else {
-                    "selected_sku": candidates[0]["sku"],
+                    "selected_sku": candidates[0]["sku"] if candidates else None,
                     "reasoning": response.content.strip(),
                     "area_m2": 12.0,
                     "explicit_paint": None,
                 }
             )
-            selected_sku = res_json.get("selected_sku", candidates[0]["sku"])
+            selected_sku = res_json.get("selected_sku", candidates[0]["sku"] if candidates else None)
             area_m2 = float(res_json.get("area_m2", 12.0))
             reasoning = res_json.get("reasoning", response.content.strip())
             explicit_paint = res_json.get("explicit_paint")
         except Exception:
-            selected_sku = candidates[0]["sku"]
+            selected_sku = candidates[0]["sku"] if candidates else None
             area_m2 = 12.0
             reasoning = response.content.strip()
             explicit_paint = None
 
-        selected_product = next((c for c in candidates if c["sku"] == selected_sku), candidates[0])
+        if not explicit_paint and not candidates:
+            # Tidak ada kebutuhan cat eksplisit yang diminta dan tidak ada kandidat di katalog
+            report = {
+                "agent": "Paint Consultant",
+                "content": "Tidak ada kebutuhan pengecatan dinding dalam brief terbaru.",
+                "product": []
+            }
+            old_reports = [r for r in state.get("reports", []) if r.get("agent") != "Paint Consultant"]
+            return {"reports": old_reports + [report]}
+
+        selected_product = next((c for c in candidates if c["sku"] == selected_sku), candidates[0] if candidates else None)
 
         # If LLM returned an explicit paint product not in DB, use it directly
         if explicit_paint:
@@ -134,7 +143,8 @@ def paint_consultant(state: AgentState):
                 paint_unit = explicit_paint["unit"]
 
             paint_name = explicit_paint.get("name", "Cat Khusus") if isinstance(explicit_paint, dict) else "Cat Khusus"
-            calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
+            coverage = float(selected_product["coverage_m2"]) if (selected_product and selected_product.get("coverage_m2")) else 12.0
+            calc = calculate_paint_needs(area_m2, coverage)
 
             product_data = [
                 {
@@ -171,18 +181,19 @@ def paint_consultant(state: AgentState):
                 + (f" Tambahan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar juga disertakan." if _has_buying_intent(brief) else "")
             )
         else:
-            calc = calculate_paint_needs(area_m2, float(selected_product["coverage_m2"]))
+            coverage = float(selected_product["coverage_m2"]) if (selected_product and selected_product.get("coverage_m2")) else 12.0
+            calc = calculate_paint_needs(area_m2, coverage)
             qty = calc["pails_needed"]
             unit = "Pail"
 
             product_data = [
                 {
-                    "sku": selected_product["sku"],
-                    "name": selected_product["name"],
-                    "price": selected_product["base_price"],
-                    "coverage": selected_product["coverage_m2"],
+                    "sku": selected_product["sku"] if selected_product else "OOS-PAINT",
+                    "name": selected_product["name"] if selected_product else "Cat Dinding / Interior",
+                    "price": selected_product["base_price"] if selected_product else 0,
+                    "coverage": selected_product["coverage_m2"] if selected_product else 12.0,
                     "qty": f"{qty} {unit} (Est)",
-                    "total": selected_product["base_price"] * qty,
+                    "total": (selected_product["base_price"] if selected_product else 0) * qty,
                 },
             ]
 
@@ -211,14 +222,20 @@ def paint_consultant(state: AgentState):
                 + (f" dan {calc['primer_pails_needed']} pail cat primer alkali sealer dasar." if _has_buying_intent(brief) else ".")
             )
     except Exception as e:
-        content = f"Maaf, saya tidak menemukan cat interior yang spesifik sesuai permintaan. Detail {str(e)}"
-        product_data = [{
-            "sku": "OOS-PAINT",
-            "name": "Menunggu Konfirmasi",
-            "price": 0,
-            "qty": "0",
-            "total": 0,
-        }]
+        paint_kws = ["cat", "paint", "primer", "sealer", "dinding", "tembok", "alkali", "warna", "lukis"]
+        has_paint_intent = any(kw in brief.lower() for kw in paint_kws)
+        if not has_paint_intent:
+            content = "Tidak ada kebutuhan pengecatan dinding dalam brief terbaru."
+            product_data = []
+        else:
+            content = f"Maaf, saya tidak menemukan cat interior yang spesifik sesuai permintaan. Detail {str(e)}"
+            product_data = [{
+                "sku": "OOS-PAINT",
+                "name": "Cat Dinding / Interior",
+                "price": 0,
+                "qty": "0",
+                "total": 0,
+            }]
 
     report = {"agent": "Paint Consultant", "content": content, "product": product_data}
     old_reports = [

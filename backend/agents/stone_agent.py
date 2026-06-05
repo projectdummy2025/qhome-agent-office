@@ -185,14 +185,20 @@ def stone_specialist(state: AgentState):
             )
         )
     except Exception as e:
-        content = f"Maaf, produk Stone Veneer tidak ditemukan di katalog. Detail: {str(e)}"
-        product_data = [{
-            "sku": "OOS-STONE",
-            "name": "Menunggu Konfirmasi",
-            "price": 0,
-            "qty": "0",
-            "total": 0,
-        }]
+        stone_kws = ["stone", "batu", "veneer", "andesit", "carrara", "calacatta", "travertine", "statario", "alam", "dinding batu"]
+        has_stone_intent = any(kw in brief.lower() for kw in stone_kws)
+        if not has_stone_intent:
+            content = "Tidak ada kebutuhan batu alam dalam brief terbaru."
+            product_data = []
+        else:
+            content = f"Maaf, produk Stone Veneer tidak ditemukan di katalog. Detail: {str(e)}"
+            product_data = [{
+                "sku": "OOS-STONE",
+                "name": "Batu Alam Veneer",
+                "price": 0,
+                "qty": "0",
+                "total": 0,
+            }]
         resolved = list(state.get("resolved_supporting", []))
 
     report = {

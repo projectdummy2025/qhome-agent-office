@@ -224,14 +224,20 @@ def tile_estimator(state: AgentState):
                 "total": grout_price * grout_qty,
             })
     except Exception as e:
-        content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"
-        product_data = [{
-            "sku": "OOS-TILE",
-            "name": "Menunggu Konfirmasi",
-            "price": 0,
-            "qty": "0",
-            "total": 0,
-        }]
+        tile_kws = ["ubin", "tile", "granit", "keramik", "lantai", "carrara", "calacatta", "travertine", "statario", "rustic", "matte"]
+        has_tile_intent = any(kw in brief.lower() for kw in tile_kws)
+        if not has_tile_intent:
+            content = "Tidak ada kebutuhan ubin lantai dalam brief terbaru."
+            product_data = []
+        else:
+            content = f"Maaf, setelah menganalisis katalog, saya tidak menemukan material lantai yang persis sesuai permintaan. Detail {str(e)}"
+            product_data = [{
+                "sku": "OOS-TILE",
+                "name": "Ubin Granit / Lantai",
+                "price": 0,
+                "qty": "0",
+                "total": 0,
+            }]
         resolved = list(state.get("resolved_supporting", []))
 
     report = {"agent": "Tile Estimator", "content": content, "product": product_data}

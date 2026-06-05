@@ -151,14 +151,20 @@ def wood_specialist(state: AgentState):
             + (f" Diperlukan pula {calc['coating_cans_needed']} kaleng cairan coating pelindung UV agar warna kayu tahan lama." if _has_buying_intent(brief) else "")
         )
     except Exception as e:
-        content = f"Maaf, saya tidak menemukan produk panel kayu yang sesuai di database. Detail {str(e)}"
-        product_data = [{
-            "sku": "OOS-WOOD",
-            "name": "Menunggu Konfirmasi",
-            "price": 0,
-            "qty": "0",
-            "total": 0,
-        }]
+        wood_kws = ["spc", "vinyl", "wood", "teak", "oak", "sandalwood", "kayu", "panel", "furniture", "meja", "lemari", "sofa", "kursi", "divan"]
+        has_wood_intent = any(kw in brief.lower() for kw in wood_kws)
+        if not has_wood_intent:
+            content = "Tidak ada kebutuhan material kayu dalam brief terbaru."
+            product_data = []
+        else:
+            content = f"Maaf, saya tidak menemukan produk panel kayu yang sesuai di database. Detail {str(e)}"
+            product_data = [{
+                "sku": "OOS-WOOD",
+                "name": "SPC Flooring / Kayu",
+                "price": 0,
+                "qty": "0",
+                "total": 0,
+            }]
 
     report = {"agent": "Wood Specialist", "content": content, "product": product_data}
     old_reports = [
