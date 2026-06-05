@@ -513,7 +513,14 @@ def synthesizer(state: AgentState):
         "2. Jika ada produk dengan label [STOK TERBATAS] atau [STOK HABIS], sebutkan secara eksplisit bahwa produk tersebut perlu diproses lebih lanjut oleh Admin Gudang dan belum dapat dikonfirmasi pengadaannya.\n"
         "3. Jika ada produk dengan estimasi harga internet (label 'Estimasi Internet'), nyatakan bahwa harga tersebut adalah estimasi pasar dan memerlukan konfirmasi harga resmi dari pemasok.\n"
         "4. DILARANG membuat klaim tentang jalur distribusi, TDS, SDS, atau proses pengadaan yang belum terjadi secara nyata dalam sistem.\n"
-        "Jangan buat rincian harga karena akan ditampilkan terpisah. Format output harus teks paragraf biasa."
+        "5. PENTING - PERHITUNGAN LOGISTIK/KARGO:\n"
+        "   Jika klien secara eksplisit menanyakan/meminta perhitungan biaya kargo/logistik (misalnya CDD ke Sleman) atau total biaya, Anda WAJIB menghitungnya secara tepat di narasi dengan aturan berikut:\n"
+        "   - Lokasi Proyek & Jarak: Sleman berjarak 8 Km dari gudang utama.\n"
+        "   - Tarif Colt Diesel Double (CDD): Rp 750.000 (dasar) + (Jarak Km * Rp 15.000). Untuk Sleman (8 Km), biayanya Rp 870.000.\n"
+        "   - Tarif Truk Fuso Box: Rp 1.500.000 (dasar) + (Jarak Km * Rp 25.000). Untuk Sleman (8 Km), biayanya Rp 1.700.000.\n"
+        "   - Tarif Tronton Wingbox: Rp 3.000.000 (dasar) + (Jarak Km * Rp 45.000). Untuk Sleman (8 Km), biayanya Rp 3.360.000.\n"
+        "   - Total Biaya = Total Harga Material + Biaya Logistik. Hitunglah penjumlahan ini dengan benar.\n"
+        "Jangan buat rincian harga secara umum karena akan ditampilkan terpisah, kecuali untuk logistik dan total biaya jika ditanyakan oleh klien. Format output harus teks paragraf biasa."
     )
 
     try:

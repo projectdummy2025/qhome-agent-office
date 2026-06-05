@@ -61,10 +61,10 @@ Setelah memilih persona **Mitra QHomeMart**, Anda dapat berinteraksi langsung de
 > "Saya ingin merenovasi dinding kamar tidur mungil dengan luas dinding 12 m². Estimasikan kebutuhan cat interior berkualitas untuk pengecatan dan sertakan cat dasar/primer untuk lapisan awal dari katalog QHomeMart."
 *   **Mengapa tidak memicu restok?** Sistem akan mencari cat interior terbaik dari katalog berdasarkan area 12 m². Jika cat spesifik tidak tersedia, agent akan menunjukkan alternatif terdekat atau menandai untuk pengadaan.
 
-### Opsi 3: Skenario Pemesanan Lantai SPC Teras (Membuat Keranjang - Checkout Jalur Cepat)
+### Opsi 3: Skenario Pemesanan Lantai SPC Teras (Membuat Keranjang - Jalur Restok / Validasi)
 > **Salin & Tempel Prompt Ini:**
 > "Saya memerlukan estimasi kebutuhan lantai SPC Flooring Wood untuk area teras seluas 10 m² dengan perkiraan wastage 5%. Sertakan juga coating pelindung UV untuk menjaga warna kayu tetap awet."
-*   **Mengapa tidak memicu restok?** Sistem akan menghitung kebutuhan SPC flooring dan coating berdasarkan area 10 m². Stok yang tersedia mencukupi untuk memenuhi kebutuhan proyek ini.
+*   **Mengapa memicu restok?** Produk lantai utama (SPC Flooring) tersedia di database. Namun, cairan coating pelindung UV merupakan produk luar katalog (`OOS-COATING`) yang diriset harganya dari internet, sehingga memicu peringatan **Pemberitahuan Alokasi Stok / Restok** untuk validasi harga resmi dan mengunci tombol checkout. Pembeli dapat melakukan deseleksi (uncheck) item coating jika ingin langsung checkout (jalur cepat), atau meminta admin gudang menyetujui alokasi stok/harga tersebut lewat Portal Admin.
 
 ### Opsi 4: Skenario Konsultasi Tren & Estetika (Murni Konsultasi - Tanpa Keranjang Belanja)
 > **Salin & Tempel Prompt Ini (atau Klik Preset "Konsultasi Tren Interior (Desainer)"):**
@@ -96,10 +96,10 @@ Setelah asisten digital selesai mengurasi material, Anda dapat mengelola daftar 
 
 ### Bagian A: Alur Pembelian Langsung Tanpa Restok (Opsi 1, 2, dan 3)
 Agar Anda dapat langsung checkout ke halaman logistik dan pembayaran secara instan:
-1.  **Tinjau Keranjang**: Di halaman **Daftar Material**, Anda akan melihat produk utama yang Anda pesan berstatus aktif (bercentang hijau), namun ada item pendukung otomatis (seperti semen nat, cat dasar, atau coating) yang berlabel `(Menunggu Konfirmasi)` dengan harga Rp 0.
-2.  **Lakukan Deseleksi (Uncheck)**: Hilangkan centang (uncheck) pada item-item pendukung berlabel `(Menunggu Konfirmasi)` tersebut.
-3.  **Buka Kunci Checkout**: Setelah item-item OOS pembantu dinonaktifkan dari daftar belanja, status proposal di bagian atas berubah menjadi **"Keranjang Belanja Aktif (Telah Disetujui)"**!
-4.  **Lanjutkan**: Klik tombol **"Setujui Rencana & Masukkan Keranjang"** (atau **"Lanjut ke Logistik"** jika proposal sudah disetujui) untuk menuju halaman konfigurasi kargo.
+1.  **Tinjau Keranjang**: Di halaman **Daftar Material**, Anda akan melihat produk utama yang Anda pesan berstatus aktif (bercentang hijau). Namun, jika ada item pendukung otomatis berlabel `(Menunggu Konfirmasi)` dengan harga Rp 0 (seperti pada Opsi 1 & 2) atau cairan coating pelindung UV berlabel `(Estimasi Internet - Menunggu Validasi)` dengan status warning/alokasi (seperti pada Opsi 3), tombol checkout akan terkunci/ditangguhkan sementara.
+2.  **Lakukan Deseleksi (Uncheck)**: Hilangkan centang (uncheck) pada item-item bermasalah atau berlabel `(Menunggu Konfirmasi)` / `(Estimasi Internet - Menunggu Validasi)` tersebut dari keranjang.
+3.  **Buka Kunci Checkout**: Setelah item-item yang memicu peringatan/restok tersebut dinonaktifkan dari daftar belanja, status proposal di bagian atas berubah menjadi **"Keranjang Belanja Aktif (Telah Disetujui)"** dan tombol **"Lanjut ke Logistik"** akan aktif kembali secara instan!
+4.  **Lanjutkan**: Klik tombol tersebut untuk menuju ke halaman konfigurasi kargo.
 
 ### Bagian B: Alur Restok Gudang (Opsi 5)
 1.  **Kunci Checkout**: Tombol checkout dinonaktifkan (berwarna abu-abu) karena ada item utama berlabel `[STOK HABIS]` / `[STOK TERBATAS]`.
