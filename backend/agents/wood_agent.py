@@ -114,7 +114,7 @@ def wood_specialist(state: AgentState):
 
         calc = calculate_wood_needs(area_m2, float(selected_product["coverage_m2"]))
         qty = calc["panels_needed"]
-        unit = "Lembar"
+        unit = "Dus" if float(selected_product["coverage_m2"]) > 0.5 else "Lembar"
 
         product_data = [
             {

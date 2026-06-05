@@ -386,6 +386,9 @@ def inventory_administrator(state: AgentState):
         f"Anda telah melakukan pemeriksaan stok untuk proyek dengan brief: '{brief}'.\n\n"
         f"Hasil pemeriksaan stok gudang:\n{stock_summary}\n\n"
         "Tuliskan laporan ketersediaan material (1-2 kalimat) kepada Chief Supervisor secara profesional. "
+        "PENTING:\n"
+        "1. JANGAN PERNAH menghitung ulang kuantitas (qty) atau mengubah satuan unit produk secara mandiri.\n"
+        "2. Wajib gunakan angka kuantitas (qty) dan nama produk persis seperti yang tertulis di 'Hasil pemeriksaan stok gudang' di atas.\n"
         "Sebutkan jika ada produk yang dialihkan ke alternatif stok yang lebih melimpah demi kelancaran proyek."
     )
 

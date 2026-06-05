@@ -184,7 +184,7 @@ def paint_consultant(state: AgentState):
             coverage = float(selected_product["coverage_m2"]) if (selected_product and selected_product.get("coverage_m2")) else 12.0
             calc = calculate_paint_needs(area_m2, coverage)
             qty = calc["pails_needed"]
-            unit = "Pail"
+            unit = "Galon" if selected_product and "5L" in selected_product["name"] else "Pail"
 
             product_data = [
                 {
