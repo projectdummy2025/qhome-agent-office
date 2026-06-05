@@ -10,6 +10,7 @@ from backend.agents.shared import (
     _find_product_by_name_sql,
     _get_candidates_with_stock,
     _has_buying_intent,
+    _has_area_in_text,
     _get_resolved,
     _mark_resolved,
     supervisor_llm,
@@ -158,6 +159,29 @@ def chief_supervisor(state: AgentState):
     updated_reports = []
 
     hired = [h for h in hired if h not in rejected]
+
+    # Phase 5b: Jika intent=estimation + order_type!=bulk_order tapi no area → klarifikasi langsung
+    # Bulk order tidak perlu area (handled di atas), tapi estimation murni membutuhkan area
+    if (intent == "estimation" and order_type != "bulk_order"
+        and not _has_area_in_text(brief, history_summary)):
+        # Specialist membutuhkan area tapi user tidak sebutkan → clarify dulu
+        clarify_content = (
+            "Untuk memberikan estimasi yang akurat, saya memerlukan luas area yang akan dikerjakan. "
+            "Contoh format:\n"
+            "- Lantai/ubin: '10 m²' atau '5x4 meter'\n"
+            "- Dinding/cat: '12 m²' atau 'ruangan 3x4 meter tinggi 3 meter'\n"
+            "- Panel kayu: '15 m²'\n\n"
+            "Bisakah Anda menyebutkan luasnya?"
+        )
+        return {
+            "hired_agents": [],
+            "reports": [{
+                "agent": "Chief Supervisor",
+                "content": clarify_content,
+            }],
+            "intent": intent,
+            "resolved_supporting": [],
+        }
 
     # Reset resolved_supporting tiap giliran baru (brief baru = resolusi baru)
     return {
