@@ -49,9 +49,13 @@ def paint_consultant(state: AgentState):
                 }]
         else:
             # SQL name-search dulu, ChromaDB sebagai fallback
-            candidates = _find_product_by_name_sql(brief, "building material", limit=5)
+            candidates = _find_product_by_name_sql(brief, "building material", limit=30)
             if not candidates:
-                candidates = _get_candidates_with_stock(brief, "building material", limit=5)
+                candidates = _get_candidates_with_stock(brief, "building material", limit=30)
+            
+            # Filter out non-paint products (mortar/cement/waterproofing)
+            candidates = [c for c in candidates if not c["sku"].startswith("BM-0")][:5]
+            
             if not candidates:
                 raise Exception("No product found")
 

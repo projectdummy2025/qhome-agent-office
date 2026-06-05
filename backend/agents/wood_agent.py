@@ -49,9 +49,18 @@ def wood_specialist(state: AgentState):
                 }]
         else:
             # SQL name-search dulu, ChromaDB sebagai fallback
-            candidates = _find_product_by_name_sql(brief, "furniture", limit=5)
+            # Wood flooring / SPC / Vinyl are in "floor" category
+            candidates = _find_product_by_name_sql(brief, "floor", limit=30)
             if not candidates:
-                candidates = _get_candidates_with_stock(brief, "furniture", limit=5)
+                candidates = _get_candidates_with_stock(brief, "floor", limit=30)
+            
+            # Filter to include only wood-related products
+            wood_keywords = ["spc", "vinyl", "wood", "teak", "oak", "sandalwood", "kayu"]
+            candidates = [
+                c for c in candidates
+                if any(kw in c["name"].lower() or kw in c["desc"].lower() for kw in wood_keywords)
+            ][:5]
+            
             if not candidates:
                 raise Exception("No product found")
 

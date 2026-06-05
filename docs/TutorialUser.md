@@ -53,18 +53,18 @@ Setelah memilih persona **Mitra QHomeMart**, Anda dapat berinteraksi langsung de
 
 ### Opsi 1: Skenario Pemesanan Ubin Lantai (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini (atau Klik Preset "Desain Kamar Mandi (Arsitek)"):**
-> "Tolong carikan di katalog QHomeMart ubin granit polished motif Carrara White 60x60 Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Cek juga ketersediaan semen perekat Lemkra FK 206 dan pengisi nat AM 207 dari katalog toko untuk pemasangannya."
-*   **Mengapa tidak memicu restok?** Ubin utama (FL-061) dan bahan pendukung (BM-007, BM-008) berstatus **TERSEDIA** di database karena kebutuhannya di bawah batas stok (50 unit). Untuk item tambahan nat pembantu lainnya yang berlabel `(Menunggu Konfirmasi)`, Anda dapat membatalkan centangnya (uncheck) di keranjang untuk langsung checkout, atau memicu alur restok via Admin Portal untuk memperbarui harganya.
+> "Estimasikan kebutuhan ubin granit polished Carrara White 60x60 Roman untuk area kamar mandi seluas 10 m² dengan pola standard. Sertakan juga kebutuhan semen perekat Lemkra FK 206 dan pengisi nat AM 207 untuk pemasangan ubin tersebut."
+*   **Mengapa tidak memicu restok?** Ubin utama (FL-001), perekat FK 206 (BM-007), dan pengisi nat AM 207 (BM-008) semuanya **TERSEDIA** di database. Kebutuhan untuk area 10 m² berada di bawah batas stok (50 unit masing-masing), sehingga proses pengadaan dapat langsung dilanjutkan.
 
 ### Opsi 2: Skenario Pemesanan Pengecatan Dinding (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Saya ingin merenovasi dinding kamar tidur mungil dengan luas dinding 12 m². Tolong kalkulasikan kebutuhan cat interior putih Jotun Jotaplast 5L dan sertakan cat dasar Jotun Undercoat Primer 5L untuk pelapis dasarnya dari katalog QHomeMart yang tersedia."
-*   **Mengapa tidak memicu restok?** Cat utama (BM-101) dan primer dasar (BM-105) memiliki stok yang cukup di gudang. Sementara untuk hardcoded primer pembantu lainnya yang berlabel OOS di keranjang, Anda dapat menonaktifkan centangnya di keranjang untuk langsung ke logistik, atau menyetujuinya via Admin Portal.
+> "Saya ingin merenovasi dinding kamar tidur mungil dengan luas dinding 12 m². Estimasikan kebutuhan cat interior berkualitas untuk pengecatan dan sertakan cat dasar/primer untuk lapisan awal dari katalog QHomeMart."
+*   **Mengapa tidak memicu restok?** Sistem akan mencari cat interior terbaik dari katalog berdasarkan area 12 m². Jika cat spesifik tidak tersedia, agent akan menunjukkan alternatif terdekat atau menandai untuk pengadaan.
 
 ### Opsi 3: Skenario Pemesanan Lantai SPC Teras (Membuat Keranjang - Checkout Jalur Cepat)
 > **Salin & Tempel Prompt Ini:**
-> "Cari produk lantai SPC Flooring Wood Motif Roman dari katalog QHomeMart untuk area teras seluas 10 m² dengan perkiraan wastage 5%."
-*   **Mengapa tidak memicu restok?** Kebutuhan ubin lantai SPC (FL-011) berada di bawah batas stok gudang sehingga berstatus aman. Hilangkan centang pada item pelengkap (Cairan Coating) di keranjang belanja Anda untuk memotong alur restok, atau setujui restoknya melalui Admin Portal.
+> "Saya memerlukan estimasi kebutuhan lantai SPC Flooring Wood untuk area teras seluas 10 m² dengan perkiraan wastage 5%. Sertakan juga coating pelindung UV untuk menjaga warna kayu tetap awet."
+*   **Mengapa tidak memicu restok?** Sistem akan menghitung kebutuhan SPC flooring dan coating berdasarkan area 10 m². Stok yang tersedia mencukupi untuk memenuhi kebutuhan proyek ini.
 
 ### Opsi 4: Skenario Konsultasi Tren & Estetika (Murni Konsultasi - Tanpa Keranjang Belanja)
 > **Salin & Tempel Prompt Ini (atau Klik Preset "Konsultasi Tren Interior (Desainer)"):**
@@ -73,8 +73,8 @@ Setelah memilih persona **Mitra QHomeMart**, Anda dapat berinteraksi langsung de
 
 ### Opsi 5: Skenario Pengadaan Skala Besar (Memicu Restok Gudang)
 > **Salin & Tempel Prompt Ini (atau Klik Preset "Bulk Order Semen (Ritel - Memicu Restok)"):**
-> "Selamat siang, kami sedang mengerjakan proyek di Sleman. Tolong cek stok MU-203 Perekat Keramik 50kg dari katalog QHomeMart untuk pemesanan sebanyak 80 sak. Hitung biaya logistik kargo CDD ke Sleman dan total biayanya."
-*   **Mengapa memicu restok?** Permintaan sebanyak 80 sak melebihi batas stok default gudang (50 unit), sehingga secara otomatis memicu status `[STOK TERBATAS]` pada item tersebut dan mengunci tombol checkout (Lihat Langkah 4 - Bagian B).
+> "Kami sedang mengerjakan proyek di Sleman. Cek dan pesan MU-203 Perekat Keramik 50kg dari katalog QHomeMart sebanyak 80 sak. Hitung biaya logistik kargo CDD ke Sleman dan total biayanya."
+*   **Mengapa memicu restok?** Permintaan sebanyak 80 sak melebihi batas stok default gudang (50 unit), sehingga secara otomatis memicu status `[STOK TERBATAS]` pada item tersebut dan mengunci tombol checkout. Admin perlu melakukan restock terlebih dahulu.
 
 ---
 

@@ -38,9 +38,21 @@ def stone_specialist(state: AgentState):
                 }]
         else:
             # SQL name-search dulu, ChromaDB sebagai fallback
-            candidates = _find_product_by_name_sql(brief, "building material", limit=5)
+            # Stone/granite products are in "floor" category
+            candidates = _find_product_by_name_sql(brief, "floor", limit=30)
             if not candidates:
-                candidates = _get_candidates_with_stock(brief, "building material", limit=5)
+                candidates = _get_candidates_with_stock(brief, "floor", limit=30)
+            
+            # Filter to include only stone/granite/marble/slate/veneer/travertine/carrara/calacatta/statario/rustic/matte
+            # and exclude wood/spc/vinyl
+            stone_keywords = ["granit", "keramik", "carrara", "calacatta", "travertine", "statario", "rustic", "matte", "stone", "batu"]
+            wood_keywords = ["spc", "vinyl", "wood", "teak", "oak", "sandalwood", "kayu"]
+            candidates = [
+                c for c in candidates
+                if any(kw in c["name"].lower() or kw in c["desc"].lower() for kw in stone_keywords)
+                and not any(wkw in c["name"].lower() for wkw in wood_keywords)
+            ][:5]
+            
             if not candidates:
                 raise Exception("No stone product found")
 
