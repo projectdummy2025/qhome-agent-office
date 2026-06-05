@@ -118,15 +118,9 @@ def chief_supervisor(state: AgentState):
     if intent == "conversational":
         hired = []
 
-    updated_reports = list(reports)
-    if rejected:
-        filtered_reports = []
-        for r in updated_reports:
-            agent_name = r.get("agent", "").lower()
-            is_rejected = any(rej in agent_name for rej in rejected)
-            if not is_rejected:
-                filtered_reports.append(r)
-        updated_reports = filtered_reports
+    # Reset reports setiap giliran baru — mencegah kontaminasi produk lintas-turn
+    # lewat MemorySaver checkpointer. Konteks historis sudah tersimpan di history_summary.
+    updated_reports = []
 
     hired = [h for h in hired if h not in rejected]
 

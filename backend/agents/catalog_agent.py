@@ -62,13 +62,17 @@ def catalog_agent(state: AgentState):
             "2. Jika klien menyebut merek/tipe spesifik yang tidak ada di kandidat, pilih yang paling mendekati "
             "   dan jelaskan perbedaannya.\n"
             "3. Jika ada info kuantitas (unit/sak/pcs) dalam permintaan, gunakan itu. Jika tidak, asumsikan 1 unit.\n"
-            "4. Berikan reasoning singkat (1 kalimat) mengapa produk ini dipilih.\n\n"
+            "4. Berikan reasoning singkat (1 kalimat) mengapa produk ini dipilih.\n"
+            "5. Set 'is_relevant' = false jika tidak ada kandidat yang benar-benar cocok dengan kategori/tipe "
+            "   produk yang diminta (misalnya: klien minta cat tapi kandidat hanya kulkas/keramik/kursi). "
+            "   Set true jika produk kandidat memang relevan.\n\n"
             "Format output HANYA JSON:\n"
             "{\n"
             '  "selected_sku": "SKU produk yang dipilih",\n'
             '  "reasoning": "1 kalimat alasan pemilihan produk",\n'
             '  "qty": integer,\n'
-            '  "unit": "Unit/Sak/Pcs/Set/dll"\n'
+            '  "unit": "Unit/Sak/Pcs/Set/dll",\n'
+            '  "is_relevant": true atau false\n'
             "}"
         )
 
@@ -82,11 +86,13 @@ def catalog_agent(state: AgentState):
             reasoning = res_json.get("reasoning", "")
             qty = int(res_json.get("qty", 1))
             unit = res_json.get("unit", "Unit")
+            is_relevant = res_json.get("is_relevant", True)
         except Exception:
             selected_sku = candidates[0]["sku"]
             reasoning = ""
             qty = 1
             unit = "Unit"
+            is_relevant = True
 
         selected = next((c for c in candidates if c["sku"] == selected_sku), candidates[0])
 
@@ -97,7 +103,7 @@ def catalog_agent(state: AgentState):
         )
 
         product_data = []
-        if _has_buying_intent(brief):
+        if _has_buying_intent(brief) and is_relevant:
             product_data.append({
                 "sku": selected["sku"],
                 "name": selected["name"],
