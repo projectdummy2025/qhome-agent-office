@@ -57,22 +57,39 @@ def chief_supervisor(state: AgentState):
         "1. 'intent': Tentukan apakah pesan klien adalah:\n"
         "   - 'conversational': pertanyaan umum, konsultasi desain, diskusi ide, tanya rekomendasi tanpa angka/dimensi spesifik, "
         "     ucapan terima kasih, konfirmasi sederhana, atau pesan yang tidak memerlukan kalkulasi material.\n"
-        "   - 'estimation': permintaan kalkulasi RAB, estimasi kebutuhan material, menyebut dimensi ruangan (m2/meter), "
-        "     minta daftar produk, cek stok/harga, pesan/order/beli produk tertentu, atau revisi rencana belanja.\n\n"
-        "2. 'rejected_agents': Jika klien ingin menghapus material tertentu dari rencana, "
+        "   - 'estimation': permintaan kalkulasi RAB, estimasi kebutuhan material dengan AREA/DIMENSI spesifik (m2/meter), "
+        "     atau pesan/order/beli produk tertentu.\n\n"
+        "2. 'order_type' (isi HANYA jika intent='estimation'):\n"
+        "   - 'estimation': brief MENYEBUT dimensi area (m2/meter/luas ruangan) → perlu kalkulasi spesialis\n"
+        "   - 'bulk_order': brief TIDAK menyebut dimensi area, tapi menyebut jumlah barang (X sak/unit/pail/dus) "
+        "     atau kata 'pesan/order/cek stok/pemesanan' → tidak perlu kalkulasi, langsung cari di katalog\n\n"
+        "   ATURAN PENTING — Disambiguasi keyword:\n"
+        "   Jika brief menyebut kata terkait material (keramik/semen/cat/kayu) DAN JUGA menyebut 'pemesanan X sak' "
+        "   atau 'cek stok' TANPA dimensi area → order_type = 'bulk_order', hired = ['catalog'] (BUKAN tile/paint/wood)\n\n"
+        "3. 'rejected_agents': Jika klien ingin menghapus material tertentu dari rencana, "
         "masukkan nama agentnya. Pilihan: 'tile', 'wood', 'stone', 'paint', 'catalog'. Kosongkan jika tidak ada.\n\n"
-        "3. 'hired_agents': Jika intent adalah 'estimation', tentukan agen yang perlu dipanggil:\n"
-        "   - 'tile': ubin/granit/keramik/lantai/semen perekat/nat\n"
-        "   - 'wood': kayu/panel/wpc/fluted/SPC flooring\n"
-        "   - 'stone': batu alam/veneer/andesit\n"
-        "   - 'paint': cat/waterproofing/pelapis/coating dinding\n"
-        "   - 'catalog': sanitary/wastafel/closet/kompor/elektronik/lampu/alat/bulk order produk tunggal "
-        "     tanpa kalkulasi area, atau produk yang tidak masuk kategori tile/wood/stone/paint\n"
+        "4. 'hired_agents': Tentukan agen spesialis:\n"
+        "   Jika order_type = 'bulk_order': SELALU ['catalog'], jangan gunakan tile/wood/stone/paint.\n"
+        "   Jika order_type = 'estimation':\n"
+        "   - 'tile': ubin/granit/keramik/lantai (dengan area spesifik)\n"
+        "   - 'wood': kayu/panel/wpc/fluted/SPC flooring (dengan area spesifik)\n"
+        "   - 'stone': batu alam/veneer/andesit (dengan area spesifik)\n"
+        "   - 'paint': cat/waterproofing/pelapis/coating dinding (dengan area spesifik)\n"
+        "   - 'catalog': sanitary/wastafel/closet/kompor/elektronik/lampu/alat, ATAU sebagai tambahan "
+        "     di samping spesialis HANYA jika brief secara eksplisit menyebut produk sanitary/electronic "
+        "     di luar kategori spesialis utama\n"
         "   - 'researcher': riset tren desain/insight pasar\n"
-        "   Satu permintaan bisa hire lebih dari satu agent. Jika intent 'conversational', KOSONGKAN.\n\n"
+        "   JANGAN co-hire 'catalog' dengan spesialis hanya karena produk utama tidak ada di katalog.\n"
+        "   Jika intent 'conversational', KOSONGKAN hired_agents.\n\n"
+        "CONTOH:\n"
+        "- 'Cek stok MU-203 untuk pemesanan 80 sak' → bulk_order → hired=['catalog']\n"
+        "- 'Granit 60x60 untuk kamar mandi 10m2' → estimation → hired=['tile']\n"
+        "- 'Cat Jotun untuk dinding 12m2 dan tambah wastafel Kohler' → estimation → hired=['paint','catalog']\n"
+        "- 'Cat Jotun untuk dinding 12m2' → estimation → hired=['paint'] (JANGAN tambah catalog)\n\n"
         "Format output HANYA JSON valid tanpa backticks:\n"
         "{\n"
         '  "intent": "conversational" atau "estimation",\n'
+        '  "order_type": "estimation" atau "bulk_order" (kosongkan jika conversational),\n'
         '  "rejected_agents": [],\n'
         '  "hired_agents": []\n'
         "}"
@@ -81,6 +98,7 @@ def chief_supervisor(state: AgentState):
     response = _llm_invoke_with_retry(supervisor_llm, prompt)
 
     intent = "estimation"
+    order_type = None
     rejected = []
     hired = []
 
@@ -89,6 +107,7 @@ def chief_supervisor(state: AgentState):
         if match:
             res_json = json.loads(match.group(0))
             intent = res_json.get("intent", "estimation")
+            order_type = res_json.get("order_type")
             rejected = res_json.get("rejected_agents", [])
             hired = res_json.get("hired_agents", [])
     except Exception:
@@ -98,6 +117,22 @@ def chief_supervisor(state: AgentState):
         if "stone" in text: hired.append("stone")
         if "paint" in text: hired.append("paint")
         if "researcher" in text: hired.append("researcher")
+
+    # Safety net: Python-level bulk_order detection sebagai override LLM
+    # Jika brief ada qty eksplisit (X sak/unit/etc) TANPA dimensi area → paksa catalog
+    brief_lower = brief.lower()
+    _bulk_qty_pat = re.compile(
+        r'\b\d+\s*(sak|unit|pcs|set|kaleng|roll|pail|bag|dus|botol|lembar(?!\s+(?:kayu|panel)))\b', re.IGNORECASE
+    )
+    _bulk_kw_pat = re.compile(r'\b(pemesanan|cek\s+stok|cek\s+ketersediaan|order\s+\d+|pesan\s+\d+)\b', re.IGNORECASE)
+    _area_pat = re.compile(r'\d+\s*(m2|m²|meter\s*persegi|\bm\b)', re.IGNORECASE)
+    _has_bulk_qty = bool(_bulk_qty_pat.search(brief))
+    _has_bulk_kw = bool(_bulk_kw_pat.search(brief))
+    _has_area = bool(_area_pat.search(brief))
+
+    if (_has_bulk_qty or _has_bulk_kw) and not _has_area and intent == "estimation":
+        order_type = "bulk_order"
+        hired = ["catalog"]
 
     # Fallback keyword-based rejection
     brief_lower = brief.lower()
@@ -501,17 +536,31 @@ def route_after_supervisor(state: AgentState):
         return "researcher"
     return "synthesizer"
 
+_SPECIALIST_AGENT_LABELS = {
+    "tile": "Tile Estimator",
+    "wood": "Wood Specialist",
+    "stone": "Stone Specialist",
+    "paint": "Paint Consultant",
+    "catalog": "Catalog Agent",
+    "researcher": "Market Analyst",
+}
+
 def _next_after(state: AgentState, current: str) -> str:
-    """Tentukan node berikutnya dalam urutan dinamis sesuai hired_agents."""
+    """Tentukan node berikutnya dalam urutan dinamis sesuai hired_agents.
+    Skip specialist yang sudah ada di reports (guard terhadap double-run).
+    """
     order = ["tile", "wood", "stone", "paint", "catalog", "researcher"]
     hired = state.get("hired_agents", [])
+    already_run = {r.get("agent", "") for r in state.get("reports", [])}
     try:
         idx = order.index(current)
     except ValueError:
         return "inventory"
     for candidate in order[idx + 1:]:
         if candidate in hired:
-            return candidate
+            label = _SPECIALIST_AGENT_LABELS.get(candidate, "")
+            if label not in already_run:
+                return candidate
     return "inventory"
 
 def route_after_tile(state: AgentState):
