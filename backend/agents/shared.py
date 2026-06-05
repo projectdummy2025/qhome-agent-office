@@ -263,6 +263,25 @@ def _has_buying_intent(brief: str) -> bool:
     return any(w in brief_lower for w in _BUYING_INTENT_WORDS)
 
 
+_AREA_PATTERN = re.compile(
+    r'(?:'
+    r'\d+(?:[.,]\d+)?\s*(?:m2|m²|meter\s*persegi)'  # 10 m2, 10 m², 10 meter persegi
+    r'|\d+\s*[x×]\s*\d+\s*(?:meter|m\b)'             # 3x4 meter, 3×4 m
+    r'|\d+(?:[.,]\d+)?\s*m\b'                         # 10 m, 3 m (standalone)
+    r')',
+    re.IGNORECASE,
+)
+
+def _has_area_in_text(*texts: str) -> bool:
+    """True jika salah satu teks mengandung dimensi area (m2/m²/meter persegi).
+    Terima multiple strings — cukup satu yang cocok sudah dianggap ada area.
+    """
+    for t in texts:
+        if t and _AREA_PATTERN.search(t):
+            return True
+    return False
+
+
 def _find_product_by_name_sql(query_text: str, category: str = None, limit: int = 5) -> list:
     """SQL ILIKE search di kolom name DAN desc — desc memuat brand (Roman/Sandimas/dll)
     yang tidak ada di name, sehingga brand eksplisit dari user bisa terfilter.

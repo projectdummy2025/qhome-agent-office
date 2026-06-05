@@ -19,9 +19,13 @@ router = APIRouter(prefix="/api/projects", tags=["chat"])
 
 
 def _build_history_summary(db: Session, session_id: str, existing_summary: str = None) -> str:
-    """Bangun context percakapan dari riwayat pesan DB, maksimal 10 pesan terakhir."""
+    """Bangun context percakapan dari riwayat pesan DB, maksimal 10 pesan terakhir.
+
+    Output format: teks narasi + section terstruktur [KONTEKS TERAKHIR] berisi
+    produk dan specialist dari turn terakhir — agar supervisor dan specialist
+    punya konteks konkret tanpa mengubah tipe AgentState.history_summary.
+    """
     from backend.models.schema import ChatMessage, ChatRole
-    import json as _json
     import re as _re
 
     messages = (
@@ -35,26 +39,61 @@ def _build_history_summary(db: Session, session_id: str, existing_summary: str =
         return existing_summary or ""
 
     lines = []
-    for msg in messages[-10:]:  # Ambil 10 pesan terakhir
+    last_products = []
+    last_hired = []
+
+    for msg in messages[-10:]:
         if msg.role == ChatRole.user:
             lines.append(f"Klien: {msg.content}")
         elif msg.role == ChatRole.system:
-            # Ambil narrative dari agent_logs jika ada, fallback ke content
             narrative = msg.content or ""
             if msg.agent_logs:
+                logs = msg.agent_logs if isinstance(msg.agent_logs, list) else []
+
+                # Ekstrak hired agents dari routing event
+                routing = next(
+                    (l for l in logs if isinstance(l, dict) and l.get("event") == "routing" and l.get("hired")),
+                    None,
+                )
+                if routing:
+                    last_hired = routing.get("hired", [])
+
+                # Ekstrak produk dan narrative dari completed event
                 completed = next(
-                    (l for l in msg.agent_logs if isinstance(l, dict) and l.get("event") == "completed"),
+                    (l for l in logs if isinstance(l, dict) and l.get("event") == "completed"),
                     None,
                 )
                 if completed:
                     raw_narrative = completed.get("narrative", msg.content or "")
                     narrative = _re.sub(r"<think>[\s\S]*?</think>", "", raw_narrative, flags=_re.IGNORECASE).strip()
-                    # Potong kalau terlalu panjang
                     if len(narrative) > 400:
                         narrative = narrative[:400] + "..."
+                    last_products = completed.get("products", [])
+
             lines.append(f"Asisten: {narrative}")
 
-    return "\n".join(lines) if lines else (existing_summary or "")
+    summary = "\n".join(lines) if lines else (existing_summary or "")
+
+    # Tambahkan section terstruktur dari turn terakhir agar supervisor
+    # dan specialist tahu produk + specialist apa yang sudah di-resolve.
+    structured_parts = []
+    if last_hired:
+        structured_parts.append(f"Specialist terakhir: {', '.join(last_hired)}")
+    if last_products:
+        prod_lines = []
+        for p in last_products[:6]:  # max 6 item
+            name = p.get("name", "")
+            sku = p.get("sku", "")
+            qty = p.get("qty", "")
+            if name and not name.startswith("Menunggu"):
+                prod_lines.append(f"  - {name} (SKU:{sku}, Qty:{qty})")
+        if prod_lines:
+            structured_parts.append("Produk turn terakhir:\n" + "\n".join(prod_lines))
+
+    if structured_parts:
+        summary += "\n\n[KONTEKS TERAKHIR]\n" + "\n".join(structured_parts)
+
+    return summary
 
 @router.post("/analyze")
 async def analyze_project(request: Request, db: Session = Depends(get_db)):

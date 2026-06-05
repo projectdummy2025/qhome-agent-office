@@ -8,6 +8,7 @@ from backend.agents.shared import (
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
     _extract_explicit_support,
+    _has_area_in_text,
     groq_specialist
 )
 
@@ -16,6 +17,18 @@ def wood_specialist(state: AgentState):
     if "wood" not in state.get("hired_agents", []):
         return {"reports": [r for r in state.get("reports", []) if r.get("agent") != "Wood Specialist"]}
     brief = state.get("brief", "")
+    history_summary = state.get("history_summary", "")
+    if not _has_area_in_text(brief, history_summary):
+        clarify = {
+            "agent": "Wood Specialist",
+            "content": (
+                "Untuk menghitung estimasi kebutuhan panel/lantai kayu yang akurat, saya memerlukan "
+                "luas area yang akan dipasang (contoh: 10 m², 20 m²). "
+                "Bisakah Anda menyebutkan luas area yang dimaksud?"
+            ),
+        }
+        old = [r for r in state.get("reports", []) if r.get("agent") != "Wood Specialist"]
+        return {"reports": old + [clarify]}
     try:
         reuse_result = _should_reuse_product(brief, "Wood Specialist", state)
 

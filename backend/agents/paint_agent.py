@@ -8,6 +8,7 @@ from backend.agents.shared import (
     _format_candidates_for_prompt,
     _llm_invoke_with_retry,
     _extract_explicit_support,
+    _has_area_in_text,
     groq_specialist
 )
 
@@ -16,6 +17,18 @@ def paint_consultant(state: AgentState):
     if "paint" not in state.get("hired_agents", []):
         return {"reports": [r for r in state.get("reports", []) if r.get("agent") != "Paint Consultant"]}
     brief = state.get("brief", "")
+    history_summary = state.get("history_summary", "")
+    if not _has_area_in_text(brief, history_summary):
+        clarify = {
+            "agent": "Paint Consultant",
+            "content": (
+                "Untuk menghitung estimasi kebutuhan cat yang akurat, saya memerlukan "
+                "luas area dinding yang akan dicat (contoh: 12 m², atau dimensi ruangan seperti 3x4 m tinggi 3 m). "
+                "Bisakah Anda menyebutkan ukuran area tersebut?"
+            ),
+        }
+        old = [r for r in state.get("reports", []) if r.get("agent") != "Paint Consultant"]
+        return {"reports": old + [clarify]}
     try:
         reuse_result = _should_reuse_product(brief, "Paint Consultant", state)
 
