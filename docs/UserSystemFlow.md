@@ -3,12 +3,12 @@
 ---
 
 ### Sistem Navigasi Dokumentasi (QHome-MAS)
-* **[Panduan Utama (README)](file:///home/ahmad/projects/qhomemart-mas-agent/README.md)**
-* **[Blueprint Arsitektur (ArchitectureConcept)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/ArchitectureConcept.md)**
-* **[Roster Karyawan Digital (AgentRoster)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/AgentRoster.md)**
-* **[Panduan Struktur Proyek (ProjectStructure)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/ProjectStructure.md)**
-* **[Alur Skenario Sistem (UserSystemFlow)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/UserSystemFlow.md)**
-* **[Tutorial Penggunaan Mandiri (TutorialUser)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/TutorialUser.md)**
+* **[Panduan Utama (README)](../README.md)**
+* **[Blueprint Arsitektur (ArchitectureConcept)](./ArchitectureConcept.md)**
+* **[Roster Karyawan Digital (AgentRoster)](./AgentRoster.md)**
+* **[Panduan Struktur Proyek (ProjectStructure)](./ProjectStructure.md)**
+* **[Alur Skenario Sistem (UserSystemFlow)](./UserSystemFlow.md)**
+* **[Tutorial Penggunaan Mandiri (TutorialUser)](./TutorialUser.md)**
 
 ---
 
@@ -206,7 +206,7 @@ Saat pengguna menyetujui verifikasi ganda dan memproses transaksi resmi, fronten
 ### Fase 6: Roda Nota Belanja & Vector QRIS Drawing
 Saat tombol "Unduh PDF" ditekan:
 1. React memicu endpoint GET `/api/projects/{session_id}/generate-pdf`.
-2. Backend [pdf_service.py](file:///home/ahmad/projects/qhomemart-mas-agent/backend/services/pdf_service.py) mendeteksi adanya data `orders` resmi untuk sesi tersebut.
+2. Backend [pdf_service.py](../backend/services/pdf_service.py) mendeteksi adanya data `orders` resmi untuk sesi tersebut.
 3. Sistem secara otomatis menyusun layout PDF bertema **Nota Belanja Resmi B2B**, mencakup rincian jarak logistik, armada pengiriman, jadwal pengantaran, catatan akses, subtotal, dan pajak.
 4. **Drawing Barcode Vektor Terintegrasi**: Di bagian bawah PDF, modul ReportLab shapes digunakan untuk menggambar representasi stand QRIS (grafik vektor) yang tajam lengkap dengan corner square markers, penanda penyelarasan, dan simulated QR bits secara mandiri tanpa membebani library eksternal, menjamin performa tinggi dan keamanan dokumen.
 5. Lembar PDF disajikan kembali ke klien secara asinkron sebagai berkas unduhan instan.

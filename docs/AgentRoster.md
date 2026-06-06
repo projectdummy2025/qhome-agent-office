@@ -3,12 +3,12 @@
 ---
 
 ### Sistem Navigasi Dokumentasi (QHome-MAS)
-* **[Panduan Utama (README)](file:///home/ahmad/projects/qhomemart-mas-agent/README.md)**
-* **[Blueprint Arsitektur (ArchitectureConcept)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/ArchitectureConcept.md)**
-* **[Roster Karyawan Digital (AgentRoster)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/AgentRoster.md)**
-* **[Panduan Struktur Proyek (ProjectStructure)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/ProjectStructure.md)**
-* **[Alur Skenario Sistem (UserSystemFlow)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/UserSystemFlow.md)**
-* **[Tutorial Penggunaan Mandiri (TutorialUser)](file:///home/ahmad/projects/qhomemart-mas-agent/docs/TutorialUser.md)**
+* **[Panduan Utama (README)](../README.md)**
+* **[Blueprint Arsitektur (ArchitectureConcept)](./ArchitectureConcept.md)**
+* **[Roster Karyawan Digital (AgentRoster)](./AgentRoster.md)**
+* **[Panduan Struktur Proyek (ProjectStructure)](./ProjectStructure.md)**
+* **[Alur Skenario Sistem (UserSystemFlow)](./UserSystemFlow.md)**
+* **[Tutorial Penggunaan Mandiri (TutorialUser)](./TutorialUser.md)**
 
 ---
 
